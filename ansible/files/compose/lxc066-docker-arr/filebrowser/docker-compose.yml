@@ -1,0 +1,17 @@
+# ansible/files/compose/lxc066-docker-arr/filebrowser/docker-compose.yml
+# Compose stub for filebrowser
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   filebrowser:
+#     image: example/filebrowser:latest
+#     container_name: filebrowser
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

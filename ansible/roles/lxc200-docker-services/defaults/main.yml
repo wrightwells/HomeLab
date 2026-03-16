@@ -1,0 +1,7 @@
+---
+# ansible/roles/lxc200-docker-services/defaults/main.yml
+# Lowest-priority defaults for the lxc200-docker-services role.
+#
+# Example:
+# lxc200_docker_services_enabled: true
+# lxc200_docker_services_base_dir: /opt/lxc200-docker-services

@@ -1,6 +1,14 @@
-all:
-  hosts:
-%{ for vm in vms ~}
-    ${vm.name}:
-      ansible_host: ${vm.ip}
-%{ endfor ~}
+# terraform/templates/ansible_inventory.tftpl
+# Purpose:
+# - Template for generating ansible/inventories/production/hosts.yml
+#
+# Typical inventory groups:
+# - firewall
+# - ai_gpu
+# - docker_arr
+# - docker_services
+# - docker_apps
+# - docker_media
+# - docker_external
+# - infra
+# - docker_hosts

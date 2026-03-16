@@ -1,0 +1,11 @@
+---
+# ansible/roles/lxc220-docker-apps/tasks/main.yml
+# Configure the docker-apps host.
+#
+# Typical tasks:
+# - create app directories
+# - deploy compose files for:
+#   Grafana, InfluxDB, Node-RED, Teslamate, Homebridge,
+#   Calibre, Calibre-Web, Grist, Blinko, finance apps
+# - create storage paths
+# - start services

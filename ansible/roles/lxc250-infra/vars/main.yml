@@ -1,0 +1,5 @@
+---
+# ansible/roles/lxc250-infra/vars/main.yml
+# Higher-priority role variables for lxc250-infra.
+#
+# Use this for fixed internal values that normally should not be overridden.

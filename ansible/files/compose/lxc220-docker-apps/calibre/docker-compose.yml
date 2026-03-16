@@ -1,0 +1,17 @@
+# ansible/files/compose/lxc220-docker-apps/calibre/docker-compose.yml
+# Compose stub for calibre
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   calibre:
+#     image: example/calibre:latest
+#     container_name: calibre
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

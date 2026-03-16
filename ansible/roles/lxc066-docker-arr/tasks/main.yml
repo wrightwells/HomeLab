@@ -1,0 +1,13 @@
+---
+# ansible/roles/lxc066-docker-arr/tasks/main.yml
+# Configure the docker-arr host.
+#
+# Typical tasks:
+# - create /opt/containers
+# - create per-app directories:
+#   - filebrowser
+#   - jellyseerr
+#   - aurral
+#   - arr-stack
+# - copy docker-compose.yml files
+# - run docker compose up -d

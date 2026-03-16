@@ -1,0 +1,17 @@
+# ansible/files/compose/lxc200-docker-services/owncloud/docker-compose.yml
+# Compose stub for owncloud
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   owncloud:
+#     image: example/owncloud:latest
+#     container_name: owncloud
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

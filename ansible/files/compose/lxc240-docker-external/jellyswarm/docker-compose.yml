@@ -1,0 +1,17 @@
+# ansible/files/compose/lxc240-docker-external/jellyswarm/docker-compose.yml
+# Compose stub for jellyswarm
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   jellyswarm:
+#     image: example/jellyswarm:latest
+#     container_name: jellyswarm
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

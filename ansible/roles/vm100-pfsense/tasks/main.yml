@@ -1,0 +1,13 @@
+---
+# ansible/roles/vm100-pfsense/tasks/main.yml
+# pfSense is often managed inside pfSense itself or via API tooling later.
+#
+# Possible future tasks:
+# - document interfaces
+# - manage backups
+# - apply API-based firewall configuration
+#
+# Example:
+# - name: Placeholder for pfSense role
+#   ansible.builtin.debug:
+#     msg: "pfSense role not yet implemented"

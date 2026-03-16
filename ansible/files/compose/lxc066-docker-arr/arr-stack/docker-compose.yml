@@ -1,0 +1,17 @@
+# ansible/files/compose/lxc066-docker-arr/arr-stack/docker-compose.yml
+# Compose stub for arr-stack
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   arr-stack:
+#     image: example/arr-stack:latest
+#     container_name: arr-stack
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

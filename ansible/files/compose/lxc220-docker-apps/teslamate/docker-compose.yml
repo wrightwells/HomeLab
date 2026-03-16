@@ -1,0 +1,17 @@
+# ansible/files/compose/lxc220-docker-apps/teslamate/docker-compose.yml
+# Compose stub for teslamate
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   teslamate:
+#     image: example/teslamate:latest
+#     container_name: teslamate
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

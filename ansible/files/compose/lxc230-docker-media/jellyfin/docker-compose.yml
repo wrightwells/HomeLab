@@ -1,0 +1,17 @@
+# ansible/files/compose/lxc230-docker-media/jellyfin/docker-compose.yml
+# Compose stub for jellyfin
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   jellyfin:
+#     image: example/jellyfin:latest
+#     container_name: jellyfin
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

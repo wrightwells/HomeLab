@@ -1,0 +1,17 @@
+# ansible/files/compose/lxc240-docker-external/kutt/docker-compose.yml
+# Compose stub for kutt
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   kutt:
+#     image: example/kutt:latest
+#     container_name: kutt
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

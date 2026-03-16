@@ -1,0 +1,7 @@
+---
+# ansible/roles/lxc220-docker-apps/defaults/main.yml
+# Lowest-priority defaults for the lxc220-docker-apps role.
+#
+# Example:
+# lxc220_docker_apps_enabled: true
+# lxc220_docker_apps_base_dir: /opt/lxc220-docker-apps

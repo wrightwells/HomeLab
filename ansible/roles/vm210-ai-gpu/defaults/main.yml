@@ -1,0 +1,7 @@
+---
+# ansible/roles/vm210-ai-gpu/defaults/main.yml
+# Lowest-priority defaults for the vm210-ai-gpu role.
+#
+# Example:
+# vm210_ai_gpu_enabled: true
+# vm210_ai_gpu_base_dir: /opt/vm210-ai-gpu

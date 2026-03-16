@@ -1,0 +1,5 @@
+---
+# ansible/roles/vm210-ai-gpu/vars/main.yml
+# Higher-priority role variables for vm210-ai-gpu.
+#
+# Use this for fixed internal values that normally should not be overridden.

@@ -1,0 +1,9 @@
+---
+# ansible/roles/lxc200-docker-services/tasks/main.yml
+# Configure the docker-services host.
+#
+# Typical tasks:
+# - create directories for Immich, Owncloud, Syncthing
+# - copy compose and env files
+# - create bind-mount data paths
+# - start services

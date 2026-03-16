@@ -1,0 +1,21 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Secrets / vars
+*.tfvars
+!.tfvars.example
+
+# Ansible
+*.retry
+
+# Env files
+.env
+.env.*
+
+# Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db

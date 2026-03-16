@@ -1,0 +1,16 @@
+---
+# ansible/roles/monitoring/tasks/main.yml
+# Role purpose:
+# Optional monitoring configuration role
+#
+# Add tasks here to:
+# - install packages
+# - create directories
+# - copy templates or compose files
+# - configure services
+# - enable/start services
+#
+# Example:
+# - name: Placeholder task for monitoring
+#   ansible.builtin.debug:
+#     msg: "Implement monitoring role tasks here"

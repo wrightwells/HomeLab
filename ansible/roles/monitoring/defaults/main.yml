@@ -1,0 +1,7 @@
+---
+# ansible/roles/monitoring/defaults/main.yml
+# Lowest-priority defaults for the monitoring role.
+#
+# Example:
+# monitoring_enabled: true
+# monitoring_base_dir: /opt/monitoring

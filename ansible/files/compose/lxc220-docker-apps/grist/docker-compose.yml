@@ -1,0 +1,17 @@
+# ansible/files/compose/lxc220-docker-apps/grist/docker-compose.yml
+# Compose stub for grist
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   grist:
+#     image: example/grist:latest
+#     container_name: grist
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

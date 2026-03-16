@@ -1,0 +1,16 @@
+---
+# ansible/roles/reverse-proxy/tasks/main.yml
+# Role purpose:
+# Optional reverse proxy configuration role
+#
+# Add tasks here to:
+# - install packages
+# - create directories
+# - copy templates or compose files
+# - configure services
+# - enable/start services
+#
+# Example:
+# - name: Placeholder task for reverse-proxy
+#   ansible.builtin.debug:
+#     msg: "Implement reverse-proxy role tasks here"

@@ -1,0 +1,16 @@
+---
+# ansible/roles/vm210-ai-gpu/tasks/main.yml
+# Configure the AI GPU VM.
+#
+# Typical tasks:
+# - install Docker and NVIDIA tooling
+# - configure model storage directories
+# - deploy Frigate compose
+# - deploy Home Assistant compose
+# - deploy Ollama / vLLM / other model runtime
+# - install GPU drivers if using a VM OS image that needs them
+#
+# Example:
+# - name: Placeholder for AI GPU configuration
+#   ansible.builtin.debug:
+#     msg: "Add AI GPU VM tasks here"

@@ -1,0 +1,17 @@
+# ansible/files/compose/vm210-ai-gpu/frigate/docker-compose.yml
+# Compose stub for frigate
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   frigate:
+#     image: example/frigate:latest
+#     container_name: frigate
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

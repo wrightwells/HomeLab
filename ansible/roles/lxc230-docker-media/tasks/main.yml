@@ -1,0 +1,9 @@
+---
+# ansible/roles/lxc230-docker-media/tasks/main.yml
+# Configure the docker-media host.
+#
+# Typical tasks:
+# - create Plex and Jellyfin directories
+# - mount media paths if required
+# - deploy compose files
+# - start media services

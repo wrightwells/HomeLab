@@ -1,0 +1,7 @@
+---
+# ansible/roles/reverse-proxy/defaults/main.yml
+# Lowest-priority defaults for the reverse-proxy role.
+#
+# Example:
+# reverse_proxy_enabled: true
+# reverse_proxy_base_dir: /opt/reverse-proxy

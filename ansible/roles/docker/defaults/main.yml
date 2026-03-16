@@ -1,0 +1,7 @@
+---
+# ansible/roles/docker/defaults/main.yml
+# Lowest-priority defaults for the docker role.
+#
+# Example:
+# docker_enabled: true
+# docker_base_dir: /opt/docker

@@ -1,0 +1,10 @@
+---
+# ansible/roles/lxc240-docker-external/tasks/main.yml
+# Configure the docker-external host.
+#
+# Typical tasks:
+# - create directories for externally exposed apps
+# - deploy compose files for:
+#   NGINX, tailscale-peer-relay, jellyswarm, Ghost, DNNS,
+#   Kutt, WordPress, Walletpage
+# - configure reverse proxy or tunnel integration

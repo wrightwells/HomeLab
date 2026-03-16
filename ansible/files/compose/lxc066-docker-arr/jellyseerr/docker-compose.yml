@@ -1,0 +1,17 @@
+# ansible/files/compose/lxc066-docker-arr/jellyseerr/docker-compose.yml
+# Compose stub for jellyseerr
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   jellyseerr:
+#     image: example/jellyseerr:latest
+#     container_name: jellyseerr
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

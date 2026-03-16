@@ -1,0 +1,5 @@
+---
+# ansible/roles/common/vars/main.yml
+# Higher-priority role variables for common.
+#
+# Use this for fixed internal values that normally should not be overridden.

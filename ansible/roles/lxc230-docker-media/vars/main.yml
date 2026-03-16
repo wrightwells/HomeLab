@@ -1,0 +1,5 @@
+---
+# ansible/roles/lxc230-docker-media/vars/main.yml
+# Higher-priority role variables for lxc230-docker-media.
+#
+# Use this for fixed internal values that normally should not be overridden.

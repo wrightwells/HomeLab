@@ -1,0 +1,17 @@
+# ansible/files/compose/lxc240-docker-external/tailscale-peer-relay/docker-compose.yml
+# Compose stub for tailscale-peer-relay
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   tailscale-peer-relay:
+#     image: example/tailscale-peer-relay:latest
+#     container_name: tailscale-peer-relay
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

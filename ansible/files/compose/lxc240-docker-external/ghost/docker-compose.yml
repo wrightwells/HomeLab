@@ -1,0 +1,17 @@
+# ansible/files/compose/lxc240-docker-external/ghost/docker-compose.yml
+# Compose stub for ghost
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   ghost:
+#     image: example/ghost:latest
+#     container_name: ghost
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

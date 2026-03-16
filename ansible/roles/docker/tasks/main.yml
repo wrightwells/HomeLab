@@ -1,0 +1,16 @@
+---
+# ansible/roles/docker/tasks/main.yml
+# Role purpose:
+# Install and configure Docker engine and compose plugin
+#
+# Add tasks here to:
+# - install packages
+# - create directories
+# - copy templates or compose files
+# - configure services
+# - enable/start services
+#
+# Example:
+# - name: Placeholder task for docker
+#   ansible.builtin.debug:
+#     msg: "Implement docker role tasks here"

@@ -1,0 +1,17 @@
+# ansible/files/compose/lxc220-docker-apps/finance/docker-compose.yml
+# Compose stub for finance
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   finance:
+#     image: example/finance:latest
+#     container_name: finance
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

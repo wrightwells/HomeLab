@@ -1,14 +1,15 @@
 ---
-- name: Base config
-  hosts: all
-  become: true
-
-  tasks:
-    - name: Ensure basic packages installed
-      apt:
-        name:
-          - curl
-          - vim
-          - git
-        state: present
-        update_cache: yes
+# ansible/playbooks/site.yml
+# Main playbook for full host configuration.
+#
+# Typical plays:
+# - common role for all Linux hosts
+# - docker role for docker-capable hosts
+# - host-specific roles for each VM/LXC
+#
+# Example:
+# - hosts: docker_hosts:ai_gpu
+#   become: true
+#   roles:
+#     - common
+#     - docker

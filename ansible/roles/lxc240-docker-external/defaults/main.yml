@@ -1,0 +1,7 @@
+---
+# ansible/roles/lxc240-docker-external/defaults/main.yml
+# Lowest-priority defaults for the lxc240-docker-external role.
+#
+# Example:
+# lxc240_docker_external_enabled: true
+# lxc240_docker_external_base_dir: /opt/lxc240-docker-external

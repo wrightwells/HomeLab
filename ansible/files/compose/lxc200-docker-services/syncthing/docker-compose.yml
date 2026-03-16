@@ -1,0 +1,17 @@
+# ansible/files/compose/lxc200-docker-services/syncthing/docker-compose.yml
+# Compose stub for syncthing
+#
+# Replace with a real compose file.
+#
+# Example:
+# services:
+#   syncthing:
+#     image: example/syncthing:latest
+#     container_name: syncthing
+#     restart: unless-stopped
+#     environment:
+#       - TZ=Europe/London
+#     volumes:
+#       - ./data:/data
+#     ports:
+#       - "1234:1234"

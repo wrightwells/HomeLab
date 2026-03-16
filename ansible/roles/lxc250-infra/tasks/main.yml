@@ -1,0 +1,8 @@
+---
+# ansible/roles/lxc250-infra/tasks/main.yml
+# Configure the infra host.
+#
+# Typical tasks:
+# - create directories for MQTT, Homebridge, NGINX
+# - copy configs and compose files
+# - start infra services

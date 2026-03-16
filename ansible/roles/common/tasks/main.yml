@@ -1,0 +1,16 @@
+---
+# ansible/roles/common/tasks/main.yml
+# Role purpose:
+# Baseline configuration for all Linux hosts
+#
+# Add tasks here to:
+# - install packages
+# - create directories
+# - copy templates or compose files
+# - configure services
+# - enable/start services
+#
+# Example:
+# - name: Placeholder task for common
+#   ansible.builtin.debug:
+#     msg: "Implement common role tasks here"

@@ -1,3 +1,14 @@
-pm_api_url          = "https://proxmox:8006/api2/json"
-pm_api_token_id     = "terraform@pve!provider"
-pm_api_token_secret = "CHANGEME"
+# terraform/terraform.tfvars.example
+# Copy to terraform.tfvars and replace placeholder values.
+#
+# pm_api_url          = "https://proxmox.example.local:8006/api2/json"
+# pm_api_token_id     = "terraform@pve!provider"
+# pm_api_token_secret = "replace_me"
+# proxmox_node        = "pve"
+# vm_storage          = "local-lvm"
+# lxc_storage         = "local-lvm"
+# cloudinit_storage   = "local-lvm"
+# vm_bridge           = "vmbr0"
+# vm_vlan             = 66
+# ansible_user        = "ansible"
+# ssh_public_key      = "ssh-ed25519 AAAA..."
