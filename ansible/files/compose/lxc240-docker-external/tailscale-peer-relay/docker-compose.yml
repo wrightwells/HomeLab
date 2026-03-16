@@ -1,0 +1,11 @@
+services:
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "41641:41641/udp"
+    volumes:
+      - ./state:/var/lib/tailscale

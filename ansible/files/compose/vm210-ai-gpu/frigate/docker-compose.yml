@@ -1,0 +1,12 @@
+services:
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable
+    container_name: frigate
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./config:/config
+      - /etc/localtime:/etc/localtime:ro

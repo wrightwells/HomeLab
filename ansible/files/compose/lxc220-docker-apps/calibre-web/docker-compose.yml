@@ -1,0 +1,12 @@
+services:
+  calibre-web:
+    image: lscr.io/linuxserver/calibre-web:latest
+    container_name: calibre-web
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "8084:8083"
+    volumes:
+      - ./config:/config
+      - ./books:/books

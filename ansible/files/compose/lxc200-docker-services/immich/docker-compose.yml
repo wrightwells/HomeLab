@@ -1,0 +1,11 @@
+services:
+  immich:
+    image: ghcr.io/immich-app/immich-server:release
+    container_name: immich
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "2283:2283"
+    volumes:
+      - ./data:/usr/src/app/upload

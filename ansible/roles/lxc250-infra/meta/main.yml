@@ -1,0 +1,6 @@
+---
+galaxy_info:
+  author: Richard Wrightwells
+  description: Configure host role lxc250-infra
+  min_ansible_version: "2.14"
+dependencies: []

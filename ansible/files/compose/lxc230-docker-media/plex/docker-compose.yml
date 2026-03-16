@@ -1,0 +1,12 @@
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "32400:32400"
+    volumes:
+      - ./config:/config
+      - /media:/media

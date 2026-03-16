@@ -1,0 +1,11 @@
+services:
+  kutt:
+    image: kutt/kutt:latest
+    container_name: kutt
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./data:/kutt

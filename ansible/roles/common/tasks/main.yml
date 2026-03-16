@@ -1,9 +1,31 @@
 ---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - wget
+      - git
+      - vim
+      - htop
+      - ca-certificates
+      - gnupg
+      - python3
+      - python3-pip
+      - qemu-guest-agent
+    state: present
+
 - name: Set timezone
   community.general.timezone:
     name: "{{ timezone }}"
 
-- name: Install common packages
-  ansible.builtin.package:
-    name: "{{ common_packages }}"
-    state: present
+- name: Enable qemu guest agent
+  ansible.builtin.service:
+    name: qemu-guest-agent
+    state: started
+    enabled: true
+  ignore_errors: true

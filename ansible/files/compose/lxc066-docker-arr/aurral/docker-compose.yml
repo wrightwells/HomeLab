@@ -1,0 +1,11 @@
+services:
+  aurral:
+    image: ghcr.io/lklynet/aurral:latest
+    container_name: aurral
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/backend/data

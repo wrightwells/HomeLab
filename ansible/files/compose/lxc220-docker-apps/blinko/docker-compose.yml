@@ -1,0 +1,11 @@
+services:
+  blinko:
+    image: blinko/blinko:latest
+    container_name: blinko
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "1111:1111"
+    volumes:
+      - ./data:/app/data

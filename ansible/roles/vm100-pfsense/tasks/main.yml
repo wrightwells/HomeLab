@@ -1,0 +1,4 @@
+---
+- name: pfSense placeholder
+  ansible.builtin.debug:
+    msg: "pfSense is usually managed from pfSense itself or via API later."

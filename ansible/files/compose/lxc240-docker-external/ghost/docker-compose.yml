@@ -1,0 +1,11 @@
+services:
+  ghost:
+    image: ghost:latest
+    container_name: ghost
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "2368:2368"
+    volumes:
+      - ./data:/var/lib/ghost/content

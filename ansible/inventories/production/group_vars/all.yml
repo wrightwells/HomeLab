@@ -1,8 +1,4 @@
 ---
-lab_domain: home.arpa
 timezone: Europe/London
-common_packages:
-  - curl
-  - git
-  - htop
-  - vim
+docker_compose_root: /opt/containers
+ansible_python_interpreter: /usr/bin/python3

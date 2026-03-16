@@ -1,18 +1,54 @@
 ---
-- name: Baseline all hosts
-  hosts: all
+- name: Baseline for all Linux hosts
+  hosts: docker_hosts:ai_gpu
   become: true
   roles:
     - common
 
-- name: Configure Docker hosts
-  hosts: docker_hosts
+- name: Install Docker on docker-capable hosts
+  hosts: docker_hosts:ai_gpu
   become: true
   roles:
-    - docker_host
+    - docker
 
-- name: Configure Proxmox hosts
-  hosts: proxmox_hosts
+- name: Configure AI GPU VM
+  hosts: ai_gpu
   become: true
   roles:
-    - proxmox_host
+    - vm210-ai-gpu
+
+- name: Configure docker-arr host
+  hosts: docker_arr
+  become: true
+  roles:
+    - lxc066-docker-arr
+
+- name: Configure docker-services host
+  hosts: docker_services
+  become: true
+  roles:
+    - lxc200-docker-services
+
+- name: Configure docker-apps host
+  hosts: docker_apps
+  become: true
+  roles:
+    - lxc220-docker-apps
+
+- name: Configure docker-media host
+  hosts: docker_media
+  become: true
+  roles:
+    - lxc230-docker-media
+
+- name: Configure docker-external host
+  hosts: docker_external
+  become: true
+  roles:
+    - lxc240-docker-external
+
+- name: Configure infra host
+  hosts: infra
+  become: true
+  roles:
+    - lxc250-infra

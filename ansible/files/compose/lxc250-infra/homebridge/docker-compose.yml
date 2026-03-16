@@ -1,0 +1,11 @@
+services:
+  homebridge:
+    image: homebridge/homebridge:latest
+    container_name: homebridge
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "8582:8581"
+    volumes:
+      - ./data:/homebridge
