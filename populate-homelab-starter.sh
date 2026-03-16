@@ -46,7 +46,7 @@ make_module_tree() {
 # -----------------------------------------------------------------------------
 # Terraform root
 # -----------------------------------------------------------------------------
-write_file "$BASE/terraform/providers.tf" <<'EOF'
+write_file "$BASE/terraform/providers.tf" <<'EOF2'
 terraform {
   required_version = ">= 1.5.0"
 
@@ -67,9 +67,9 @@ provider "proxmox" {
   api_token = "${var.pm_api_token_id}=${var.pm_api_token_secret}"
   insecure  = true
 }
-EOF
+EOF2
 
-write_file "$BASE/terraform/variables.tf" <<'EOF'
+write_file "$BASE/terraform/variables.tf" <<'EOF2'
 variable "pm_api_url" {
   description = "Proxmox API URL"
   type        = string
@@ -142,9 +142,9 @@ variable "debian_lxc_template" {
   type        = string
   default     = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
 }
-EOF
+EOF2
 
-write_file "$BASE/terraform/main.tf" <<'EOF'
+write_file "$BASE/terraform/main.tf" <<'EOF2'
 locals {
   inventory_hosts = {
     vm100_pfsense = {
@@ -306,9 +306,9 @@ resource "local_file" "ansible_inventory" {
     hosts = local.inventory_hosts
   })
 }
-EOF
+EOF2
 
-write_file "$BASE/terraform/outputs.tf" <<'EOF'
+write_file "$BASE/terraform/outputs.tf" <<'EOF2'
 output "ansible_inventory_file" {
   value = local_file.ansible_inventory.filename
 }
@@ -344,9 +344,9 @@ output "lxc240_docker_external_id" {
 output "lxc250_infra_id" {
   value = module.lxc250_infra.vm_id
 }
-EOF
+EOF2
 
-write_file "$BASE/terraform/terraform.tfvars.example" <<'EOF'
+write_file "$BASE/terraform/terraform.tfvars.example" <<'EOF2'
 pm_api_url          = "https://10.10.66.2:8006/api2/json"
 pm_api_token_id     = "terraform@pve!provider"
 pm_api_token_secret = "REPLACE_ME"
@@ -361,9 +361,9 @@ debian_lxc_template  = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
 
 ansible_user   = "ansible"
 ssh_public_key = "ssh-ed25519 AAAA_REPLACE_ME"
-EOF
+EOF2
 
-write_file "$BASE/terraform/templates/ansible_inventory.tftpl" <<'EOF'
+write_file "$BASE/terraform/templates/ansible_inventory.tftpl" <<'EOF2'
 all:
   children:
     firewall:
@@ -473,19 +473,19 @@ all:
           guest_type: ${host.type}
 %{ endif ~}
 %{ endfor ~}
-EOF
+EOF2
 
-write_file "$BASE/terraform/environments/production/main.tf" <<'EOF'
+write_file "$BASE/terraform/environments/production/main.tf" <<'EOF2'
 module "homelab" {
   source = "../../"
 }
-EOF
+EOF2
 
-write_file "$BASE/terraform/environments/production/terraform.tfvars" <<'EOF'
+write_file "$BASE/terraform/environments/production/terraform.tfvars" <<'EOF2'
 # optional per-environment overrides
-EOF
+EOF2
 
-write_file "$BASE/terraform/README.md" <<'EOF'
+write_file "$BASE/terraform/README.md" <<'EOF2'
 # Terraform
 
 Root module for Proxmox VMs and LXCs.
@@ -504,21 +504,22 @@ Notes:
 - pfSense is a starter placeholder VM
 - AI VM is a starter VM and should be extended for template clone and GPU passthrough
 - LXCs assume a Debian 12 template exists in Proxmox
+- LXCs bind-mount host storage into /mnt/appdata and /mnt/media_pool where required
 - Terraform renders the Ansible inventory automatically
-EOF
+EOF2
 
 # -----------------------------------------------------------------------------
 # Terraform modules
 # -----------------------------------------------------------------------------
 make_module_tree "vm100-pfsense"
-write_file "$BASE/terraform/modules/vm100-pfsense/variables.tf" <<'EOF'
+write_file "$BASE/terraform/modules/vm100-pfsense/variables.tf" <<'EOF2'
 variable "proxmox_node" { type = string }
 variable "vm_storage"   { type = string }
 variable "vm_bridge"    { type = string }
 variable "vm_vlan"      { type = number, default = null }
-EOF
+EOF2
 
-write_file "$BASE/terraform/modules/vm100-pfsense/main.tf" <<'EOF'
+write_file "$BASE/terraform/modules/vm100-pfsense/main.tf" <<'EOF2'
 resource "proxmox_virtual_environment_vm" "this" {
   name      = "pfsense"
   node_name = var.proxmox_node
@@ -558,23 +559,23 @@ resource "proxmox_virtual_environment_vm" "this" {
 
   description = "Starter pfSense VM. Attach ISO and finish install in Proxmox console."
 }
-EOF
+EOF2
 
-write_file "$BASE/terraform/modules/vm100-pfsense/outputs.tf" <<'EOF'
+write_file "$BASE/terraform/modules/vm100-pfsense/outputs.tf" <<'EOF2'
 output "vm_id" {
   value = proxmox_virtual_environment_vm.this.vm_id
 }
-EOF
+EOF2
 
-write_file "$BASE/terraform/modules/vm100-pfsense/README.md" <<'EOF'
+write_file "$BASE/terraform/modules/vm100-pfsense/README.md" <<'EOF2'
 # vm100-pfsense
 
 Starter pfSense VM placeholder.
 Use this as the shell VM and attach a pfSense ISO manually or extend later.
-EOF
+EOF2
 
 make_module_tree "vm210-ai-gpu"
-write_file "$BASE/terraform/modules/vm210-ai-gpu/variables.tf" <<'EOF'
+write_file "$BASE/terraform/modules/vm210-ai-gpu/variables.tf" <<'EOF2'
 variable "proxmox_node"      { type = string }
 variable "vm_storage"        { type = string }
 variable "cloudinit_storage" { type = string }
@@ -582,9 +583,9 @@ variable "vm_bridge"         { type = string }
 variable "vm_vlan"           { type = number, default = null }
 variable "ssh_public_key"    { type = string }
 variable "ansible_user"      { type = string }
-EOF
+EOF2
 
-write_file "$BASE/terraform/modules/vm210-ai-gpu/main.tf" <<'EOF'
+write_file "$BASE/terraform/modules/vm210-ai-gpu/main.tf" <<'EOF2'
 resource "proxmox_virtual_environment_vm" "this" {
   name      = "ai-gpu"
   node_name = var.proxmox_node
@@ -640,20 +641,20 @@ resource "proxmox_virtual_environment_vm" "this" {
 
   description = "Starter AI VM. Extend later with template clone and GPU passthrough."
 }
-EOF
+EOF2
 
-write_file "$BASE/terraform/modules/vm210-ai-gpu/outputs.tf" <<'EOF'
+write_file "$BASE/terraform/modules/vm210-ai-gpu/outputs.tf" <<'EOF2'
 output "vm_id" {
   value = proxmox_virtual_environment_vm.this.vm_id
 }
-EOF
+EOF2
 
-write_file "$BASE/terraform/modules/vm210-ai-gpu/README.md" <<'EOF'
+write_file "$BASE/terraform/modules/vm210-ai-gpu/README.md" <<'EOF2'
 # vm210-ai-gpu
 
 Starter Linux VM for AI and Docker workloads.
 Next step is usually template cloning and PCIe GPU passthrough.
-EOF
+EOF2
 
 make_lxc_module() {
   local module="$1"
@@ -663,19 +664,21 @@ make_lxc_module() {
   local disk="$5"
   local mem="$6"
   local cores="$7"
+  local add_appdata="$8"
+  local add_media_pool="$9"
 
   make_module_tree "$module"
 
-  write_file "$BASE/terraform/modules/$module/variables.tf" <<'EOF'
+  write_file "$BASE/terraform/modules/$module/variables.tf" <<'EOF2'
 variable "proxmox_node"        { type = string }
 variable "lxc_storage"         { type = string }
 variable "vm_bridge"           { type = string }
 variable "vm_vlan"             { type = number, default = null }
 variable "ssh_public_key"      { type = string }
 variable "debian_lxc_template" { type = string }
-EOF
+EOF2
 
-  write_file "$BASE/terraform/modules/$module/main.tf" <<EOF
+  write_file "$BASE/terraform/modules/$module/main.tf" <<EOF2
 resource "proxmox_virtual_environment_container" "this" {
   node_name    = var.proxmox_node
   vm_id        = ${vmid}
@@ -726,36 +729,57 @@ resource "proxmox_virtual_environment_container" "this" {
 
   features {
     nesting = true
+    keyctl  = true
   }
+$( if [[ "$add_appdata" == "true" ]]; then cat <<'MP'
+
+  mount_point {
+    volume = "/mnt/appdata"
+    path   = "/mnt/appdata"
+  }
+MP
+fi
+)$( if [[ "$add_media_pool" == "true" ]]; then cat <<'MP'
+
+  mount_point {
+    volume = "/mnt/media_pool"
+    path   = "/mnt/media_pool"
+  }
+MP
+fi
+)
 
   description = "Starter LXC for ${hostname}"
 }
-EOF
+EOF2
 
-  write_file "$BASE/terraform/modules/$module/outputs.tf" <<'EOF'
+  write_file "$BASE/terraform/modules/$module/outputs.tf" <<'EOF2'
 output "vm_id" {
   value = proxmox_virtual_environment_container.this.vm_id
 }
-EOF
+EOF2
 
-  write_file "$BASE/terraform/modules/$module/README.md" <<EOF
+  write_file "$BASE/terraform/modules/$module/README.md" <<EOF2
 # ${module}
 
 Starter Debian LXC for ${hostname}.
-EOF
+This module bind-mounts host storage where needed:
+- /mnt/appdata for configs, docker volumes, and synced data
+- /mnt/media_pool for media libraries and downloads
+EOF2
 }
 
-make_lxc_module "lxc066-docker-arr"      "docker-arr"      66  "10.10.66.66"  32  4096 2
-make_lxc_module "lxc200-docker-services" "docker-services" 200 "10.10.66.200" 64  8192 4
-make_lxc_module "lxc220-docker-apps"     "docker-apps"     220 "10.10.66.220" 64  8192 4
-make_lxc_module "lxc230-docker-media"    "docker-media"    230 "10.10.66.230" 64  8192 4
-make_lxc_module "lxc240-docker-external" "docker-external" 240 "10.10.66.240" 32  4096 2
-make_lxc_module "lxc250-infra"           "infra"           250 "10.10.66.250" 16  2048 2
+make_lxc_module "lxc066-docker-arr"      "docker-arr"      66  "10.10.66.66"  32  4096 2 true  true
+make_lxc_module "lxc200-docker-services" "docker-services" 200 "10.10.66.200" 64  8192 4 true  false
+make_lxc_module "lxc220-docker-apps"     "docker-apps"     220 "10.10.66.220" 64  8192 4 true  false
+make_lxc_module "lxc230-docker-media"    "docker-media"    230 "10.10.66.230" 64  8192 4 true  true
+make_lxc_module "lxc240-docker-external" "docker-external" 240 "10.10.66.240" 32  4096 2 true  false
+make_lxc_module "lxc250-infra"           "infra"           250 "10.10.66.250" 16  2048 2 true  false
 
 # -----------------------------------------------------------------------------
 # Ansible root
 # -----------------------------------------------------------------------------
-write_file "$BASE/ansible/ansible.cfg" <<'EOF'
+write_file "$BASE/ansible/ansible.cfg" <<'EOF2'
 [defaults]
 inventory = inventories/production/hosts.yml
 roles_path = roles
@@ -766,18 +790,23 @@ stdout_callback = yaml
 
 [ssh_connection]
 pipelining = True
-EOF
+EOF2
 
-write_file "$BASE/ansible/inventories/production/group_vars/all.yml" <<'EOF'
+write_file "$BASE/ansible/inventories/production/group_vars/all.yml" <<'EOF2'
 ---
 timezone: Europe/London
 docker_compose_root: /opt/containers
+appdata_root: /mnt/appdata
+aI_models_root: /mnt/ai_models
+ai_models_root: /mnt/ai_models
+ai_cache_root: /mnt/ai_cache
+media_root: /mnt/media_pool
 ansible_python_interpreter: /usr/bin/python3
-EOF
+EOF2
 
 touch "$BASE/ansible/inventories/production/host_vars/.gitkeep"
 
-write_file "$BASE/ansible/playbooks/site.yml" <<'EOF'
+write_file "$BASE/ansible/playbooks/site.yml" <<'EOF2'
 ---
 - name: Baseline for all Linux hosts
   hosts: docker_hosts:ai_gpu
@@ -832,9 +861,9 @@ write_file "$BASE/ansible/playbooks/site.yml" <<'EOF'
   become: true
   roles:
     - lxc250-infra
-EOF
+EOF2
 
-write_file "$BASE/ansible/README.md" <<'EOF'
+write_file "$BASE/ansible/README.md" <<'EOF2'
 # Ansible
 
 Terraform renders the inventory to:
@@ -847,13 +876,13 @@ Run:
 ansible all -m ping
 ansible-playbook playbooks/site.yml
 ```
-EOF
+EOF2
 
 # -----------------------------------------------------------------------------
 # Ansible roles
 # -----------------------------------------------------------------------------
 make_role_tree "common"
-write_file "$BASE/ansible/roles/common/tasks/main.yml" <<'EOF'
+write_file "$BASE/ansible/roles/common/tasks/main.yml" <<'EOF2'
 ---
 - name: Update apt cache
   ansible.builtin.apt:
@@ -885,28 +914,28 @@ write_file "$BASE/ansible/roles/common/tasks/main.yml" <<'EOF'
     state: started
     enabled: true
   ignore_errors: true
-EOF
+EOF2
 
-write_file "$BASE/ansible/roles/common/handlers/main.yml" <<'EOF'
+write_file "$BASE/ansible/roles/common/handlers/main.yml" <<'EOF2'
 ---
-EOF
-write_file "$BASE/ansible/roles/common/defaults/main.yml" <<'EOF'
+EOF2
+write_file "$BASE/ansible/roles/common/defaults/main.yml" <<'EOF2'
 ---
-EOF
-write_file "$BASE/ansible/roles/common/vars/main.yml" <<'EOF'
+EOF2
+write_file "$BASE/ansible/roles/common/vars/main.yml" <<'EOF2'
 ---
-EOF
-write_file "$BASE/ansible/roles/common/meta/main.yml" <<'EOF'
+EOF2
+write_file "$BASE/ansible/roles/common/meta/main.yml" <<'EOF2'
 ---
 galaxy_info:
   author: Richard Wrightwells
   description: Common baseline role
   min_ansible_version: "2.14"
 dependencies: []
-EOF
+EOF2
 
 make_role_tree "docker"
-write_file "$BASE/ansible/roles/docker/tasks/main.yml" <<'EOF'
+write_file "$BASE/ansible/roles/docker/tasks/main.yml" <<'EOF2'
 ---
 - name: Install Docker packages
   ansible.builtin.apt:
@@ -930,25 +959,25 @@ write_file "$BASE/ansible/roles/docker/tasks/main.yml" <<'EOF'
     owner: root
     group: root
     mode: "0755"
-EOF
+EOF2
 
-write_file "$BASE/ansible/roles/docker/handlers/main.yml" <<'EOF'
+write_file "$BASE/ansible/roles/docker/handlers/main.yml" <<'EOF2'
 ---
-EOF
-write_file "$BASE/ansible/roles/docker/defaults/main.yml" <<'EOF'
+EOF2
+write_file "$BASE/ansible/roles/docker/defaults/main.yml" <<'EOF2'
 ---
-EOF
-write_file "$BASE/ansible/roles/docker/vars/main.yml" <<'EOF'
+EOF2
+write_file "$BASE/ansible/roles/docker/vars/main.yml" <<'EOF2'
 ---
-EOF
-write_file "$BASE/ansible/roles/docker/meta/main.yml" <<'EOF'
+EOF2
+write_file "$BASE/ansible/roles/docker/meta/main.yml" <<'EOF2'
 ---
 galaxy_info:
   author: Richard Wrightwells
   description: Install Docker engine
   min_ansible_version: "2.14"
 dependencies: []
-EOF
+EOF2
 
 make_compose_role() {
   local role="$1"
@@ -1001,49 +1030,49 @@ make_compose_role() {
     done
   } > "$BASE/ansible/roles/$role/tasks/main.yml"
 
-  write_file "$BASE/ansible/roles/$role/handlers/main.yml" <<'EOF'
+  write_file "$BASE/ansible/roles/$role/handlers/main.yml" <<'EOF2'
 ---
-EOF
-  write_file "$BASE/ansible/roles/$role/defaults/main.yml" <<'EOF'
+EOF2
+  write_file "$BASE/ansible/roles/$role/defaults/main.yml" <<'EOF2'
 ---
-EOF
-  write_file "$BASE/ansible/roles/$role/vars/main.yml" <<'EOF'
+EOF2
+  write_file "$BASE/ansible/roles/$role/vars/main.yml" <<'EOF2'
 ---
-EOF
-  write_file "$BASE/ansible/roles/$role/meta/main.yml" <<EOF
+EOF2
+  write_file "$BASE/ansible/roles/$role/meta/main.yml" <<EOF2
 ---
 galaxy_info:
   author: Richard Wrightwells
   description: Configure host role $role
   min_ansible_version: "2.14"
 dependencies: []
-EOF
+EOF2
 }
 
 make_role_tree "vm100-pfsense"
-write_file "$BASE/ansible/roles/vm100-pfsense/tasks/main.yml" <<'EOF'
+write_file "$BASE/ansible/roles/vm100-pfsense/tasks/main.yml" <<'EOF2'
 ---
 - name: pfSense placeholder
   ansible.builtin.debug:
     msg: "pfSense is usually managed from pfSense itself or via API later."
-EOF
-write_file "$BASE/ansible/roles/vm100-pfsense/handlers/main.yml" <<'EOF'
+EOF2
+write_file "$BASE/ansible/roles/vm100-pfsense/handlers/main.yml" <<'EOF2'
 ---
-EOF
-write_file "$BASE/ansible/roles/vm100-pfsense/defaults/main.yml" <<'EOF'
+EOF2
+write_file "$BASE/ansible/roles/vm100-pfsense/defaults/main.yml" <<'EOF2'
 ---
-EOF
-write_file "$BASE/ansible/roles/vm100-pfsense/vars/main.yml" <<'EOF'
+EOF2
+write_file "$BASE/ansible/roles/vm100-pfsense/vars/main.yml" <<'EOF2'
 ---
-EOF
-write_file "$BASE/ansible/roles/vm100-pfsense/meta/main.yml" <<'EOF'
+EOF2
+write_file "$BASE/ansible/roles/vm100-pfsense/meta/main.yml" <<'EOF2'
 ---
 galaxy_info:
   author: Richard Wrightwells
   description: pfSense placeholder role
   min_ansible_version: "2.14"
 dependencies: []
-EOF
+EOF2
 
 make_compose_role "vm210-ai-gpu" "frigate" "home-assistant" "ai-models"
 make_compose_role "lxc066-docker-arr" "filebrowser" "jellyseerr" "aurral" "arr-stack"
@@ -1065,7 +1094,7 @@ make_compose() {
 
   mkdir -p "$BASE/ansible/files/compose/$rel"
 
-  write_file "$BASE/ansible/files/compose/$rel/docker-compose.yml" <<EOF
+  write_file "$BASE/ansible/files/compose/$rel/docker-compose.yml" <<EOF2
 services:
   ${service}:
     image: ${image}
@@ -1075,46 +1104,49 @@ services:
       - TZ=Europe/London
     ${ports}
     ${volumes}
-EOF
+EOF2
 
-  write_file "$BASE/ansible/files/compose/$rel/.env.example" <<'EOF'
+  write_file "$BASE/ansible/files/compose/$rel/.env.example" <<'EOF2'
 PUID=1000
 PGID=1000
 TZ=Europe/London
-EOF
+EOF2
 }
 
 make_compose "vm210-ai-gpu/frigate" "frigate" "ghcr.io/blakeblackshear/frigate:stable" \
 'ports:
       - "5000:5000"' \
 'volumes:
-      - ./config:/config
+      - /mnt/appdata/configs/frigate:/config
+      - /mnt/ai_cache/frigate_recordings:/media/frigate
       - /etc/localtime:/etc/localtime:ro'
 
 make_compose "vm210-ai-gpu/home-assistant" "homeassistant" "ghcr.io/home-assistant/home-assistant:stable" \
 'ports:
       - "8123:8123"' \
 'volumes:
-      - ./config:/config
+      - /mnt/appdata/configs/home-assistant:/config
       - /etc/localtime:/etc/localtime:ro'
 
 make_compose "vm210-ai-gpu/ai-models" "ollama" "ollama/ollama:latest" \
 'ports:
       - "11434:11434"' \
 'volumes:
-      - ./data:/root/.ollama'
+      - /mnt/ai_models:/root/.ollama/models
+      - /mnt/ai_cache/ollama:/root/.ollama'
 
 make_compose "lxc200-docker-services/immich" "immich" "ghcr.io/immich-app/immich-server:release" \
 'ports:
       - "2283:2283"' \
 'volumes:
-      - ./data:/usr/src/app/upload'
+      - /mnt/appdata/docker_volumes/immich:/usr/src/app/upload
+      - /mnt/media_pool/photos:/external'
 
 make_compose "lxc200-docker-services/owncloud" "owncloud" "owncloud/server:latest" \
 'ports:
       - "8080:8080"' \
 'volumes:
-      - ./files:/mnt/data'
+      - /mnt/appdata/docker_volumes/owncloud:/mnt/data'
 
 make_compose "lxc200-docker-services/syncthing" "syncthing" "lscr.io/linuxserver/syncthing:latest" \
 'ports:
@@ -1123,43 +1155,44 @@ make_compose "lxc200-docker-services/syncthing" "syncthing" "lscr.io/linuxserver
       - "22000:22000/udp"
       - "21027:21027/udp"' \
 'volumes:
-      - ./config:/config
-      - ./data:/data'
+      - /mnt/appdata/docker_volumes/syncthing/config:/config
+      - /mnt/appdata/syncthing_sync:/data'
 
 make_compose "lxc230-docker-media/plex" "plex" "lscr.io/linuxserver/plex:latest" \
 'ports:
       - "32400:32400"' \
 'volumes:
-      - ./config:/config
-      - /media:/media'
+      - /mnt/appdata/docker_volumes/plex:/config
+      - /mnt/media_pool:/media'
 
 make_compose "lxc230-docker-media/jellyfin" "jellyfin" "lscr.io/linuxserver/jellyfin:latest" \
 'ports:
       - "8096:8096"' \
 'volumes:
-      - ./config:/config
-      - /media:/media'
+      - /mnt/appdata/docker_volumes/jellyfin:/config
+      - /mnt/media_pool:/media'
 
 make_compose "lxc066-docker-arr/filebrowser" "filebrowser" "filebrowser/filebrowser:latest" \
 'ports:
       - "8081:80"' \
 'volumes:
-      - ./data:/srv
-      - ./db:/database'
+      - /mnt/media_pool:/srv
+      - /mnt/appdata/docker_volumes/filebrowser/database:/database'
 
 make_compose "lxc066-docker-arr/jellyseerr" "jellyseerr" "fallenbagel/jellyseerr:latest" \
 'ports:
       - "5055:5055"' \
 'volumes:
-      - ./config:/app/config'
+      - /mnt/appdata/docker_volumes/jellyseerr:/app/config'
 
 make_compose "lxc066-docker-arr/aurral" "aurral" "ghcr.io/lklynet/aurral:latest" \
 'ports:
       - "3000:3000"' \
 'volumes:
-      - ./data:/app/backend/data'
+      - /mnt/appdata/docker_volumes/aurral:/app/backend/data
+      - /mnt/media_pool/torrents:/app/downloads'
 
-write_file "$BASE/ansible/files/compose/lxc066-docker-arr/arr-stack/docker-compose.yml" <<'EOF'
+write_file "$BASE/ansible/files/compose/lxc066-docker-arr/arr-stack/docker-compose.yml" <<'EOF2'
 services:
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -1170,7 +1203,7 @@ services:
     environment:
       - TZ=Europe/London
     volumes:
-      - ./prowlarr:/config
+      - /mnt/appdata/docker_volumes/prowlarr:/config
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
@@ -1181,8 +1214,8 @@ services:
     environment:
       - TZ=Europe/London
     volumes:
-      - ./sonarr:/config
-      - /media:/media
+      - /mnt/appdata/docker_volumes/sonarr:/config
+      - /mnt/media_pool:/media
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -1193,8 +1226,8 @@ services:
     environment:
       - TZ=Europe/London
     volumes:
-      - ./radarr:/config
-      - /media:/media
+      - /mnt/appdata/docker_volumes/radarr:/config
+      - /mnt/media_pool:/media
 
   lidarr:
     image: lscr.io/linuxserver/lidarr:latest
@@ -1205,8 +1238,8 @@ services:
     environment:
       - TZ=Europe/London
     volumes:
-      - ./lidarr:/config
-      - /media:/media
+      - /mnt/appdata/docker_volumes/lidarr:/config
+      - /mnt/media_pool:/media
 
   readarr:
     image: lscr.io/linuxserver/readarr:latest
@@ -1217,8 +1250,8 @@ services:
     environment:
       - TZ=Europe/London
     volumes:
-      - ./readarr:/config
-      - /media:/media
+      - /mnt/appdata/docker_volumes/readarr:/config
+      - /mnt/media_pool:/media
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -1231,182 +1264,182 @@ services:
     environment:
       - TZ=Europe/London
     volumes:
-      - ./qbittorrent:/config
-      - /media/torrents:/downloads
-EOF
+      - /mnt/appdata/docker_volumes/qbittorrent:/config
+      - /mnt/media_pool/torrents:/downloads
+EOF2
 
-write_file "$BASE/ansible/files/compose/lxc066-docker-arr/arr-stack/.env.example" <<'EOF'
+write_file "$BASE/ansible/files/compose/lxc066-docker-arr/arr-stack/.env.example" <<'EOF2'
 PUID=1000
 PGID=1000
 TZ=Europe/London
-EOF
+EOF2
 
 make_compose "lxc220-docker-apps/grafana" "grafana" "grafana/grafana:latest" \
 'ports:
       - "3001:3000"' \
 'volumes:
-      - ./data:/var/lib/grafana'
+      - /mnt/appdata/docker_volumes/grafana:/var/lib/grafana'
 
 make_compose "lxc220-docker-apps/influxdb" "influxdb" "influxdb:2" \
 'ports:
       - "8086:8086"' \
 'volumes:
-      - ./data:/var/lib/influxdb2'
+      - /mnt/appdata/docker_volumes/influxdb:/var/lib/influxdb2'
 
 make_compose "lxc220-docker-apps/node-red" "nodered" "nodered/node-red:latest" \
 'ports:
       - "1880:1880"' \
 'volumes:
-      - ./data:/data'
+      - /mnt/appdata/configs/node-red:/data'
 
 make_compose "lxc220-docker-apps/teslamate" "teslamate" "teslamate/teslamate:latest" \
 'ports:
       - "4000:4000"' \
 'volumes:
-      - ./data:/opt/app/data'
+      - /mnt/appdata/docker_volumes/teslamate:/opt/app/data'
 
 make_compose "lxc220-docker-apps/homebridge" "homebridge" "homebridge/homebridge:latest" \
 'ports:
       - "8581:8581"' \
 'volumes:
-      - ./data:/homebridge'
+      - /mnt/appdata/configs/homebridge:/homebridge'
 
 make_compose "lxc220-docker-apps/calibre" "calibre" "lscr.io/linuxserver/calibre:latest" \
 'ports:
       - "8083:8080"
       - "8181:8181"' \
 'volumes:
-      - ./config:/config'
+      - /mnt/appdata/docker_volumes/calibre:/config'
 
 make_compose "lxc220-docker-apps/calibre-web" "calibre-web" "lscr.io/linuxserver/calibre-web:latest" \
 'ports:
       - "8084:8083"' \
 'volumes:
-      - ./config:/config
-      - ./books:/books'
+      - /mnt/appdata/docker_volumes/calibre-web:/config
+      - /mnt/media_pool/books:/books'
 
 make_compose "lxc220-docker-apps/grist" "grist" "gristlabs/grist:latest" \
 'ports:
       - "8484:8484"' \
 'volumes:
-      - ./data:/persist'
+      - /mnt/appdata/docker_volumes/grist:/persist'
 
 make_compose "lxc220-docker-apps/blinko" "blinko" "blinko/blinko:latest" \
 'ports:
       - "1111:1111"' \
 'volumes:
-      - ./data:/app/data'
+      - /mnt/appdata/docker_volumes/blinko:/app/data'
 
 make_compose "lxc220-docker-apps/finance" "finance" "fireflyiii/core:latest" \
 'ports:
       - "8085:8080"' \
 'volumes:
-      - ./data:/var/www/html/storage/upload'
+      - /mnt/appdata/docker_volumes/firefly:/var/www/html/storage/upload'
 
 make_compose "lxc240-docker-external/nginx" "nginx" "nginx:latest" \
 'ports:
       - "80:80"
       - "443:443"' \
 'volumes:
-      - ./conf:/etc/nginx/conf.d
-      - ./html:/usr/share/nginx/html'
+      - /mnt/appdata/configs/nginx:/etc/nginx/conf.d
+      - /mnt/appdata/docker_volumes/nginx/html:/usr/share/nginx/html'
 
 make_compose "lxc240-docker-external/tailscale-peer-relay" "tailscale" "tailscale/tailscale:latest" \
 'ports:
       - "41641:41641/udp"' \
 'volumes:
-      - ./state:/var/lib/tailscale'
+      - /mnt/appdata/docker_volumes/tailscale:/var/lib/tailscale'
 
 make_compose "lxc240-docker-external/jellyswarm" "jellyswarm" "ghcr.io/jellyswarm/jellyswarm:latest" \
 'ports:
       - "5056:5055"' \
 'volumes:
-      - ./config:/config'
+      - /mnt/appdata/docker_volumes/jellyswarm:/config'
 
 make_compose "lxc240-docker-external/ghost" "ghost" "ghost:latest" \
 'ports:
       - "2368:2368"' \
 'volumes:
-      - ./data:/var/lib/ghost/content'
+      - /mnt/appdata/docker_volumes/ghost:/var/lib/ghost/content'
 
 make_compose "lxc240-docker-external/dnns" "dnns" "ghcr.io/n00bcodr/dnns:latest" \
 'ports:
       - "8090:8080"' \
 'volumes:
-      - ./data:/app/data'
+      - /mnt/appdata/docker_volumes/dnns:/app/data'
 
 make_compose "lxc240-docker-external/kutt" "kutt" "kutt/kutt:latest" \
 'ports:
       - "3002:3000"' \
 'volumes:
-      - ./data:/kutt'
+      - /mnt/appdata/docker_volumes/kutt:/kutt'
 
 make_compose "lxc240-docker-external/wordpress" "wordpress" "wordpress:latest" \
 'ports:
       - "8088:80"' \
 'volumes:
-      - ./html:/var/www/html'
+      - /mnt/appdata/docker_volumes/wordpress:/var/www/html'
 
 make_compose "lxc240-docker-external/walletpage" "walletpage" "nginx:latest" \
 'ports:
       - "8089:80"' \
 'volumes:
-      - ./html:/usr/share/nginx/html'
+      - /mnt/appdata/docker_volumes/walletpage:/usr/share/nginx/html'
 
 make_compose "lxc250-infra/mqtt" "mosquitto" "eclipse-mosquitto:latest" \
 'ports:
       - "1883:1883"
       - "9001:9001"' \
 'volumes:
-      - ./config:/mosquitto/config
-      - ./data:/mosquitto/data
-      - ./log:/mosquitto/log'
+      - /mnt/appdata/docker_volumes/mosquitto/config:/mosquitto/config
+      - /mnt/appdata/docker_volumes/mosquitto/data:/mosquitto/data
+      - /mnt/appdata/docker_volumes/mosquitto/log:/mosquitto/log'
 
 make_compose "lxc250-infra/homebridge" "homebridge" "homebridge/homebridge:latest" \
 'ports:
       - "8582:8581"' \
 'volumes:
-      - ./data:/homebridge'
+      - /mnt/appdata/configs/homebridge:/homebridge'
 
 make_compose "lxc250-infra/nginx" "nginx" "nginx:latest" \
 'ports:
       - "8087:80"' \
 'volumes:
-      - ./conf:/etc/nginx/conf.d
-      - ./html:/usr/share/nginx/html'
+      - /mnt/appdata/configs/nginx-infra:/etc/nginx/conf.d
+      - /mnt/appdata/docker_volumes/nginx-infra/html:/usr/share/nginx/html'
 
 # -----------------------------------------------------------------------------
 # Helper scripts
 # -----------------------------------------------------------------------------
-write_file "$BASE/scripts/terraform-init.sh" <<'EOF'
+write_file "$BASE/scripts/terraform-init.sh" <<'EOF2'
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/../terraform"
 terraform init
-EOF
+EOF2
 
-write_file "$BASE/scripts/terraform-plan.sh" <<'EOF'
+write_file "$BASE/scripts/terraform-plan.sh" <<'EOF2'
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/../terraform"
 terraform plan
-EOF
+EOF2
 
-write_file "$BASE/scripts/terraform-apply.sh" <<'EOF'
+write_file "$BASE/scripts/terraform-apply.sh" <<'EOF2'
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/../terraform"
 terraform apply
-EOF
+EOF2
 
-write_file "$BASE/scripts/ansible-ping.sh" <<'EOF'
+write_file "$BASE/scripts/ansible-ping.sh" <<'EOF2'
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/../ansible"
 ansible all -m ping
-EOF
+EOF2
 
-write_file "$BASE/scripts/deploy-all.sh" <<'EOF'
+write_file "$BASE/scripts/deploy-all.sh" <<'EOF2'
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -1416,14 +1449,14 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 (cd "$ROOT/terraform" && terraform apply)
 (cd "$ROOT/ansible" && ansible all -m ping)
 (cd "$ROOT/ansible" && ansible-playbook playbooks/site.yml)
-EOF
+EOF2
 
 chmod +x "$BASE/scripts/"*.sh
 
 # -----------------------------------------------------------------------------
 # Root repo files
 # -----------------------------------------------------------------------------
-write_file "$BASE/README.md" <<'EOF'
+write_file "$BASE/README.md" <<'EOF2'
 # HomeLab
 
 Infrastructure-as-code repository for a Proxmox homelab.
@@ -1438,9 +1471,16 @@ Infrastructure-as-code repository for a Proxmox homelab.
 - LXC230 docker-media
 - LXC240 docker-external
 - LXC250 infra
-EOF
 
-write_file "$BASE/.gitignore" <<'EOF'
+## Storage model
+
+- NVMe 500GB: /mnt/ai_models, /mnt/ai_cache, Frigate recordings, LLM cache
+- SSD 500GB: Proxmox OS, Terraform repo, LXC rootfs, VM root disks, Docker runtime
+- RAID1 2x4TB: /mnt/appdata for config, databases, Docker volumes, Syncthing critical data
+- Media pool 4x12TB: /mnt/media_pool via mergerfs
+EOF2
+
+write_file "$BASE/.gitignore" <<'EOF2'
 **/.terraform/*
 *.tfstate
 *.tfstate.*
@@ -1453,7 +1493,7 @@ crash.log
 .vscode/
 .DS_Store
 Thumbs.db
-EOF
+EOF2
 
 echo
 echo "Done."
@@ -1462,6 +1502,8 @@ echo
 echo "Next steps:"
 echo "1. cp $BASE/terraform/terraform.tfvars.example $BASE/terraform/terraform.tfvars"
 echo "2. Edit the real Proxmox values"
-echo "3. cd $BASE/terraform && terraform init && terraform validate"
-echo "4. terraform plan"
-echo "5. terraform apply"
+echo "3. Ensure Proxmox host paths exist: /mnt/appdata /mnt/media_pool /mnt/ai_models /mnt/ai_cache"
+echo "4. cd $BASE/terraform && terraform init && terraform validate"
+echo "5. terraform plan"
+echo "6. terraform apply"
+
