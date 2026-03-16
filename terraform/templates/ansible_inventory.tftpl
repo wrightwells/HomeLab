@@ -1,14 +1,109 @@
-# terraform/templates/ansible_inventory.tftpl
-# Purpose:
-# - Template for generating ansible/inventories/production/hosts.yml
-#
-# Typical inventory groups:
-# - firewall
-# - ai_gpu
-# - docker_arr
-# - docker_services
-# - docker_apps
-# - docker_media
-# - docker_external
-# - infra
-# - docker_hosts
+all:
+  children:
+    firewall:
+      hosts:
+%{ for _, host in hosts ~}
+%{ if contains(host.groups, "firewall") ~}
+        ${host.name}:
+          ansible_host: ${host.ip}
+          ansible_user: ${host.user}
+          vmid: ${host.vmid}
+          guest_type: ${host.type}
+%{ endif ~}
+%{ endfor ~}
+
+    ai_gpu:
+      hosts:
+%{ for _, host in hosts ~}
+%{ if contains(host.groups, "ai_gpu") ~}
+        ${host.name}:
+          ansible_host: ${host.ip}
+          ansible_user: ${host.user}
+          vmid: ${host.vmid}
+          guest_type: ${host.type}
+%{ endif ~}
+%{ endfor ~}
+
+    docker_arr:
+      hosts:
+%{ for _, host in hosts ~}
+%{ if contains(host.groups, "docker_arr") ~}
+        ${host.name}:
+          ansible_host: ${host.ip}
+          ansible_user: ${host.user}
+          vmid: ${host.vmid}
+          guest_type: ${host.type}
+%{ endif ~}
+%{ endfor ~}
+
+    docker_services:
+      hosts:
+%{ for _, host in hosts ~}
+%{ if contains(host.groups, "docker_services") ~}
+        ${host.name}:
+          ansible_host: ${host.ip}
+          ansible_user: ${host.user}
+          vmid: ${host.vmid}
+          guest_type: ${host.type}
+%{ endif ~}
+%{ endfor ~}
+
+    docker_apps:
+      hosts:
+%{ for _, host in hosts ~}
+%{ if contains(host.groups, "docker_apps") ~}
+        ${host.name}:
+          ansible_host: ${host.ip}
+          ansible_user: ${host.user}
+          vmid: ${host.vmid}
+          guest_type: ${host.type}
+%{ endif ~}
+%{ endfor ~}
+
+    docker_media:
+      hosts:
+%{ for _, host in hosts ~}
+%{ if contains(host.groups, "docker_media") ~}
+        ${host.name}:
+          ansible_host: ${host.ip}
+          ansible_user: ${host.user}
+          vmid: ${host.vmid}
+          guest_type: ${host.type}
+%{ endif ~}
+%{ endfor ~}
+
+    docker_external:
+      hosts:
+%{ for _, host in hosts ~}
+%{ if contains(host.groups, "docker_external") ~}
+        ${host.name}:
+          ansible_host: ${host.ip}
+          ansible_user: ${host.user}
+          vmid: ${host.vmid}
+          guest_type: ${host.type}
+%{ endif ~}
+%{ endfor ~}
+
+    infra:
+      hosts:
+%{ for _, host in hosts ~}
+%{ if contains(host.groups, "infra") ~}
+        ${host.name}:
+          ansible_host: ${host.ip}
+          ansible_user: ${host.user}
+          vmid: ${host.vmid}
+          guest_type: ${host.type}
+%{ endif ~}
+%{ endfor ~}
+
+    docker_hosts:
+      hosts:
+%{ for _, host in hosts ~}
+%{ if contains(host.groups, "docker_hosts") ~}
+        ${host.name}:
+          ansible_host: ${host.ip}
+          ansible_user: ${host.user}
+          vmid: ${host.vmid}
+          guest_type: ${host.type}
+%{ endif ~}
+%{ endfor ~}
