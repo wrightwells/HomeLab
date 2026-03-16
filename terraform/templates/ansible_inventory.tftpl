@@ -1,109 +1,46 @@
 all:
+  vars:
+%{ for k, v in inventory_groups.all.vars ~}
+    ${k}: ${yamlencode(v)}
+%{ endfor ~}
+  hosts:
+%{ for host_key, host in inventory_groups.all.hosts ~}
+    ${host_key}:
+      hostname: ${yamlencode(host.hostname)}
+      ansible_host: ${yamlencode(host.ansible_host)}
+      ansible_user: ${yamlencode(host.ansible_user)}
+      node: ${yamlencode(host.node)}
+      type: ${yamlencode(host.type)}
+%{ if length(host.groups) > 0 ~}
+      host_groups: ${yamlencode(host.groups)}
+%{ endif ~}
+%{ endfor ~}
   children:
-    firewall:
-      hosts:
-%{ for _, host in hosts ~}
-%{ if contains(host.groups, "firewall") ~}
-        ${host.name}:
-          ansible_host: ${host.ip}
-          ansible_user: ${host.user}
-          vmid: ${host.vmid}
-          guest_type: ${host.type}
-%{ endif ~}
-%{ endfor ~}
-
-    ai_gpu:
-      hosts:
-%{ for _, host in hosts ~}
-%{ if contains(host.groups, "ai_gpu") ~}
-        ${host.name}:
-          ansible_host: ${host.ip}
-          ansible_user: ${host.user}
-          vmid: ${host.vmid}
-          guest_type: ${host.type}
-%{ endif ~}
-%{ endfor ~}
-
-    docker_arr:
-      hosts:
-%{ for _, host in hosts ~}
-%{ if contains(host.groups, "docker_arr") ~}
-        ${host.name}:
-          ansible_host: ${host.ip}
-          ansible_user: ${host.user}
-          vmid: ${host.vmid}
-          guest_type: ${host.type}
-%{ endif ~}
-%{ endfor ~}
-
-    docker_services:
-      hosts:
-%{ for _, host in hosts ~}
-%{ if contains(host.groups, "docker_services") ~}
-        ${host.name}:
-          ansible_host: ${host.ip}
-          ansible_user: ${host.user}
-          vmid: ${host.vmid}
-          guest_type: ${host.type}
-%{ endif ~}
-%{ endfor ~}
-
-    docker_apps:
-      hosts:
-%{ for _, host in hosts ~}
-%{ if contains(host.groups, "docker_apps") ~}
-        ${host.name}:
-          ansible_host: ${host.ip}
-          ansible_user: ${host.user}
-          vmid: ${host.vmid}
-          guest_type: ${host.type}
-%{ endif ~}
-%{ endfor ~}
-
-    docker_media:
-      hosts:
-%{ for _, host in hosts ~}
-%{ if contains(host.groups, "docker_media") ~}
-        ${host.name}:
-          ansible_host: ${host.ip}
-          ansible_user: ${host.user}
-          vmid: ${host.vmid}
-          guest_type: ${host.type}
-%{ endif ~}
-%{ endfor ~}
-
-    docker_external:
-      hosts:
-%{ for _, host in hosts ~}
-%{ if contains(host.groups, "docker_external") ~}
-        ${host.name}:
-          ansible_host: ${host.ip}
-          ansible_user: ${host.user}
-          vmid: ${host.vmid}
-          guest_type: ${host.type}
-%{ endif ~}
-%{ endfor ~}
-
-    infra:
-      hosts:
-%{ for _, host in hosts ~}
-%{ if contains(host.groups, "infra") ~}
-        ${host.name}:
-          ansible_host: ${host.ip}
-          ansible_user: ${host.user}
-          vmid: ${host.vmid}
-          guest_type: ${host.type}
-%{ endif ~}
-%{ endfor ~}
-
     docker_hosts:
       hosts:
-%{ for _, host in hosts ~}
+%{ for host_key, host in inventory_groups.all.hosts ~}
 %{ if contains(host.groups, "docker_hosts") ~}
-        ${host.name}:
-          ansible_host: ${host.ip}
-          ansible_user: ${host.user}
-          vmid: ${host.vmid}
-          guest_type: ${host.type}
+        ${host_key}: {}
+%{ endif ~}
+%{ endfor ~}
+    vm_hosts:
+      hosts:
+%{ for host_key, host in inventory_groups.all.hosts ~}
+%{ if contains(host.groups, "vm_hosts") ~}
+        ${host_key}: {}
+%{ endif ~}
+%{ endfor ~}
+    ai:
+      hosts:
+%{ for host_key, host in inventory_groups.all.hosts ~}
+%{ if contains(host.groups, "ai") ~}
+        ${host_key}: {}
+%{ endif ~}
+%{ endfor ~}
+    media:
+      hosts:
+%{ for host_key, host in inventory_groups.all.hosts ~}
+%{ if contains(host.groups, "media") ~}
+        ${host_key}: {}
 %{ endif ~}
 %{ endfor ~}

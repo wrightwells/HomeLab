@@ -1,0 +1,4 @@
+---
+- name: Placeholder Proxmox host role
+  ansible.builtin.debug:
+    msg: "Add Proxmox host-specific tasks here"

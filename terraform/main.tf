@@ -1,161 +1,69 @@
 locals {
-  inventory_hosts = {
-    vm100_pfsense = {
-      name   = "pfsense"
-      type   = "vm"
-      vmid   = 100
-      ip     = "dhcp"
-      groups = ["firewall"]
-      user   = "admin"
+  lxc_inventory = {
+    for name, cfg in var.lxc_definitions : name => {
+      hostname = cfg.hostname
+      ansible_host = split("/", cfg.ip_address)[0]
+      ansible_user = "root"
+      node         = var.target_node
+      type         = "lxc"
+      groups       = cfg.ansible_groups
     }
+  }
 
-    vm210_ai_gpu = {
-      name   = "ai-gpu"
-      type   = "vm"
-      vmid   = 210
-      ip     = "10.10.66.210"
-      groups = ["ai_gpu", "docker_hosts"]
-      user   = var.ansible_user
+  vm_inventory = {
+    for name, cfg in var.vm_definitions : name => {
+      hostname = cfg.name
+      ansible_host = split("/", cfg.ip_address)[0]
+      ansible_user = "root"
+      node         = var.target_node
+      type         = "vm"
+      groups       = cfg.ansible_groups
     }
+  }
 
-    lxc066_docker_arr = {
-      name   = "docker-arr"
-      type   = "lxc"
-      vmid   = 66
-      ip     = "10.10.66.66"
-      groups = ["docker_arr", "docker_hosts"]
-      user   = "root"
-    }
+  inventory_hosts = merge(local.lxc_inventory, local.vm_inventory)
 
-    lxc200_docker_services = {
-      name   = "docker-services"
-      type   = "lxc"
-      vmid   = 200
-      ip     = "10.10.66.200"
-      groups = ["docker_services", "docker_hosts"]
-      user   = "root"
-    }
-
-    lxc220_docker_apps = {
-      name   = "docker-apps"
-      type   = "lxc"
-      vmid   = 220
-      ip     = "10.10.66.220"
-      groups = ["docker_apps", "docker_hosts"]
-      user   = "root"
-    }
-
-    lxc230_docker_media = {
-      name   = "docker-media"
-      type   = "lxc"
-      vmid   = 230
-      ip     = "10.10.66.230"
-      groups = ["docker_media", "docker_hosts"]
-      user   = "root"
-    }
-
-    lxc240_docker_external = {
-      name   = "docker-external"
-      type   = "lxc"
-      vmid   = 240
-      ip     = "10.10.66.240"
-      groups = ["docker_external", "docker_hosts"]
-      user   = "root"
-    }
-
-    lxc250_infra = {
-      name   = "infra"
-      type   = "lxc"
-      vmid   = 250
-      ip     = "10.10.66.250"
-      groups = ["infra", "docker_hosts"]
-      user   = "root"
+  inventory_groups = {
+    all = {
+      vars = {
+        ansible_python_interpreter = "/usr/bin/python3"
+      }
+      hosts = local.inventory_hosts
     }
   }
 }
 
-module "vm100_pfsense" {
-  source       = "./modules/vm100-pfsense"
-  proxmox_node = var.proxmox_node
-  vm_storage   = var.vm_storage
-  vm_bridge    = var.vm_bridge
-  vm_vlan      = var.vm_vlan
+module "lxc" {
+  source   = "./modules/lxc_container"
+  for_each = var.lxc_definitions
+
+  target_node  = var.target_node
+  default_bridge = var.default_bridge
+  default_gateway = var.default_gateway
+  default_storage = var.default_storage
+
+  config = each.value
 }
 
-module "vm210_ai_gpu" {
-  source            = "./modules/vm210-ai-gpu"
-  proxmox_node      = var.proxmox_node
-  vm_storage        = var.vm_storage
-  cloudinit_storage = var.cloudinit_storage
-  vm_bridge         = var.vm_bridge
-  vm_vlan           = var.vm_vlan
-  ssh_public_key    = var.ssh_public_key
-  ansible_user      = var.ansible_user
-}
+module "vm" {
+  source   = "./modules/vm_qemu"
+  for_each = var.vm_definitions
 
-module "lxc066_docker_arr" {
-  source              = "./modules/lxc066-docker-arr"
-  proxmox_node        = var.proxmox_node
-  lxc_storage         = var.lxc_storage
-  vm_bridge           = var.vm_bridge
-  vm_vlan             = var.vm_vlan
-  ssh_public_key      = var.ssh_public_key
-  debian_lxc_template = var.debian_lxc_template
-}
+  target_node  = var.target_node
+  default_bridge = var.default_bridge
+  default_gateway = var.default_gateway
+  default_storage = var.default_storage
 
-module "lxc200_docker_services" {
-  source              = "./modules/lxc200-docker-services"
-  proxmox_node        = var.proxmox_node
-  lxc_storage         = var.lxc_storage
-  vm_bridge           = var.vm_bridge
-  vm_vlan             = var.vm_vlan
-  ssh_public_key      = var.ssh_public_key
-  debian_lxc_template = var.debian_lxc_template
-}
-
-module "lxc220_docker_apps" {
-  source              = "./modules/lxc220-docker-apps"
-  proxmox_node        = var.proxmox_node
-  lxc_storage         = var.lxc_storage
-  vm_bridge           = var.vm_bridge
-  vm_vlan             = var.vm_vlan
-  ssh_public_key      = var.ssh_public_key
-  debian_lxc_template = var.debian_lxc_template
-}
-
-module "lxc230_docker_media" {
-  source              = "./modules/lxc230-docker-media"
-  proxmox_node        = var.proxmox_node
-  lxc_storage         = var.lxc_storage
-  vm_bridge           = var.vm_bridge
-  vm_vlan             = var.vm_vlan
-  ssh_public_key      = var.ssh_public_key
-  debian_lxc_template = var.debian_lxc_template
-}
-
-module "lxc240_docker_external" {
-  source              = "./modules/lxc240-docker-external"
-  proxmox_node        = var.proxmox_node
-  lxc_storage         = var.lxc_storage
-  vm_bridge           = var.vm_bridge
-  vm_vlan             = var.vm_vlan
-  ssh_public_key      = var.ssh_public_key
-  debian_lxc_template = var.debian_lxc_template
-}
-
-module "lxc250_infra" {
-  source              = "./modules/lxc250-infra"
-  proxmox_node        = var.proxmox_node
-  lxc_storage         = var.lxc_storage
-  vm_bridge           = var.vm_bridge
-  vm_vlan             = var.vm_vlan
-  ssh_public_key      = var.ssh_public_key
-  debian_lxc_template = var.debian_lxc_template
+  config = each.value
 }
 
 resource "local_file" "ansible_inventory" {
   filename = "${path.module}/../ansible/inventories/production/hosts.yml"
   content = templatefile("${path.module}/templates/ansible_inventory.tftpl", {
-    hosts = local.inventory_hosts
+    inventory_groups = local.inventory_groups
   })
+}
+
+output "generated_inventory" {
+  value = local_file.ansible_inventory.filename
 }

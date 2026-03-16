@@ -1,0 +1,14 @@
+---
+- name: Install Docker dependencies
+  ansible.builtin.package:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+
+- name: Ensure Docker compose root exists
+  ansible.builtin.file:
+    path: /opt/stacks
+    state: directory
+    mode: "0755"
