@@ -1,15 +1,12 @@
 # Ansible
-#
-# This directory should contain:
-# - inventory
-# - group_vars
-# - host_vars
-# - playbooks
-# - roles
-# - compose files for deployment
-#
-# Intended flow:
-# 1. Terraform provisions hosts
-# 2. Terraform renders Ansible inventory
-# 3. Ansible configures hosts
-# 4. Compose or service definitions are deployed
+
+Terraform renders the inventory to:
+
+`inventories/production/hosts.yml`
+
+Run:
+
+```bash
+ansible all -m ping
+ansible-playbook playbooks/site.yml
+```

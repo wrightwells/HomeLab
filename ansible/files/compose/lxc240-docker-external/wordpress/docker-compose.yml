@@ -1,17 +1,11 @@
-# ansible/files/compose/lxc240-docker-external/wordpress/docker-compose.yml
-# Compose stub for wordpress
-#
-# Replace with a real compose file.
-#
-# Example:
-# services:
-#   wordpress:
-#     image: example/wordpress:latest
-#     container_name: wordpress
-#     restart: unless-stopped
-#     environment:
-#       - TZ=Europe/London
-#     volumes:
-#       - ./data:/data
-#     ports:
-#       - "1234:1234"
+services:
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "8088:80"
+    volumes:
+      - ./html:/var/www/html

@@ -1,5 +1,1 @@
 ---
-# ansible/roles/lxc200-docker-services/vars/main.yml
-# Higher-priority role variables for lxc200-docker-services.
-#
-# Use this for fixed internal values that normally should not be overridden.

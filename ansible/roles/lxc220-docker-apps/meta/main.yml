@@ -1,6 +1,6 @@
 ---
 galaxy_info:
   author: Richard Wrightwells
-  description: Configure docker-apps LXC host
+  description: Configure host role lxc220-docker-apps
   min_ansible_version: "2.14"
 dependencies: []

@@ -1,17 +1,11 @@
-# ansible/files/compose/lxc220-docker-apps/grafana/docker-compose.yml
-# Compose stub for grafana
-#
-# Replace with a real compose file.
-#
-# Example:
-# services:
-#   grafana:
-#     image: example/grafana:latest
-#     container_name: grafana
-#     restart: unless-stopped
-#     environment:
-#       - TZ=Europe/London
-#     volumes:
-#       - ./data:/data
-#     ports:
-#       - "1234:1234"
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./data:/var/lib/grafana

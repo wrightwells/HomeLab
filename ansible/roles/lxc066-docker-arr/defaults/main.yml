@@ -1,7 +1,1 @@
 ---
-# ansible/roles/lxc066-docker-arr/defaults/main.yml
-# Lowest-priority defaults for the lxc066-docker-arr role.
-#
-# Example:
-# lxc066_docker_arr_enabled: true
-# lxc066_docker_arr_base_dir: /opt/lxc066-docker-arr

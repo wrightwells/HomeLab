@@ -1,7 +1,1 @@
 ---
-# ansible/roles/vm100-pfsense/defaults/main.yml
-# Lowest-priority defaults for the vm100-pfsense role.
-#
-# Example:
-# vm100_pfsense_enabled: true
-# vm100_pfsense_base_dir: /opt/vm100-pfsense

@@ -1,17 +1,11 @@
-# ansible/files/compose/lxc220-docker-apps/influxdb/docker-compose.yml
-# Compose stub for influxdb
-#
-# Replace with a real compose file.
-#
-# Example:
-# services:
-#   influxdb:
-#     image: example/influxdb:latest
-#     container_name: influxdb
-#     restart: unless-stopped
-#     environment:
-#       - TZ=Europe/London
-#     volumes:
-#       - ./data:/data
-#     ports:
-#       - "1234:1234"
+services:
+  influxdb:
+    image: influxdb:2
+    container_name: influxdb
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./data:/var/lib/influxdb2

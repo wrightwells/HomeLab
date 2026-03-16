@@ -1,17 +1,11 @@
-# ansible/files/compose/vm210-ai-gpu/ai-models/docker-compose.yml
-# Compose stub for ai-models
-#
-# Replace with a real compose file.
-#
-# Example:
-# services:
-#   ai-models:
-#     image: example/ai-models:latest
-#     container_name: ai-models
-#     restart: unless-stopped
-#     environment:
-#       - TZ=Europe/London
-#     volumes:
-#       - ./data:/data
-#     ports:
-#       - "1234:1234"
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./data:/root/.ollama

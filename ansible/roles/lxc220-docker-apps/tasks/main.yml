@@ -1,11 +1,62 @@
 ---
-# ansible/roles/lxc220-docker-apps/tasks/main.yml
-# Configure the docker-apps host.
-#
-# Typical tasks:
-# - create app directories
-# - deploy compose files for:
-#   Grafana, InfluxDB, Node-RED, Teslamate, Homebridge,
-#   Calibre, Calibre-Web, Grist, Blinko, finance apps
-# - create storage paths
-# - start services
+- name: Ensure compose root exists
+  ansible.builtin.file:
+    path: "{{ docker_compose_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Ensure application directories exist
+  ansible.builtin.file:
+    path: "{{ docker_compose_root }}/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - grafana
+    - influxdb
+    - node-red
+    - teslamate
+    - homebridge
+    - calibre
+    - calibre-web
+    - grist
+    - blinko
+    - finance
+
+- name: Copy compose files
+  ansible.builtin.copy:
+    src: "{{ item }}/"
+    dest: "{{ docker_compose_root }}/{{ item }}/"
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+    - grafana
+    - influxdb
+    - node-red
+    - teslamate
+    - homebridge
+    - calibre
+    - calibre-web
+    - grist
+    - blinko
+    - finance
+
+- name: Start compose stacks
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker_compose_root }}/{{ item }}"
+    state: present
+  loop:
+    - grafana
+    - influxdb
+    - node-red
+    - teslamate
+    - homebridge
+    - calibre
+    - calibre-web
+    - grist
+    - blinko
+    - finance

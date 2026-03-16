@@ -1,16 +1,23 @@
 ---
-# ansible/roles/docker/tasks/main.yml
-# Role purpose:
-# Install and configure Docker engine and compose plugin
-#
-# Add tasks here to:
-# - install packages
-# - create directories
-# - copy templates or compose files
-# - configure services
-# - enable/start services
-#
-# Example:
-# - name: Placeholder task for docker
-#   ansible.builtin.debug:
-#     msg: "Implement docker role tasks here"
+- name: Install Docker packages
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose-plugin
+      - python3-docker
+    state: present
+    update_cache: true
+
+- name: Start Docker
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Ensure compose root exists
+  ansible.builtin.file:
+    path: "{{ docker_compose_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"

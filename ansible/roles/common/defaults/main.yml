@@ -1,7 +1,1 @@
 ---
-# ansible/roles/common/defaults/main.yml
-# Lowest-priority defaults for the common role.
-#
-# Example:
-# common_enabled: true
-# common_base_dir: /opt/common

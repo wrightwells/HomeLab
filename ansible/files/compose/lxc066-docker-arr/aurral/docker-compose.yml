@@ -1,17 +1,11 @@
-# ansible/files/compose/lxc066-docker-arr/aurral/docker-compose.yml
-# Compose stub for aurral
-#
-# Replace with a real compose file.
-#
-# Example:
-# services:
-#   aurral:
-#     image: example/aurral:latest
-#     container_name: aurral
-#     restart: unless-stopped
-#     environment:
-#       - TZ=Europe/London
-#     volumes:
-#       - ./data:/data
-#     ports:
-#       - "1234:1234"
+services:
+  aurral:
+    image: ghcr.io/lklynet/aurral:latest
+    container_name: aurral
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/backend/data

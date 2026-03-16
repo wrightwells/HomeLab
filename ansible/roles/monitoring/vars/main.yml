@@ -1,5 +1,0 @@
----
-# ansible/roles/monitoring/vars/main.yml
-# Higher-priority role variables for monitoring.
-#
-# Use this for fixed internal values that normally should not be overridden.

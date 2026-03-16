@@ -1,17 +1,11 @@
-# ansible/files/compose/lxc200-docker-services/immich/docker-compose.yml
-# Compose stub for immich
-#
-# Replace with a real compose file.
-#
-# Example:
-# services:
-#   immich:
-#     image: example/immich:latest
-#     container_name: immich
-#     restart: unless-stopped
-#     environment:
-#       - TZ=Europe/London
-#     volumes:
-#       - ./data:/data
-#     ports:
-#       - "1234:1234"
+services:
+  immich:
+    image: ghcr.io/immich-app/immich-server:release
+    container_name: immich
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "2283:2283"
+    volumes:
+      - ./data:/usr/src/app/upload

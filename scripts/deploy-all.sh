@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Full helper flow:
-# 1. terraform init
-# 2. terraform apply
-# 3. ansible ping
-# 4. ansible-playbook playbooks/site.yml
-
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 (cd "$ROOT/terraform" && terraform init)

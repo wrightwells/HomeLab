@@ -1,5 +1,1 @@
 ---
-# ansible/roles/lxc240-docker-external/vars/main.yml
-# Higher-priority role variables for lxc240-docker-external.
-#
-# Use this for fixed internal values that normally should not be overridden.

@@ -1,5 +1,1 @@
 ---
-# ansible/roles/lxc066-docker-arr/vars/main.yml
-# Higher-priority role variables for lxc066-docker-arr.
-#
-# Use this for fixed internal values that normally should not be overridden.

@@ -1,17 +1,12 @@
-# ansible/files/compose/vm210-ai-gpu/home-assistant/docker-compose.yml
-# Compose stub for home-assistant
-#
-# Replace with a real compose file.
-#
-# Example:
-# services:
-#   home-assistant:
-#     image: example/home-assistant:latest
-#     container_name: home-assistant
-#     restart: unless-stopped
-#     environment:
-#       - TZ=Europe/London
-#     volumes:
-#       - ./data:/data
-#     ports:
-#       - "1234:1234"
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "8123:8123"
+    volumes:
+      - ./config:/config
+      - /etc/localtime:/etc/localtime:ro

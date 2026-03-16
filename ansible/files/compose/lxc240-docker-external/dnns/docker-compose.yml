@@ -1,17 +1,11 @@
-# ansible/files/compose/lxc240-docker-external/dnns/docker-compose.yml
-# Compose stub for dnns
-#
-# Replace with a real compose file.
-#
-# Example:
-# services:
-#   dnns:
-#     image: example/dnns:latest
-#     container_name: dnns
-#     restart: unless-stopped
-#     environment:
-#       - TZ=Europe/London
-#     volumes:
-#       - ./data:/data
-#     ports:
-#       - "1234:1234"
+services:
+  dnns:
+    image: ghcr.io/n00bcodr/dnns:latest
+    container_name: dnns
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "8090:8080"
+    volumes:
+      - ./data:/app/data

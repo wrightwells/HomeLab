@@ -1,7 +1,1 @@
 ---
-# ansible/roles/lxc230-docker-media/defaults/main.yml
-# Lowest-priority defaults for the lxc230-docker-media role.
-#
-# Example:
-# lxc230_docker_media_enabled: true
-# lxc230_docker_media_base_dir: /opt/lxc230-docker-media

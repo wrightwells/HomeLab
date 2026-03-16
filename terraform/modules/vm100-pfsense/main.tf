@@ -1,17 +1,39 @@
-# terraform/modules/vm100-pfsense/main.tf
-# Module purpose:
-# VM100 pfSense firewall VM
-#
-# This module should contain the Proxmox resource definition for this vm.
-#
-# Typical contents:
-# - resource "proxmox_virtual_environment_vm" "this" { ... }
-# - cpu, memory, disk, network settings
-# - tags and description
-# - initialization / cloud-init if relevant
-#
-# Example skeleton:
-#
-# resource "proxmox_virtual_environment_vm" "this" {
-#   # fill in resource details here
-# }
+resource "proxmox_virtual_environment_vm" "this" {
+  name      = "pfsense"
+  node_name = var.proxmox_node
+  vm_id     = 100
+  started   = false
+  on_boot   = true
+  tags      = ["terraform", "firewall", "pfsense"]
+
+  cpu {
+    cores = 2
+    type  = "host"
+  }
+
+  memory {
+    dedicated = 4096
+  }
+
+  disk {
+    datastore_id = var.vm_storage
+    interface    = "scsi0"
+    size         = 32
+    file_format  = "raw"
+  }
+
+  network_device {
+    bridge  = var.vm_bridge
+    vlan_id = var.vm_vlan
+  }
+
+  operating_system {
+    type = "other"
+  }
+
+  agent {
+    enabled = false
+  }
+
+  description = "Starter pfSense VM. Attach ISO and finish install in Proxmox console."
+}

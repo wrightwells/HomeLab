@@ -1,17 +1,11 @@
-# ansible/files/compose/lxc220-docker-apps/blinko/docker-compose.yml
-# Compose stub for blinko
-#
-# Replace with a real compose file.
-#
-# Example:
-# services:
-#   blinko:
-#     image: example/blinko:latest
-#     container_name: blinko
-#     restart: unless-stopped
-#     environment:
-#       - TZ=Europe/London
-#     volumes:
-#       - ./data:/data
-#     ports:
-#       - "1234:1234"
+services:
+  blinko:
+    image: blinko/blinko:latest
+    container_name: blinko
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "1111:1111"
+    volumes:
+      - ./data:/app/data

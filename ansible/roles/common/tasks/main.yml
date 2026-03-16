@@ -1,16 +1,31 @@
 ---
-# ansible/roles/common/tasks/main.yml
-# Role purpose:
-# Baseline configuration for all Linux hosts
-#
-# Add tasks here to:
-# - install packages
-# - create directories
-# - copy templates or compose files
-# - configure services
-# - enable/start services
-#
-# Example:
-# - name: Placeholder task for common
-#   ansible.builtin.debug:
-#     msg: "Implement common role tasks here"
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - wget
+      - git
+      - vim
+      - htop
+      - ca-certificates
+      - gnupg
+      - python3
+      - python3-pip
+      - qemu-guest-agent
+    state: present
+
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ timezone }}"
+
+- name: Enable qemu guest agent
+  ansible.builtin.service:
+    name: qemu-guest-agent
+    state: started
+    enabled: true
+  ignore_errors: true

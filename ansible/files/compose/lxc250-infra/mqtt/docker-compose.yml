@@ -1,17 +1,14 @@
-# ansible/files/compose/lxc250-infra/mqtt/docker-compose.yml
-# Compose stub for mqtt
-#
-# Replace with a real compose file.
-#
-# Example:
-# services:
-#   mqtt:
-#     image: example/mqtt:latest
-#     container_name: mqtt
-#     restart: unless-stopped
-#     environment:
-#       - TZ=Europe/London
-#     volumes:
-#       - ./data:/data
-#     ports:
-#       - "1234:1234"
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./config:/mosquitto/config
+      - ./data:/mosquitto/data
+      - ./log:/mosquitto/log

@@ -1,9 +1,1 @@
 ---
-# ansible/roles/vm100-pfsense/handlers/main.yml
-# Add handlers here for service restarts or reloads.
-#
-# Example:
-# - name: restart service
-#   ansible.builtin.service:
-#     name: some-service
-#     state: restarted

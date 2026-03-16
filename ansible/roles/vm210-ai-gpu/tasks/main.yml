@@ -1,16 +1,41 @@
 ---
-# ansible/roles/vm210-ai-gpu/tasks/main.yml
-# Configure the AI GPU VM.
-#
-# Typical tasks:
-# - install Docker and NVIDIA tooling
-# - configure model storage directories
-# - deploy Frigate compose
-# - deploy Home Assistant compose
-# - deploy Ollama / vLLM / other model runtime
-# - install GPU drivers if using a VM OS image that needs them
-#
-# Example:
-# - name: Placeholder for AI GPU configuration
-#   ansible.builtin.debug:
-#     msg: "Add AI GPU VM tasks here"
+- name: Ensure compose root exists
+  ansible.builtin.file:
+    path: "{{ docker_compose_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Ensure application directories exist
+  ansible.builtin.file:
+    path: "{{ docker_compose_root }}/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - frigate
+    - home-assistant
+    - ai-models
+
+- name: Copy compose files
+  ansible.builtin.copy:
+    src: "{{ item }}/"
+    dest: "{{ docker_compose_root }}/{{ item }}/"
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+    - frigate
+    - home-assistant
+    - ai-models
+
+- name: Start compose stacks
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker_compose_root }}/{{ item }}"
+    state: present
+  loop:
+    - frigate
+    - home-assistant
+    - ai-models

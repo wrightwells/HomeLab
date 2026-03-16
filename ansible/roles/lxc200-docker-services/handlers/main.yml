@@ -1,9 +1,1 @@
 ---
-# ansible/roles/lxc200-docker-services/handlers/main.yml
-# Add handlers here for service restarts or reloads.
-#
-# Example:
-# - name: restart service
-#   ansible.builtin.service:
-#     name: some-service
-#     state: restarted

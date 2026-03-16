@@ -1,17 +1,13 @@
-# ansible/files/compose/lxc240-docker-external/nginx/docker-compose.yml
-# Compose stub for nginx
-#
-# Replace with a real compose file.
-#
-# Example:
-# services:
-#   nginx:
-#     image: example/nginx:latest
-#     container_name: nginx
-#     restart: unless-stopped
-#     environment:
-#       - TZ=Europe/London
-#     volumes:
-#       - ./data:/data
-#     ports:
-#       - "1234:1234"
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./conf:/etc/nginx/conf.d
+      - ./html:/usr/share/nginx/html

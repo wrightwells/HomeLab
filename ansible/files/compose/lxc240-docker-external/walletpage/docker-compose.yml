@@ -1,17 +1,11 @@
-# ansible/files/compose/lxc240-docker-external/walletpage/docker-compose.yml
-# Compose stub for walletpage
-#
-# Replace with a real compose file.
-#
-# Example:
-# services:
-#   walletpage:
-#     image: example/walletpage:latest
-#     container_name: walletpage
-#     restart: unless-stopped
-#     environment:
-#       - TZ=Europe/London
-#     volumes:
-#       - ./data:/data
-#     ports:
-#       - "1234:1234"
+services:
+  walletpage:
+    image: nginx:latest
+    container_name: walletpage
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "8089:80"
+    volumes:
+      - ./html:/usr/share/nginx/html

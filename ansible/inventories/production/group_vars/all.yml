@@ -1,8 +1,4 @@
 ---
-# ansible/inventories/production/group_vars/all.yml
-# Shared variables for all hosts.
-#
-# Example:
-# timezone: Europe/London
-# docker_compose_root: /opt/containers
-# ansible_python_interpreter: /usr/bin/python3
+timezone: Europe/London
+docker_compose_root: /opt/containers
+ansible_python_interpreter: /usr/bin/python3
