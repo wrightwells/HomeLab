@@ -1,0 +1,14 @@
+---
+- name: Base config
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Ensure basic packages installed
+      apt:
+        name:
+          - curl
+          - vim
+          - git
+        state: present
+        update_cache: yes
