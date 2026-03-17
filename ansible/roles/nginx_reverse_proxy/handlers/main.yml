@@ -1,0 +1,8 @@
+- name: Validate nginx config
+  ansible.builtin.command: >
+    docker run --rm
+    -v {{ nginx_config_root }}/nginx.conf:/etc/nginx/nginx.conf:ro
+    -v {{ nginx_config_root }}/conf.d:/etc/nginx/conf.d:ro
+    -v {{ nginx_config_root }}/certs:/etc/nginx/certs:ro
+    nginx:1.28-alpine nginx -t
+  changed_when: false

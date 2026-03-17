@@ -1,0 +1,36 @@
+- name: Ensure nginx config directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ nginx_config_root }}"
+    - "{{ nginx_config_root }}/conf.d"
+    - "{{ nginx_config_root }}/certs"
+    - "{{ nginx_html_root }}"
+    - "{{ nginx_log_root }}"
+  notify: Validate nginx config
+
+- name: Deploy main nginx.conf
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: "{{ nginx_config_root }}/nginx.conf"
+    mode: "0644"
+  notify: Validate nginx config
+
+- name: Deploy common proxy config
+  ansible.builtin.template:
+    src: proxy-common.conf.j2
+    dest: "{{ nginx_config_root }}/conf.d/proxy-common.conf"
+    mode: "0644"
+  notify: Validate nginx config
+
+- name: Deploy virtual host configs
+  ansible.builtin.template:
+    src: vhost.conf.j2
+    dest: "{{ nginx_config_root }}/conf.d/{{ item.server_name }}.conf"
+    mode: "0644"
+  loop: "{{ nginx_proxy_hosts }}"
+  loop_control:
+    label: "{{ item.server_name }}"
+  notify: Validate nginx config

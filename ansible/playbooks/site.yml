@@ -46,6 +46,7 @@
   become: true
   roles:
     - lxc240-docker-external
+    - nginx_reverse_proxy
 
 - name: Configure infra host
   hosts: infra

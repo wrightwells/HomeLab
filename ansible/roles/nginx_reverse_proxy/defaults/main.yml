@@ -1,0 +1,50 @@
+nginx_config_root: /mnt/appdata/configs/nginx
+nginx_html_root: /mnt/appdata/docker_volumes/nginx/html
+nginx_log_root: /mnt/appdata/docker_volumes/nginx/logs
+
+nginx_user: nginx
+nginx_worker_processes: auto
+nginx_worker_connections: 1024
+nginx_client_max_body_size: 100m
+
+nginx_proxy_read_timeout: 3600
+nginx_proxy_send_timeout: 3600
+
+nginx_tls_protocols:
+  - TLSv1.2
+  - TLSv1.3
+
+nginx_enable_hsts: false
+
+nginx_certificates:
+  wrightwells:
+    fullchain: /etc/nginx/certs/wrightwells.com/fullchain.pem
+    privkey: /etc/nginx/certs/wrightwells.com/privkey.pem
+  uk_wrightwells:
+    fullchain: /etc/nginx/certs/uk.wrightwells.com/fullchain.pem
+    privkey: /etc/nginx/certs/uk.wrightwells.com/privkey.pem
+
+nginx_proxy_hosts:
+  - server_name: art.wrightwells.com
+    upstream: http://10.10.66.110:8080
+    certificate: wrightwells
+
+  - server_name: ha.uk.wrightwells.com
+    upstream: http://10.10.20.20:8123
+    certificate: uk_wrightwells
+
+  - server_name: jellyfin.uk.wrightwells.com
+    upstream: http://10.10.20.15:8096
+    certificate: uk_wrightwells
+
+  - server_name: jellyfin.wrightwells.com
+    upstream: http://10.10.20.201:3000
+    certificate: wrightwells
+
+  - server_name: links.wrightwells.com
+    upstream: http://10.10.66.110:7070
+    certificate: wrightwells
+
+  - server_name: wallet.wrightwells.com
+    upstream: http://10.10.66.110:8070
+    certificate: wrightwells
