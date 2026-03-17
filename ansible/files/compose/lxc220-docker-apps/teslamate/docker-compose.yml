@@ -1,18 +1,5 @@
 services:
   teslamate:
-    image: teslamate/teslamate:latest
-    container_name: teslamate
-    restart: unless-stopped
-    environment:
-      - TZ=Europe/London
-    ports:
-      - "4000:4000"
-    volumes:
-      - /mnt/appdata/docker_volumes/teslamate:/opt/app/data
-
-
-services:
-  teslamate:
     container_name: teslamate
     image: teslamate/teslamate:1.28.2
     restart: always
