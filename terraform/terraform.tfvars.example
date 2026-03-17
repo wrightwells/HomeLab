@@ -1,4 +1,4 @@
-pm_api_url          = "https://10.10.66.2:8006/api2/json"
+pm_api_url          = "https://10.10.99.2:8006/api2/json"
 pm_api_token_id     = "terraform@pve!provider"
 pm_api_token_secret = "REPLACE_ME"
 
