@@ -1,11 +1,33 @@
 services:
-  blinko:
-    image: blinko/blinko:latest
-    container_name: blinko
+  blinko-db:
+    image: postgres:16
+    container_name: blinko-db
     restart: unless-stopped
     environment:
-      - TZ=Europe/London
-    ports:
-      - "1111:1111"
+      POSTGRES_DB: blinko
+      POSTGRES_USER: blinko
+      POSTGRES_PASSWORD: mirror
+      TZ: Europe/London
     volumes:
-      - /mnt/appdata/docker_volumes/blinko:/app/data
+      - /mnt/appdata/docker_volumes/blinko/db:/var/lib/postgresql/data
+
+  blinko:
+    image: blinkospace/blinko:latest
+    container_name: blinko
+    restart: unless-stopped
+    ports:
+      - "10.10.20.220:1111:1111"
+    environment:
+      TZ: Europe/London
+      # Database
+      DATABASE_URL: postgresql://blinko:mirror@blinko-db:5432/blinko
+      # Public URL
+      NEXT_PUBLIC_APP_URL: https://notes.wrightwells.com
+      # File storage
+      STORAGE_LOCAL_PATH: /app/storage
+      # Ollama AI
+      #OLLAMA_BASE_URL: http://10.10.20.210:11434
+      #OLLAMA_MODEL: llama3:8b
+    volumes:
+      - /mnt/appdata/docker_volumes/blinko/files:/app/storage
+      
