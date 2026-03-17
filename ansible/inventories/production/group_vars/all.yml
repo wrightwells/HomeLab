@@ -7,3 +7,15 @@ ai_models_root: /mnt/ai_models
 ai_cache_root: /mnt/ai_cache
 media_root: /mnt/media_pool
 ansible_python_interpreter: /usr/bin/python3
+
+
+openwebui_port: 3000
+ollama_base_url: "http://127.0.0.1:11434"
+
+docker_compose_bin: /usr/bin/docker
+docker_project_owner: root
+docker_project_group: root
+
+docker_stack_root_mode: "0750"
+docker_stack_compose_mode: "0640"
+docker_stack_env_mode: "0600"
