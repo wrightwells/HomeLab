@@ -6,3 +6,5 @@ vault_api_token: "replace-me"
 
 #cd /opt/HomeLab/ansible
 #ansible-vault create inventories/production/group_vars/vault.yml
+#or
+#ansible-vault encrypt_string 'very-secret-value' --name 'vault_openwebui_secret_key'
