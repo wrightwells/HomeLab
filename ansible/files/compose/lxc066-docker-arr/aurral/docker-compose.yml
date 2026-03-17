@@ -5,6 +5,12 @@ services:
     restart: unless-stopped
     environment:
       - TZ=Europe/London
+      - DOWNLOAD_FOLDER=/app/downloads
+      - LIDARR_URL=http://10.10.66.66:8686
+      - LIDARR_API_KEY=29022b70c6de450bb32a58c0aa1b9d7c #update API Key when LIDARR installed
+      - CONTACT_EMAIL=wrightwells@hotmail.com
+      - PUID=1000
+      - PGID=1000
     ports:
       - "3000:3000"
     volumes:
