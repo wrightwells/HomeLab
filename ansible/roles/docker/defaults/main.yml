@@ -1,1 +1,17 @@
+
 ---
+stack_name: app
+stack_dir: "/mnt/appdata/{{ stack_name }}"
+
+stack_compose_template: compose.yml.j2
+stack_env_template: app.env.j2
+
+stack_env: {}
+stack_compose: {}
+
+docker_project_owner: root
+docker_project_group: root
+
+docker_stack_root_mode: "0750"
+docker_stack_compose_mode: "0640"
+docker_stack_env_mode: "0600"
