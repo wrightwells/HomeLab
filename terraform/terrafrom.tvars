@@ -1,0 +1,5 @@
+ai_vm_enabled        = true
+ai_vm_inventory_name = "ai-gpu-01"
+ai_vm_ip             = "10.10.20.210"
+ai_vm_ansible_user   = "ansible"
+ai_vm_groups         = ["ai_gpu"]
