@@ -21,3 +21,36 @@
     owner: root
     group: root
     mode: "0755"
+
+
+---
+- name: Ensure stack directory exists
+  ansible.builtin.file:
+    path: "{{ stack_dir }}"
+    state: directory
+    owner: "{{ docker_project_owner }}"
+    group: "{{ docker_project_group }}"
+    mode: "{{ docker_stack_root_mode }}"
+
+- name: Render compose file
+  ansible.builtin.template:
+    src: "{{ stack_compose_template }}"
+    dest: "{{ stack_dir }}/compose.yml"
+    owner: "{{ docker_project_owner }}"
+    group: "{{ docker_project_group }}"
+    mode: "{{ docker_stack_compose_mode }}"
+  notify: Restart docker stack
+
+- name: Render environment file
+  ansible.builtin.template:
+    src: "{{ stack_env_template }}"
+    dest: "{{ stack_dir }}/.env"
+    owner: "{{ docker_project_owner }}"
+    group: "{{ docker_project_group }}"
+    mode: "{{ docker_stack_env_mode }}"
+  notify: Restart docker stack
+
+- name: Ensure stack is present
+  community.docker.docker_compose_v2:
+    project_src: "{{ stack_dir }}"
+    state: present
