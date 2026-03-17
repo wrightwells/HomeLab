@@ -1,0 +1,4 @@
+---
+vault_openwebui_secret_key: "replace-with-a-long-random-secret"
+vault_postgres_password: "replace-me"
+vault_api_token: "replace-me"
