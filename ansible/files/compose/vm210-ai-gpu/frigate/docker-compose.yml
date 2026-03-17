@@ -8,5 +8,6 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./config:/config
+      - /mnt/appdata/configs/frigate:/config
+      - /mnt/ai_cache/frigate_recordings:/media/frigate
       - /etc/localtime:/etc/localtime:ro

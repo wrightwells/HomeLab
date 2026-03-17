@@ -8,4 +8,5 @@ services:
     ports:
       - "2283:2283"
     volumes:
-      - ./data:/usr/src/app/upload
+      - /mnt/appdata/docker_volumes/immich:/usr/src/app/upload
+      - /mnt/media_pool/photos:/external

@@ -8,4 +8,4 @@ services:
     ports:
       - "5055:5055"
     volumes:
-      - ./config:/app/config
+      - /mnt/appdata/docker_volumes/jellyseerr:/app/config

@@ -8,5 +8,5 @@ services:
     ports:
       - "8084:8083"
     volumes:
-      - ./config:/config
-      - ./books:/books
+      - /mnt/appdata/docker_volumes/calibre-web:/config
+      - /mnt/media_pool/books:/books

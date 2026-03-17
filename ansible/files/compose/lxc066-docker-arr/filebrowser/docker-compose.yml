@@ -8,5 +8,5 @@ services:
     ports:
       - "8081:80"
     volumes:
-      - ./data:/srv
-      - ./db:/database
+      - /mnt/media_pool:/srv
+      - /mnt/appdata/docker_volumes/filebrowser/database:/database

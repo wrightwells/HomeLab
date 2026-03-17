@@ -9,4 +9,4 @@ services:
       - "8083:8080"
       - "8181:8181"
     volumes:
-      - ./config:/config
+      - /mnt/appdata/docker_volumes/calibre:/config

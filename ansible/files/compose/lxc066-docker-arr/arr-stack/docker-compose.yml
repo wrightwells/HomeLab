@@ -8,7 +8,7 @@ services:
     environment:
       - TZ=Europe/London
     volumes:
-      - ./prowlarr:/config
+      - /mnt/appdata/docker_volumes/prowlarr:/config
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
@@ -19,8 +19,8 @@ services:
     environment:
       - TZ=Europe/London
     volumes:
-      - ./sonarr:/config
-      - /media:/media
+      - /mnt/appdata/docker_volumes/sonarr:/config
+      - /mnt/media_pool:/media
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -31,8 +31,8 @@ services:
     environment:
       - TZ=Europe/London
     volumes:
-      - ./radarr:/config
-      - /media:/media
+      - /mnt/appdata/docker_volumes/radarr:/config
+      - /mnt/media_pool:/media
 
   lidarr:
     image: lscr.io/linuxserver/lidarr:latest
@@ -43,8 +43,8 @@ services:
     environment:
       - TZ=Europe/London
     volumes:
-      - ./lidarr:/config
-      - /media:/media
+      - /mnt/appdata/docker_volumes/lidarr:/config
+      - /mnt/media_pool:/media
 
   readarr:
     image: lscr.io/linuxserver/readarr:latest
@@ -55,8 +55,8 @@ services:
     environment:
       - TZ=Europe/London
     volumes:
-      - ./readarr:/config
-      - /media:/media
+      - /mnt/appdata/docker_volumes/readarr:/config
+      - /mnt/media_pool:/media
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -69,5 +69,5 @@ services:
     environment:
       - TZ=Europe/London
     volumes:
-      - ./qbittorrent:/config
-      - /media/torrents:/downloads
+      - /mnt/appdata/docker_volumes/qbittorrent:/config
+      - /mnt/media_pool/torrents:/downloads

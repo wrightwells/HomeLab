@@ -8,4 +8,4 @@ services:
     ports:
       - "8090:8080"
     volumes:
-      - ./data:/app/data
+      - /mnt/appdata/docker_volumes/dnns:/app/data

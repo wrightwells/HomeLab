@@ -8,4 +8,4 @@ services:
     ports:
       - "8088:80"
     volumes:
-      - ./html:/var/www/html
+      - /mnt/appdata/docker_volumes/wordpress:/var/www/html

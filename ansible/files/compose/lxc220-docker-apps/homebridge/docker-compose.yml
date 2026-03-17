@@ -8,4 +8,4 @@ services:
     ports:
       - "8581:8581"
     volumes:
-      - ./data:/homebridge
+      - /mnt/appdata/configs/homebridge:/homebridge

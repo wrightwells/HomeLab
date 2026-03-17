@@ -9,5 +9,5 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./conf:/etc/nginx/conf.d
-      - ./html:/usr/share/nginx/html
+      - /mnt/appdata/configs/nginx:/etc/nginx/conf.d
+      - /mnt/appdata/docker_volumes/nginx/html:/usr/share/nginx/html

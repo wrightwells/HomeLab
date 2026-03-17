@@ -48,6 +48,12 @@ resource "proxmox_virtual_environment_container" "this" {
 
   features {
     nesting = true
+    keyctl  = true
+  }
+
+  mount_point {
+    volume = "/mnt/appdata"
+    path   = "/mnt/appdata"
   }
 
   description = "Starter LXC for infra"

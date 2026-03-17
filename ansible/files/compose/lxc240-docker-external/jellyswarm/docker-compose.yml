@@ -8,4 +8,4 @@ services:
     ports:
       - "5056:5055"
     volumes:
-      - ./config:/config
+      - /mnt/appdata/docker_volumes/jellyswarm:/config

@@ -8,4 +8,4 @@ services:
     ports:
       - "2368:2368"
     volumes:
-      - ./data:/var/lib/ghost/content
+      - /mnt/appdata/docker_volumes/ghost:/var/lib/ghost/content

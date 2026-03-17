@@ -8,4 +8,4 @@ services:
     ports:
       - "8089:80"
     volumes:
-      - ./html:/usr/share/nginx/html
+      - /mnt/appdata/docker_volumes/walletpage:/usr/share/nginx/html

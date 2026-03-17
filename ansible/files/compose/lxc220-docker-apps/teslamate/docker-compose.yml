@@ -8,4 +8,4 @@ services:
     ports:
       - "4000:4000"
     volumes:
-      - ./data:/opt/app/data
+      - /mnt/appdata/docker_volumes/teslamate:/opt/app/data

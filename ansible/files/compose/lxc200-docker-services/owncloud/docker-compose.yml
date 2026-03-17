@@ -8,4 +8,4 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./files:/mnt/data
+      - /mnt/appdata/docker_volumes/owncloud:/mnt/data

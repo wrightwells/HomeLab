@@ -11,5 +11,5 @@ services:
       - "22000:22000/udp"
       - "21027:21027/udp"
     volumes:
-      - ./config:/config
-      - ./data:/data
+      - /mnt/appdata/docker_volumes/syncthing/config:/config
+      - /mnt/appdata/syncthing_sync:/data

@@ -8,4 +8,4 @@ services:
     ports:
       - "8484:8484"
     volumes:
-      - ./data:/persist
+      - /mnt/appdata/docker_volumes/grist:/persist

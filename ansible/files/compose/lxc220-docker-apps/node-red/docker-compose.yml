@@ -8,4 +8,4 @@ services:
     ports:
       - "1880:1880"
     volumes:
-      - ./data:/data
+      - /mnt/appdata/configs/node-red:/data

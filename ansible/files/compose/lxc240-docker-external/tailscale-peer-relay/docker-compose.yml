@@ -8,4 +8,4 @@ services:
     ports:
       - "41641:41641/udp"
     volumes:
-      - ./state:/var/lib/tailscale
+      - /mnt/appdata/docker_volumes/tailscale:/var/lib/tailscale

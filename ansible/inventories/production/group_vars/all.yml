@@ -1,4 +1,9 @@
 ---
 timezone: Europe/London
 docker_compose_root: /opt/containers
+appdata_root: /mnt/appdata
+aI_models_root: /mnt/ai_models
+ai_models_root: /mnt/ai_models
+ai_cache_root: /mnt/ai_cache
+media_root: /mnt/media_pool
 ansible_python_interpreter: /usr/bin/python3

@@ -8,5 +8,5 @@ services:
     ports:
       - "8087:80"
     volumes:
-      - ./conf:/etc/nginx/conf.d
-      - ./html:/usr/share/nginx/html
+      - /mnt/appdata/configs/nginx-infra:/etc/nginx/conf.d
+      - /mnt/appdata/docker_volumes/nginx-infra/html:/usr/share/nginx/html

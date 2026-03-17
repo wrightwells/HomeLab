@@ -8,4 +8,4 @@ services:
     ports:
       - "3002:3000"
     volumes:
-      - ./data:/kutt
+      - /mnt/appdata/docker_volumes/kutt:/kutt

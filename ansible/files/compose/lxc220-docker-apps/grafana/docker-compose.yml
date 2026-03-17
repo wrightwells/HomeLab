@@ -8,4 +8,4 @@ services:
     ports:
       - "3001:3000"
     volumes:
-      - ./data:/var/lib/grafana
+      - /mnt/appdata/docker_volumes/grafana:/var/lib/grafana

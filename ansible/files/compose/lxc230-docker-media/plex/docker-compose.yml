@@ -8,5 +8,5 @@ services:
     ports:
       - "32400:32400"
     volumes:
-      - ./config:/config
-      - /media:/media
+      - /mnt/appdata/docker_volumes/plex:/config
+      - /mnt/media_pool:/media
