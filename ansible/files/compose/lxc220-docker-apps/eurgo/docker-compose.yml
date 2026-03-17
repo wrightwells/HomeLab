@@ -1,0 +1,11 @@
+
+services:
+  erugo:
+    image: wardy784/erugo:latest
+    container_name: erugo
+    restart: unless-stopped
+    ports:
+      - "9998:80"
+    volumes:
+        - /mnt/appdata/docker_volumes/erugo:/var/www/html/storage
+

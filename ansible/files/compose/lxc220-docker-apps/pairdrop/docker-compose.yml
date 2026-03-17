@@ -1,0 +1,7 @@
+services:
+  pairdrop:
+    image: ghcr.io/schlagmichdoch/pairdrop:latest
+    container_name: pairdrop
+    ports:
+      - "1010:3000"
+    restart: unless-stopped

@@ -9,3 +9,89 @@ services:
       - "8080:8080"
     volumes:
       - /mnt/appdata/docker_volumes/owncloud:/mnt/data
+
+
+version: "3.9"
+
+services:
+
+  owncloud:
+    image: owncloud/server:${OWNCLOUD_VERSION}
+    container_name: owncloud
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    environment:
+      - OWNCLOUD_DOMAIN=${OWNCLOUD_DOMAIN}
+      - OWNCLOUD_DB_TYPE=mysql
+      - OWNCLOUD_DB_NAME=${MYSQL_DATABASE}
+      - OWNCLOUD_DB_USERNAME=${MYSQL_USER}
+      - OWNCLOUD_DB_PASSWORD=${MYSQL_PASSWORD}
+      - OWNCLOUD_DB_HOST=db
+      - OWNCLOUD_ADMIN_USERNAME=${ADMIN_USERNAME}
+      - OWNCLOUD_ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - OWNCLOUD_REDIS_ENABLED=true
+      - OWNCLOUD_REDIS_HOST=redis
+      - OWNCLOUD_REDIS_PASSWORD=${REDIS_PASSWORD}
+      - OWNCLOUD_CRON=true
+    # OwnCloud main data
+    volumes:
+      - /mnt/appdata/docker_volumes/owncloud:/mnt/data
+      # Host folder mounted as local external storage
+      - /usb_data/media_data:/external/shared
+    networks:
+      - owncloud_net
+    ports:
+      - 9090:8080
+
+  db:
+    image: mariadb:10.11
+    container_name: owncloud_db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - /mnt/appdata/docker_volumes/owncloud:/var/lib/mysql
+    networks:
+      - owncloud_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: owncloud_redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    networks:
+      - owncloud_net
+
+  cron:
+    image: owncloud/server:${OWNCLOUD_VERSION}
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    entrypoint: /usr/bin/owncloud cron
+    environment:
+      - OWNCLOUD_DB_TYPE=mysql
+      - OWNCLOUD_DB_NAME=${MYSQL_DATABASE}
+      - OWNCLOUD_DB_USERNAME=${MYSQL_USER}
+      - OWNCLOUD_DB_PASSWORD=${MYSQL_PASSWORD}
+      - OWNCLOUD_DB_HOST=db
+      - OWNCLOUD_REDIS_ENABLED=true
+      - OWNCLOUD_REDIS_HOST=redis
+      - OWNCLOUD_REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - /mnt/appdata/docker_volumes/owncloud:/mnt/data
+    networks:
+      - owncloud_net
+
+volumes:
+  owncloud_files:
+  owncloud_db:
+
+networks:
+  owncloud_net:
+    driver: bridge

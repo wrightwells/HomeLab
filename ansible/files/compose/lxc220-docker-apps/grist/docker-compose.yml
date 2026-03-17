@@ -2,10 +2,12 @@ services:
   grist:
     image: gristlabs/grist:latest
     container_name: grist
-    restart: unless-stopped
-    environment:
-      - TZ=Europe/London
     ports:
       - "8484:8484"
     volumes:
       - /mnt/appdata/docker_volumes/grist:/persist
+    environment:
+      - GRIST_SESSION_SECRET=mirror
+      - GRIST_SANDBOX_FLAVOR=gvisor
+      - GRIST_DEFAULT_EMAIL=wrightwells@hotmail.com
+    restart: unless-stopped

@@ -9,3 +9,44 @@ services:
       - "4000:4000"
     volumes:
       - /mnt/appdata/docker_volumes/teslamate:/opt/app/data
+
+
+services:
+  teslamate:
+    container_name: teslamate
+    image: teslamate/teslamate:1.28.2
+    restart: always
+    environment:
+     - DATABASE_USER=teslamate
+     - DATABASE_PASS=secret
+     - DATABASE_NAME=teslamate
+     - DATABASE_HOST=10.10.20.200
+     - MQTT_HOST=10.10.20.210
+     - MQTT_USERNAME=mqtt_user
+     - MQTT_PASSWORD=mirror
+     - TZ=Europe/London
+     - DATABASE_POOL_SIZE=10
+     - ENCRYPTION_KEY=your_secret_encryption_key
+     - VIRTUAL_HOST=local
+    ports:
+     - 4000:4000
+    volumes:
+     - /mnt/appdata/docker_volumes/teslamate/import:/opt/app/import
+  
+    cap_drop:
+     - all
+ 
+  postgres:
+    container_name: postgres
+    image: postgres:14
+    restart: unless-stopped
+    environment:
+     - POSTGRES_USER=teslamate
+     - POSTGRES_PASSWORD=secret
+     - POSTGRES_DB=teslamate
+     - TZ=Europe/London
+     - DATABASE_POOL_SIZE=10
+    ports:
+     - "5432:5432"
+    volumes:
+     - /mnt/appdata/docker_volumes/teslamate-db:/var/lib/postgresql/data

@@ -1,11 +1,14 @@
 services:
   homebridge:
-    image: homebridge/homebridge:latest
+    image: oznu/homebridge:ubuntu
     container_name: homebridge
-    restart: unless-stopped
+    restart: always
+    network_mode: host
     environment:
+      - PGID=1000
+      - PUID=1000
+      - HOMEBRIDGE_CONFIG_UI=1
+      - HOMEBRIDGE_CONFIG_UI_PORT=8581
       - TZ=Europe/London
-    ports:
-      - "8581:8581"
     volumes:
       - /mnt/appdata/configs/homebridge:/homebridge
