@@ -1,73 +1,143 @@
 services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    # Hostname to use for container, required in some instances for the rest of the stack to each other endpoints 
+    hostname: gluetun
+    # line above must be uncommented to allow external containers to connect.
+    # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/connect-a-container-to-gluetun.md#external-container-to-gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 6881:6881
+      - 6881:6881/udp
+      - 8085:8085 # qbittorrent - downloading
+      - 9117:9117 # Jackett - indexing
+      - 8989:8989 # Sonarr - tv
+      - 9696:9696 # Prowlarr - indexing
+      - 7878:7878 # Radarr - moives
+      - 8686:8686 # Lidarr - music
+      - 6767:6767 # Bazarr - subtitles
+      - 8787:8787 # Readarr - books
+
+      
+    volumes:
+      - /host_data/arr-stack/config/gluetun:/gluetun
+    environment:
+      - FIREWALL_INPUT_PORTS=8085,9117,8989,9696,7878,8686,6767,7575,8080,8787
+      - FIREWALL_OUTBOUND_SUBNETS=100.64.0.0/10
+      # See https://github.com/qdm12/gluetun-wiki/tree/main/setup#setup
+      - VPN_SERVICE_PROVIDER=private internet access      # nordvpn
+      # - VPN_TYPE=wireguard
+      # OpenVPN:
+      - OPENVPN_USER=p7519165
+      - OPENVPN_PASSWORD=XaBSZAn9ZUV3ao6
+      - SERVER_REGIONS=Netherlands,Belgium,France,Germany,Italy,Netherlands,Poland,England
+      # Wireguard:
+      #- WIREGUARD_PRIVATE_KEY=<YOUR_PRIVATE_KEY> # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/providers/nordvpn.md#obtain-your-wireguard-private-key
+      #- WIREGUARD_ADDRESSES=10.5.0.2/32
+      # Timezone for accurate log times
+      - TZ=Europe/London
+      # Server list updater
+      # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/servers.md#update-the-vpn-servers-list
+      - UPDATER_PERIOD=24h
+    restart: unless-stopped
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent
+    container_name: qbittorrent
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - WEBUI_PORT=8085
+    volumes:
+      - /mnt/appdata/docker_volumes/qbittorrent:/config
+      - /mnt/media_pool/torrents:/downloads
+
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
-    restart: unless-stopped
-    ports:
-      - "9696:9696"
+    network_mode: "service:gluetun"
     environment:
-      - TZ=Europe/London
-    volumes:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      volumes:
       - /mnt/appdata/docker_volumes/prowlarr:/config
+    restart: unless-stopped
 
+  
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
-    restart: unless-stopped
-    ports:
-      - "8989:8989"
+    network_mode: "service:gluetun"
     environment:
-      - TZ=Europe/London
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
     volumes:
       - /mnt/appdata/docker_volumes/sonarr:/config
       - /mnt/media_pool:/media
-
+    restart: unless-stopped
+    
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
-    restart: unless-stopped
-    ports:
-      - "7878:7878"
+    network_mode: "service:gluetun"
     environment:
-      - TZ=Europe/London
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
     volumes:
       - /mnt/appdata/docker_volumes/radarr:/config
       - /mnt/media_pool:/media
+    restart: unless-stopped
 
   lidarr:
     image: lscr.io/linuxserver/lidarr:latest
     container_name: lidarr
-    restart: unless-stopped
-    ports:
-      - "8686:8686"
+    network_mode: "service:gluetun"
     environment:
-      - TZ=Europe/London
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
     volumes:
       - /mnt/appdata/docker_volumes/lidarr:/config
       - /mnt/media_pool:/media
+    restart: unless-stopped
+  
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /mnt/appdata/docker_volumes/bazarr/config:/config
+      - /mnt/media_pool:/data
+    restart: unless-stopped
 
   readarr:
-    image: lscr.io/linuxserver/readarr:latest
+    image: lscr.io/linuxserver/readarr:develop
     container_name: readarr
-    restart: unless-stopped
-    ports:
-      - "8787:8787"
+    network_mode: "service:gluetun"
     environment:
-      - TZ=Europe/London
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
     volumes:
       - /mnt/appdata/docker_volumes/readarr:/config
       - /mnt/media_pool:/media
-
-  qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
     restart: unless-stopped
-    ports:
-      - "8082:8080"
-      - "6881:6881"
-      - "6881:6881/udp"
-    environment:
-      - TZ=Europe/London
-    volumes:
-      - /mnt/appdata/docker_volumes/qbittorrent:/config
-      - /mnt/media_pool/torrents:/downloads
+
+  
