@@ -5,6 +5,11 @@ services:
     restart: unless-stopped
     environment:
       - TZ=Europe/London
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - DOCKER_MODS=linuxserver/mods:universal-calibre #optional
+      - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #optional
     ports:
       - "8084:8083"
     volumes:
