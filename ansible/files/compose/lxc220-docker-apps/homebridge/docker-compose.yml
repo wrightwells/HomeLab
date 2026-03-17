@@ -4,11 +4,13 @@ services:
     container_name: homebridge
     restart: always
     network_mode: host
+    env_file:
+      - stack.env
     environment:
-      - PGID=1000
-      - PUID=1000
-      - HOMEBRIDGE_CONFIG_UI=1
-      - HOMEBRIDGE_CONFIG_UI_PORT=8581
-      - TZ=Europe/London
+      - PGID=${PGID}
+      - PUID=${PUID}
+      - HOMEBRIDGE_CONFIG_UI=${HOMEBRIDGE_CONFIG_UI}
+      - HOMEBRIDGE_CONFIG_UI_PORT=${HOMEBRIDGE_CONFIG_UI_PORT}
+      - TZ=${TZ}
     volumes:
       - /mnt/appdata/configs/homebridge:/homebridge

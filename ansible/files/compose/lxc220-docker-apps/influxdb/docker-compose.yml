@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     ports:
     - "8086:8086"
+    env_file:
+      - stack.env
     environment:
     - INFLUXDB_HTTP_FLUX_ENABLED=false
     - INFLUXDB_REPORTING_DISABLED=false

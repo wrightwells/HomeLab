@@ -3,17 +3,19 @@ services:
     container_name: teslamate
     image: teslamate/teslamate:1.28.2
     restart: always
+    env_file:
+      - stack.env
     environment:
-     - DATABASE_USER=teslamate
-     - DATABASE_PASS=secret
-     - DATABASE_NAME=teslamate
-     - DATABASE_HOST=10.10.20.200
-     - MQTT_HOST=10.10.20.210
-     - MQTT_USERNAME=mqtt_user
-     - MQTT_PASSWORD=mirror
+     - DATABASE_USER=${DATABASE_USER}
+     - DATABASE_PASS=${DATABASE_PASS}
+     - DATABASE_NAME=${DATABASE_NAME}
+     - DATABASE_HOST=${DATABASE_HOST}
+     - MQTT_HOST=${MQTT_HOST}
+     - MQTT_USERNAME=${MQTT_USERNAME}
+     - MQTT_PASSWORD=${MQTT_PASSWORD}
      - TZ=Europe/London
      - DATABASE_POOL_SIZE=10
-     - ENCRYPTION_KEY=your_secret_encryption_key
+     - ENCRYPTION_KEY=${ENCRYPTION_KEY}
      - VIRTUAL_HOST=local
     ports:
      - 4000:4000
@@ -27,11 +29,13 @@ services:
     container_name: postgres
     image: postgres:14
     restart: unless-stopped
+    env_file:
+      - stack.env
     environment:
-     - POSTGRES_USER=teslamate
-     - POSTGRES_PASSWORD=secret
-     - POSTGRES_DB=teslamate
-     - TZ=Europe/London
+     - POSTGRES_USER=${POSTGRES_USER}
+     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+     - POSTGRES_DB=${POSTGRES_DB}
+     - TZ=${TZ}
      - DATABASE_POOL_SIZE=10
     ports:
      - "5432:5432"

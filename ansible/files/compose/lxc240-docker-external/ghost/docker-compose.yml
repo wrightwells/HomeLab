@@ -3,8 +3,10 @@ services:
     image: ghost:5
     container_name: ghost-art
     restart: unless-stopped
+    env_file:
+      - stack.env
     environment:
-      url: http://art.wrightwells.com
+      url=${url}
       database__client: sqlite3
       database__connection__filename: /var/lib/ghost/content/data/ghost.db
     volumes:

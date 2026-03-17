@@ -2,47 +2,55 @@ services:
   cloudflare-ddns-all:
     image: oznu/cloudflare-ddns:latest
     container_name: cloudflare-ddns-all
+    env_file:
+      - stack.env
     environment:
-      - API_KEY=iU-uI1ifmuEwb8yrMSGNLYGvgLUwA05hG1M1u21Z
+      - API_KEY=${API_KEY}
       - ZONE=wrightwells.com
       - SUBDOMAIN=*
       - PROXIED=false
       - DELETE_ON_STOP=true
-      - DNS_SERVER=10.10.20.1
+      - DNS_SERVER=${DNS_SERVER}
     restart: unless-stopped
 
   cloudflare-ddns-all-uk:
     image: oznu/cloudflare-ddns:latest
     container_name: cloudflare-ddns-all-uk
+    env_file:
+      - stack.env
     environment:
-      - API_KEY=iU-uI1ifmuEwb8yrMSGNLYGvgLUwA05hG1M1u21Z
+      - API_KEY=${API_KEY}
       - ZONE=wrightwells.com
       - SUBDOMAIN=*.uk
       - PROXIED=false
       - DELETE_ON_STOP=true
-      - DNS_SERVER=10.10.20.1
+      - DNS_SERVER=${DNS_SERVER}
     restart: unless-stopped
     
   cloudflare-ddns-uk:
     image: oznu/cloudflare-ddns:latest
     container_name: cloudflare-ddns-uk
+    env_file:
+      - stack.env
     environment:
-      - API_KEY=iU-uI1ifmuEwb8yrMSGNLYGvgLUwA05hG1M1u21Z
+      - API_KEY=${API_KEY}
       - ZONE=wrightwells.com
       - SUBDOMAIN=uk
       - PROXIED=false
       - DELETE_ON_STOP=true
-      - DNS_SERVER=10.10.20.1
+      - DNS_SERVER=${DNS_SERVER}
     restart: unless-stopped
     
   cloudflare-ddns-art:
     image: oznu/cloudflare-ddns:latest
     container_name: cloudflare-ddns-art
+    env_file:
+      - stack.env
     environment:
-      - API_KEY=iU-uI1ifmuEwb8yrMSGNLYGvgLUwA05hG1M1u21Z
+      - API_KEY=${API_KEY}
       - ZONE=wrightwells.com
       - SUBDOMAIN=art
       - PROXIED=false
       - DELETE_ON_STOP=true
-      - DNS_SERVER=10.10.20.1
+      - DNS_SERVER=${DNS_SERVER}
     restart: unless-stopped

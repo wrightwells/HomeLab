@@ -6,11 +6,13 @@ services:
     restart: unless-stopped
     depends_on:
       - db
+    env_file:
+      - stack.env
     environment:
-      WORDPRESS_DB_HOST: db:3306
-      WORDPRESS_DB_USER: wordpress
-      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
-      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_HOST=${WORDPRESS_DB_HOST}
+      WORDPRESS_DB_USER=${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD=${WORDPRESS_DB_PASSWORD}
+      WORDPRESS_DB_NAME=${WORDPRESS_DB_NAME}
     volumes:
       - /mnt/appdata/docker_volumes/wordpress/wordpress_data:/var/www/html
       - /mnt/appdata/docker_volumes/wordpress/wordpress_data/php/custom.ini:/usr/local/etc/php/conf.d/zzz_custom.ini
@@ -25,11 +27,13 @@ services:
     container_name: wordpress_db
     restart: unless-stopped
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    env_file:
+      - stack.env
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: wordpress
-      MYSQL_USER: wordpress
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE=${MYSQL_DATABASE}
+      MYSQL_USER=${MYSQL_USER}
+      MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
       - /mnt/appdata/docker_volumes/wordpress/web_data/db_data:/var/lib/mysql
     networks:

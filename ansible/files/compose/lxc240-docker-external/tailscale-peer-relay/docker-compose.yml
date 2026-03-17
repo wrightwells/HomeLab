@@ -6,13 +6,12 @@ services:
 
     cap_add:
       - NET_ADMIN
-
     devices:
       - /dev/net/tun:/dev/net/tun
-
     volumes:
       - /mnt/appdata/docker_volumes/tailscale/tailscale-state:/var/lib/tailscale
-
+    env_file:
+      - stack.env
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY}
       - TS_HOSTNAME=peer-relay-node

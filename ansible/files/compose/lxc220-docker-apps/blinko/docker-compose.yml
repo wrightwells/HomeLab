@@ -3,11 +3,13 @@ services:
     image: postgres:16
     container_name: blinko-db
     restart: unless-stopped
+    env_file:
+      - stack.env
     environment:
-      POSTGRES_DB: blinko
-      POSTGRES_USER: blinko
-      POSTGRES_PASSWORD: mirror
-      TZ: Europe/London
+      POSTGRES_DB=${POSTGRES_DB}
+      POSTGRES_USER=${POSTGRES_USER}
+      POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      TZ=${TZ}
     volumes:
       - /mnt/appdata/docker_volumes/blinko/db:/var/lib/postgresql/data
 
@@ -17,17 +19,19 @@ services:
     restart: unless-stopped
     ports:
       - "10.10.20.220:1111:1111"
+    env_file:
+      - stack.env
     environment:
-      TZ: Europe/London
+      TZ=${TZ}
       # Database
       DATABASE_URL: postgresql://blinko:mirror@blinko-db:5432/blinko
       # Public URL
-      NEXT_PUBLIC_APP_URL: https://notes.wrightwells.com
+      NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
       # File storage
       STORAGE_LOCAL_PATH: /app/storage
       # Ollama AI
-      #OLLAMA_BASE_URL: http://10.10.20.210:11434
-      #OLLAMA_MODEL: llama3:8b
+      OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      OLLAMA_MODEL=${OLLAMA_MODEL}
     volumes:
       - /mnt/appdata/docker_volumes/blinko/files:/app/storage
       

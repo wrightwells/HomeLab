@@ -6,11 +6,13 @@ services:
     restart: unless-stopped
     ports:
       - "3002:3000"
+    env_file:
+      - stack.env
     environment:
-      SEMAPHORE_DB_DIALECT: bolt
-      SEMAPHORE_ADMIN: admin
-      SEMAPHORE_ADMIN_PASSWORD: password
-      SEMAPHORE_ADMIN_NAME: admin
-      SEMAPHORE_ADMIN_EMAIL: wrightwells@hotmail.com
+      SEMAPHORE_DB_DIALECT=${SEMAPHORE_DB_DIALECT}
+      SEMAPHORE_ADMIN=${SEMAPHORE_ADMIN}
+      SEMAPHORE_ADMIN_PASSWORD=${SEMAPHORE_ADMIN_PASSWORD}
+      SEMAPHORE_ADMIN_NAME=${SEMAPHORE_ADMIN_NAME}
+      SEMAPHORE_ADMIN_EMAIL=${SEMAPHORE_ADMIN_EMAIL}
     volumes:
       - /mnt/appdata/docker_volumes/semaphore:/var/lib/semaphore

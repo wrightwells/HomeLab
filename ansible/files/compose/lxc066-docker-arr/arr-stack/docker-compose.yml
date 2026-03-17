@@ -24,22 +24,24 @@ services:
 
       
     volumes:
-      - /host_data/arr-stack/config/gluetun:/gluetun
+      - /mnt/appdata/docker_volumes/gluetun:/gluetun
+    env_file:
+      - stack.env
     environment:
       - FIREWALL_INPUT_PORTS=8085,9117,8989,9696,7878,8686,6767,7575,8080,8787
       - FIREWALL_OUTBOUND_SUBNETS=100.64.0.0/10
       # See https://github.com/qdm12/gluetun-wiki/tree/main/setup#setup
-      - VPN_SERVICE_PROVIDER=private internet access      # nordvpn
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}      # nordvpn
       # - VPN_TYPE=wireguard
       # OpenVPN:
-      - OPENVPN_USER=p7519165
-      - OPENVPN_PASSWORD=XaBSZAn9ZUV3ao6
-      - SERVER_REGIONS=Netherlands,Belgium,France,Germany,Italy,Netherlands,Poland,England
+      - OPENVPN_USER=${OPENVPN_USER}
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
+      - SERVER_REGIONS=${SERVER_REGIONS}
       # Wireguard:
       #- WIREGUARD_PRIVATE_KEY=<YOUR_PRIVATE_KEY> # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/providers/nordvpn.md#obtain-your-wireguard-private-key
       #- WIREGUARD_ADDRESSES=10.5.0.2/32
       # Timezone for accurate log times
-      - TZ=Europe/London
+      - TZ=${TZ}
       # Server list updater
       # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/servers.md#update-the-vpn-servers-list
       - UPDATER_PERIOD=24h
@@ -49,10 +51,12 @@ services:
     image: lscr.io/linuxserver/qbittorrent
     container_name: qbittorrent
     network_mode: "service:gluetun"
+    env_file:
+      - stack.env
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/London
+      - TZ=${TZ}
       - WEBUI_PORT=8085
     volumes:
       - /mnt/appdata/docker_volumes/qbittorrent:/config
@@ -66,10 +70,12 @@ services:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
     network_mode: "service:gluetun"
+    env_file:
+      - stack.env
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=${TZ}
       volumes:
       - /mnt/appdata/docker_volumes/prowlarr:/config
     restart: unless-stopped
@@ -79,10 +85,12 @@ services:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
     network_mode: "service:gluetun"
+    env_file:
+      - stack.env
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=${TZ}
     volumes:
       - /mnt/appdata/docker_volumes/sonarr:/config
       - /mnt/media_pool:/media
@@ -92,10 +100,12 @@ services:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     network_mode: "service:gluetun"
+    env_file:
+      - stack.env
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=${TZ}
     volumes:
       - /mnt/appdata/docker_volumes/radarr:/config
       - /mnt/media_pool:/media
@@ -105,10 +115,12 @@ services:
     image: lscr.io/linuxserver/lidarr:latest
     container_name: lidarr
     network_mode: "service:gluetun"
+    env_file:
+      - stack.env
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=${TZ}
     volumes:
       - /mnt/appdata/docker_volumes/lidarr:/config
       - /mnt/media_pool:/media
@@ -118,10 +130,12 @@ services:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
     network_mode: "service:gluetun"
+    env_file:
+      - stack.env
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=${TZ}
     volumes:
       - /mnt/appdata/docker_volumes/bazarr/config:/config
       - /mnt/media_pool:/data
@@ -131,10 +145,12 @@ services:
     image: lscr.io/linuxserver/readarr:develop
     container_name: readarr
     network_mode: "service:gluetun"
+    env_file:
+      - stack.env
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=${TZ}
     volumes:
       - /mnt/appdata/docker_volumes/readarr:/config
       - /mnt/media_pool:/media

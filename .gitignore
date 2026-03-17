@@ -10,3 +10,7 @@ crash.log
 .vscode/
 .DS_Store
 Thumbs.db
+**/stack.env
+**/.env
+!**/stack.env.example
+!**/.env.example
