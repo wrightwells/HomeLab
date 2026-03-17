@@ -1,11 +1,9 @@
 services:
   walletpage:
-    image: nginx:latest
+    image: nginx:alpine
     container_name: walletpage
-    restart: unless-stopped
-    environment:
-      - TZ=Europe/London
     ports:
-      - "8089:80"
+      - "8070:80"
     volumes:
-      - /mnt/appdata/docker_volumes/walletpage:/usr/share/nginx/html
+      - /mnt/appdata/docker_volumes/walletpage:/usr/share/nginx/html:ro
+    restart: unless-stopped

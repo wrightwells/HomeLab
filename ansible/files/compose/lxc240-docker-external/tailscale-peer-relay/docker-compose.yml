@@ -1,11 +1,23 @@
 services:
-  tailscale:
+  tailscale-peer-relay:
     image: tailscale/tailscale:latest
-    container_name: tailscale
+    container_name: tailscale-peer-relay
     restart: unless-stopped
-    environment:
-      - TZ=Europe/London
-    ports:
-      - "41641:41641/udp"
+
+    cap_add:
+      - NET_ADMIN
+
+    devices:
+      - /dev/net/tun:/dev/net/tun
+
     volumes:
-      - /mnt/appdata/docker_volumes/tailscale:/var/lib/tailscale
+      - /mnt/appdata/docker_volumes/tailscale/tailscale-state:/var/lib/tailscale
+
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=peer-relay-node
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+
+    network_mode: host
+  

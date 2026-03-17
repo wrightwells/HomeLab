@@ -1,11 +1,26 @@
 services:
   kutt:
-    image: kutt/kutt:latest
-    container_name: kutt
-    restart: unless-stopped
-    environment:
-      - TZ=Europe/London
+    image: kutt/kutt
     ports:
-      - "3002:3000"
+      - "7070:3000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: kutt
+      DB_USER: kutt
+      DB_PASSWORD: kuttpass
+      JWT_SECRET: m1rr0r00m1rr0r00
+
+      DEFAULT_DOMAIN: links.wrightwells.com
+      SITE_NAME: Wrightwells Links
+    depends_on:
+      - db
+
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: kutt
+      POSTGRES_USER: kutt
+      POSTGRES_PASSWORD: kuttpass
     volumes:
-      - /mnt/appdata/docker_volumes/kutt:/kutt
+      - /mnt/appdata/docker_volumes/kutt:/var/lib/postgresql/data

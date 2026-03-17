@@ -1,0 +1,30 @@
+services:
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    hostname: jellyswarrm-node
+    privileged: true
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+
+
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    restart: unless-stopped
+
+  jellyswarrm:
+    image: ghcr.io/llukas22/jellyswarrm:latest
+    container_name: jellyswarrm-proxy
+    network_mode: "service:tailscale"
+    volumes:
+      - /mnt/appdata/docker_volumes/jellyswarrm/data:/app/data
+    environment:
+      - JELLYSWARRM_USERNAME=${JS_USERNAME}
+      - JELLYSWARRM_PASSWORD=${JS_PASSWORD}
+    restart: unless-stopped
+
+volumes:
+  tailscale-state:

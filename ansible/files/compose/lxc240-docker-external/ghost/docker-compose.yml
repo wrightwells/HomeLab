@@ -1,11 +1,13 @@
 services:
   ghost:
-    image: ghost:latest
-    container_name: ghost
+    image: ghost:5
+    container_name: ghost-art
     restart: unless-stopped
     environment:
-      - TZ=Europe/London
-    ports:
-      - "2368:2368"
+      url: http://art.wrightwells.com
+      database__client: sqlite3
+      database__connection__filename: /var/lib/ghost/content/data/ghost.db
     volumes:
       - /mnt/appdata/docker_volumes/ghost:/var/lib/ghost/content
+    ports:
+      - "2368:2368"

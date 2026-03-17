@@ -1,11 +1,40 @@
+
 services:
   wordpress:
-    image: wordpress:latest
+    image: wordpress:6.9.1-php8.2-apache
     container_name: wordpress
     restart: unless-stopped
+    depends_on:
+      - db
     environment:
-      - TZ=Europe/London
-    ports:
-      - "8088:80"
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      WORDPRESS_DB_NAME: wordpress
     volumes:
-      - /mnt/appdata/docker_volumes/wordpress:/var/www/html
+      - /mnt/appdata/docker_volumes/wordpress/wordpress_data:/var/www/html
+      - /mnt/appdata/docker_volumes/wordpress/wordpress_data/php/custom.ini:/usr/local/etc/php/conf.d/zzz_custom.ini
+ 
+    ports:
+       - "8080:80"   # Remove if using reverse proxy
+    networks:
+      - wordpress_net
+
+  db:
+    image: mariadb:10.11.6
+    container_name: wordpress_db
+    restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - /mnt/appdata/docker_volumes/wordpress/web_data/db_data:/var/lib/mysql
+    networks:
+      - wordpress_net
+
+networks:
+  wordpress_net:
+    driver: bridge

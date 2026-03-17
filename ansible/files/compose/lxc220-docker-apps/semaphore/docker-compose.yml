@@ -1,0 +1,16 @@
+services:
+  semaphore:
+    image: semaphoreui/semaphore:latest
+    container_name: ansible-semaphore
+    user: "0"
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      SEMAPHORE_DB_DIALECT: bolt
+      SEMAPHORE_ADMIN: admin
+      SEMAPHORE_ADMIN_PASSWORD: password
+      SEMAPHORE_ADMIN_NAME: admin
+      SEMAPHORE_ADMIN_EMAIL: wrightwells@hotmail.com
+    volumes:
+      - /mnt/appdata/docker_volumes/semaphore:/var/lib/semaphore
