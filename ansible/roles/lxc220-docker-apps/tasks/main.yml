@@ -25,6 +25,9 @@
     - grist
     - blinko
     - finance
+    - eurgo
+    - homarr
+    - semaphore
 
 - name: Copy compose files
   ansible.builtin.copy:
@@ -44,6 +47,9 @@
     - grist
     - blinko
     - finance
+    - eurgo
+    - homarr
+    - semaphore
 
 - name: Start compose stacks
   community.docker.docker_compose_v2:
@@ -60,3 +66,6 @@
     - grist
     - blinko
     - finance
+    - eurgo
+    - homarr
+    - semaphore

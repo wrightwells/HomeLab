@@ -17,6 +17,7 @@
   loop:
     - plex
     - jellyfin
+    - jellyswarrm
 
 - name: Copy compose files
   ansible.builtin.copy:
@@ -28,6 +29,7 @@
   loop:
     - plex
     - jellyfin
+    - jellyswarrm
 
 - name: Start compose stacks
   community.docker.docker_compose_v2:
@@ -36,3 +38,4 @@
   loop:
     - plex
     - jellyfin
+    - jellyswarrm

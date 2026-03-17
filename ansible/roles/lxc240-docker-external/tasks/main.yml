@@ -17,7 +17,6 @@
   loop:
     - nginx
     - tailscale-peer-relay
-    - jellyswarm
     - ghost
     - dnns
     - kutt
@@ -34,7 +33,6 @@
   loop:
     - nginx
     - tailscale-peer-relay
-    - jellyswarm
     - ghost
     - dnns
     - kutt
@@ -48,7 +46,6 @@
   loop:
     - nginx
     - tailscale-peer-relay
-    - jellyswarm
     - ghost
     - dnns
     - kutt
