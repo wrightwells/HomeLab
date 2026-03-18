@@ -1,0 +1,17 @@
+services:
+  openvscode-server:
+    image: lscr.io/linuxserver/openvscode-server:latest
+    container_name: openvscode-server
+    restart: unless-stopped
+    ports:
+      - "3100:3000"
+    env_file:
+      - stack.env
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - CONNECTION_TOKEN=${CONNECTION_TOKEN}
+    volumes:
+      - /mnt/appdata/openvscode/config:/config
+      - /srv/code:/workspace

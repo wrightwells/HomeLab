@@ -3,11 +3,15 @@ services:
     image: ghcr.io/blakeblackshear/frigate:stable
     container_name: frigate
     restart: unless-stopped
+    privileged: true
+    shm_size: "512mb"
+    network_mode: host
     environment:
       - TZ=Europe/London
-    ports:
-      - "5000:5000"
+      - NVIDIA_VISIBLE_DEVICES=all
+      - LIBVA_DRIVER_NAME=nvidia
     volumes:
       - /mnt/appdata/configs/frigate:/config
-      - /mnt/ai_cache/frigate_recordings:/media/frigate
+      - /mnt/ai_cache/frigate:/media/frigate
       - /etc/localtime:/etc/localtime:ro
+    gpus: all

@@ -3,10 +3,10 @@ services:
     image: ghcr.io/home-assistant/home-assistant:stable
     container_name: homeassistant
     restart: unless-stopped
+    network_mode: host
+    privileged: true
     environment:
       - TZ=Europe/London
-    ports:
-      - "8123:8123"
     volumes:
-      - /mnt/appdata/configs/home-assistant:/config
+      - /mnt/appdata/homeassistant:/config
       - /etc/localtime:/etc/localtime:ro
