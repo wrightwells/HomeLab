@@ -141,6 +141,16 @@ Example:
 vm210_clone_vmid = 9000
 ```
 
+If you want the host storage prepared by Ansible, run the dedicated Proxmox host
+storage playbook before Terraform:
+
+- [README-storage.md](/home/ww/HomeLab/HomeLab/README-storage.md)
+- [proxmox-storage.yml](/home/ww/HomeLab/HomeLab/ansible/playbooks/proxmox-storage.yml)
+
+Treat [README-storage.md](/home/ww/HomeLab/HomeLab/README-storage.md) as the
+detailed sub-guide for this one first-install step, then return here and
+continue the main bootstrap checklist.
+
 ## 5. Create the Ansible vault password file
 
 Create a local vault password file on the machine where you will run Ansible:
@@ -177,7 +187,32 @@ This installs the collections declared in:
 
 - [requirements.yml](/home/ww/HomeLab/HomeLab/ansible/requirements.yml)
 
-## 7. Configure Terraform variables
+## 7. Bootstrap Proxmox host storage if required
+
+If this is the first build and you want Ansible to prepare the host NVMe,
+appdata ZFS mirror, and initial MergerFS media disk, update:
+
+- [proxmox.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/group_vars/proxmox.yml)
+
+Then run:
+
+```bash
+cd ansible
+ansible-playbook -i inventories/production/hosts.ini playbooks/proxmox-storage.yml
+```
+
+Before you run that playbook, replace the placeholder `/dev/disk/by-id/...`
+values in:
+
+- [proxmox.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/group_vars/proxmox.yml)
+
+After the initial format-and-create run, set:
+
+```yaml
+proxmox_storage_allow_destructive_create: false
+```
+
+## 8. Configure Terraform variables
 
 Copy the example file and update it:
 
@@ -226,7 +261,7 @@ Set at least:
 - pfSense needs separate WAN, LAN/trunk, and DMZ interfaces for this design.
 - External exposure and NAT are expected to be handled in pfSense, not Terraform.
 
-## 8. Initialize and validate Terraform
+## 9. Initialize and validate Terraform
 
 Run:
 
@@ -238,7 +273,7 @@ terraform -chdir=terraform validate
 
 Review the plan before applying.
 
-## 9. Apply Terraform
+## 10. Apply Terraform
 
 Run:
 
@@ -251,7 +286,7 @@ Terraform will:
 - create the declared Proxmox VMs and LXCs
 - render the Ansible inventory file used by the playbooks
 
-## 10. Add GPU passthrough later, after the Proxmox host exists
+## 11. Add GPU passthrough later, after the Proxmox host exists
 
 The AI VM can be created now without the RTX 3060 attached. Once the host is
 built, Proxmox is installed, and the GPU is physically present, finish the
@@ -284,7 +319,7 @@ Important:
 - When the host is ready, update the `vm210-ai-gpu` module to attach the PCI
   device at that recorded address.
 
-## 11. Verify Ansible can see the hosts
+## 12. Verify Ansible can see the hosts
 
 Run:
 
@@ -300,7 +335,7 @@ If this fails, check:
 - the configured `ansible_user`
 - that your vault password file is available
 
-## 12. Run the full deployment
+## 13. Run the full deployment
 
 Run:
 
@@ -318,7 +353,7 @@ This will:
 - ping all hosts
 - run the Ansible site playbook
 
-## 13. Pull the initial Ollama models
+## 14. Pull the initial Ollama models
 
 After the AI VM stack is up, load the initial coding models into Ollama:
 
@@ -329,7 +364,7 @@ docker exec -it ollama ollama pull qwen2.5-coder:14b
 
 These become available through the Open WebUI API layer.
 
-## 14. Configure the Continue API front door
+## 15. Configure the Continue API front door
 
 If you want one consistent API front door and plan to add more providers later,
 point Continue at Open WebUI instead of talking directly to Ollama.
@@ -375,7 +410,7 @@ Notes:
 - this keeps Continue pointed at one OpenAI-compatible endpoint even if you add
   more local or remote providers later
 
-## 15. Add encrypted stack environment files
+## 16. Add encrypted stack environment files
 
 When a Docker stack needs secrets:
 
@@ -393,7 +428,7 @@ ansible-vault encrypt ansible/files/compose/lxc220-docker-apps/my-service/stack.
 At deploy time, Ansible decrypts `stack.env.vault` and writes `stack.env` onto
 the target host.
 
-## 16. Information you may still need to fill in manually
+## 17. Information you may still need to fill in manually
 
 Depending on the environment, you may still need to provide:
 

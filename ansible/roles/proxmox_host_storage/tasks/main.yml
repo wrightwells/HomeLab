@@ -1,0 +1,182 @@
+---
+- name: Validate required Proxmox storage inputs
+  ansible.builtin.assert:
+    that:
+      - proxmox_nvme_device | length > 0
+      - proxmox_appdata_zfs_disks | length == 2
+      - proxmox_media_disks | length >= 1
+    fail_msg: "Set the Proxmox host storage device variables before running this playbook."
+
+- name: Install host storage packages
+  ansible.builtin.apt:
+    name:
+      - mergerfs
+      - xfsprogs
+    state: present
+    update_cache: true
+
+- name: Ensure host storage mount roots exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ proxmox_nvme_mount_root }}"
+    - "{{ proxmox_ai_models_mount }}"
+    - "{{ proxmox_ai_cache_mount }}"
+    - "{{ proxmox_media_pool_mount }}"
+
+- name: Check NVMe filesystem type
+  ansible.builtin.command:
+    cmd: "blkid -o value -s TYPE {{ proxmox_nvme_device }}"
+  register: proxmox_nvme_fs
+  changed_when: false
+  failed_when: false
+
+- name: Refuse to overwrite unexpected NVMe filesystem
+  ansible.builtin.assert:
+    that:
+      - proxmox_nvme_fs.stdout == "" or proxmox_nvme_fs.stdout == proxmox_nvme_fstype
+    fail_msg: "NVMe device already has filesystem {{ proxmox_nvme_fs.stdout }} but {{ proxmox_nvme_fstype }} is configured."
+
+- name: Require explicit confirmation before formatting the NVMe
+  ansible.builtin.assert:
+    that:
+      - proxmox_storage_allow_destructive_create
+    fail_msg: "Set proxmox_storage_allow_destructive_create=true for the first run that formats disks."
+  when: proxmox_nvme_fs.stdout == ""
+
+- name: Format the NVMe with ext4 on first bootstrap
+  ansible.builtin.command:
+    cmd: "mkfs.ext4 -F {{ proxmox_nvme_device }}"
+  when: proxmox_nvme_fs.stdout == ""
+
+- name: Mount the NVMe root
+  ansible.posix.mount:
+    path: "{{ proxmox_nvme_mount_root }}"
+    src: "{{ proxmox_nvme_device }}"
+    fstype: "{{ proxmox_nvme_fstype }}"
+    opts: defaults
+    state: mounted
+
+- name: Ensure NVMe subdirectories exist
+  ansible.builtin.file:
+    path: "{{ proxmox_nvme_mount_root }}/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ proxmox_ai_models_subdir }}"
+    - "{{ proxmox_ai_cache_subdir }}"
+
+- name: Bind-mount AI model storage
+  ansible.posix.mount:
+    path: "{{ proxmox_ai_models_mount }}"
+    src: "{{ proxmox_nvme_mount_root }}/{{ proxmox_ai_models_subdir }}"
+    fstype: none
+    opts: bind
+    state: mounted
+
+- name: Bind-mount AI cache storage
+  ansible.posix.mount:
+    path: "{{ proxmox_ai_cache_mount }}"
+    src: "{{ proxmox_nvme_mount_root }}/{{ proxmox_ai_cache_subdir }}"
+    fstype: none
+    opts: bind
+    state: mounted
+
+- name: Check whether the appdata ZFS pool already exists
+  ansible.builtin.command:
+    cmd: "zpool list -H -o name {{ proxmox_appdata_zpool_name }}"
+  register: proxmox_appdata_zpool
+  changed_when: false
+  failed_when: false
+
+- name: Require explicit confirmation before creating the ZFS mirror
+  ansible.builtin.assert:
+    that:
+      - proxmox_storage_allow_destructive_create
+    fail_msg: "Set proxmox_storage_allow_destructive_create=true for the first run that creates the ZFS mirror."
+  when: proxmox_appdata_zpool.rc != 0
+
+- name: Create the appdata ZFS mirror on first bootstrap
+  ansible.builtin.command:
+    cmd: >-
+      zpool create -f
+      -o ashift=12
+      -O compression=lz4
+      -O atime=off
+      -O mountpoint={{ proxmox_appdata_mountpoint }}
+      {{ proxmox_appdata_zpool_name }}
+      mirror
+      {{ proxmox_appdata_zfs_disks | join(' ') }}
+  when: proxmox_appdata_zpool.rc != 0
+
+- name: Ensure the appdata ZFS pool mountpoint is set
+  ansible.builtin.command:
+    cmd: "zfs set mountpoint={{ proxmox_appdata_mountpoint }} {{ proxmox_appdata_zpool_name }}"
+  changed_when: false
+
+- name: Build media disk mount definitions
+  ansible.builtin.set_fact:
+    proxmox_media_mounts: "{{ (proxmox_media_mounts | default([])) + [ {'device': item, 'path': proxmox_media_branch_root ~ '/' ~ proxmox_media_branch_prefix ~ ('%02d' | format(ansible_loop.index)) } ] }}"
+  loop: "{{ proxmox_media_disks }}"
+  loop_control:
+    extended: true
+
+- name: Check media disk filesystem types
+  ansible.builtin.command:
+    cmd: "blkid -o value -s TYPE {{ item.device }}"
+  loop: "{{ proxmox_media_mounts }}"
+  register: proxmox_media_fs
+  changed_when: false
+  failed_when: false
+
+- name: Refuse to overwrite unexpected media disk filesystems
+  ansible.builtin.assert:
+    that:
+      - item.stdout == "" or item.stdout == proxmox_media_disk_fstype
+    fail_msg: "Media device {{ item.item.device }} already has filesystem {{ item.stdout }} but {{ proxmox_media_disk_fstype }} is configured."
+  loop: "{{ proxmox_media_fs.results }}"
+
+- name: Require explicit confirmation before formatting media disks
+  ansible.builtin.assert:
+    that:
+      - proxmox_storage_allow_destructive_create
+    fail_msg: "Set proxmox_storage_allow_destructive_create=true for the first run that formats media disks."
+  when: (proxmox_media_fs.results | selectattr('stdout', 'equalto', '') | list | length) > 0
+
+- name: Format media disks with xfs on first bootstrap
+  ansible.builtin.command:
+    cmd: "mkfs.xfs -f {{ item.item.device }}"
+  loop: "{{ proxmox_media_fs.results }}"
+  when: item.stdout == ""
+
+- name: Ensure media branch mountpoints exist
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ proxmox_media_mounts }}"
+
+- name: Mount each media disk branch
+  ansible.posix.mount:
+    path: "{{ item.path }}"
+    src: "{{ item.device }}"
+    fstype: "{{ proxmox_media_disk_fstype }}"
+    opts: defaults
+    state: mounted
+  loop: "{{ proxmox_media_mounts }}"
+
+- name: Mount the MergerFS media pool
+  ansible.posix.mount:
+    path: "{{ proxmox_media_pool_mount }}"
+    src: "{{ proxmox_media_mounts | map(attribute='path') | join(':') }}"
+    fstype: fuse.mergerfs
+    opts: "{{ proxmox_mergerfs_opts }}"
+    state: mounted

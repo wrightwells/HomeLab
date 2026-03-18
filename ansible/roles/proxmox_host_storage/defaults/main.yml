@@ -1,0 +1,21 @@
+---
+proxmox_storage_allow_destructive_create: false
+
+proxmox_nvme_device: ""
+proxmox_nvme_fstype: ext4
+proxmox_nvme_mount_root: /mnt/ai_nvme
+proxmox_ai_models_subdir: ai_models
+proxmox_ai_cache_subdir: ai_cache
+proxmox_ai_models_mount: /mnt/ai_models
+proxmox_ai_cache_mount: /mnt/ai_cache
+
+proxmox_appdata_zpool_name: appdata
+proxmox_appdata_zfs_disks: []
+proxmox_appdata_mountpoint: /mnt/appdata
+
+proxmox_media_disks: []
+proxmox_media_disk_fstype: xfs
+proxmox_media_branch_root: /mnt
+proxmox_media_branch_prefix: media_disk
+proxmox_media_pool_mount: /mnt/media_pool
+proxmox_mergerfs_opts: "defaults,allow_other,use_ino,category.create=mfs,moveonenospc=true,fsname=mergerfs"
