@@ -69,8 +69,8 @@ locals {
       name   = "pfsense"
       type   = "vm"
       vmid   = 100
-      ip     = "dhcp"
-      groups = ["firewall"]
+      ip     = "10.10.99.1"
+      groups = ["pfsense_firewall"]
       user   = "admin"
     }
 

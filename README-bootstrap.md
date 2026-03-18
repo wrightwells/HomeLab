@@ -503,7 +503,21 @@ This will:
 - ping all hosts
 - run the Ansible site playbook
 
-## 15. Pull the initial Ollama models
+## 15. Apply pfSense configuration
+
+After Terraform has built the lab and the Linux hosts have been configured, run
+the dedicated pfSense playbook:
+
+```bash
+cd ansible
+ansible-playbook -i inventories/production/hosts.ini playbooks/pfsense.yml
+```
+
+Before running it, complete the manual pfSense GUI prerequisites in:
+
+- [README-pfsense.md](README-pfsense.md)
+
+## 16. Pull the initial Ollama models
 
 After the AI VM stack is up, log into the AI VM and run these commands in the
 AI VM terminal to load the initial Ollama models:
@@ -532,7 +546,7 @@ docker exec -it ollama ollama pull MODEL_NAME
 
 These models then become available through the Open WebUI API layer.
 
-## 16. Configure the Continue API front door
+## 17. Configure the Continue API front door
 
 If you want one consistent API front door and plan to add more providers later,
 point Continue at Open WebUI instead of talking directly to Ollama.
@@ -598,7 +612,7 @@ Notes:
 - this keeps Continue pointed at one OpenAI-compatible endpoint even if you add
   more local or remote providers later
 
-## 17. Add encrypted stack environment files
+## 18. Add encrypted stack environment files
 
 When a Docker stack needs secrets:
 
@@ -616,7 +630,7 @@ ansible-vault encrypt ansible/files/compose/lxc220-docker-apps/my-service/stack.
 At deploy time, Ansible decrypts `stack.env.vault` and writes `stack.env` onto
 the target host.
 
-## 18. Information you may still need to fill in manually
+## 19. Information you may still need to fill in manually
 
 Depending on the environment, you may still need to provide:
 
@@ -631,5 +645,6 @@ Depending on the environment, you may still need to provide:
 ## Related guides
 
 - [README.md](README.md)
+- [README-pfsense.md](README-pfsense.md)
 - [README-add-docker-component.md](README-add-docker-component.md)
 - [README.md](ansible/README.md)

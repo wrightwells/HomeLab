@@ -1,0 +1,30 @@
+---
+- name: Read pfSense config.xml for validation
+  ansible.builtin.slurp:
+    src: /cf/conf/config.xml
+  register: pfsense_config_xml_raw
+
+- name: Decode pfSense config.xml
+  ansible.builtin.set_fact:
+    pfsense_config_xml_text: "{{ pfsense_config_xml_raw.content | b64decode }}"
+
+- name: Validate expected gateways are present
+  ansible.builtin.assert:
+    that:
+      - "'<name>{{ item }}</name>' in pfsense_config_xml_text"
+    fail_msg: "Expected gateway {{ item }} was not found in pfSense config.xml"
+  loop: "{{ pfsense_expected_gateways }}"
+
+- name: Validate expected DHCP range markers are present
+  ansible.builtin.assert:
+    that:
+      - "item in pfsense_config_xml_text"
+    fail_msg: "Expected DHCP range marker {{ item }} was not found in pfSense config.xml"
+  loop: "{{ pfsense_expected_dhcp_ranges }}"
+
+- name: Validate expected package markers are present
+  ansible.builtin.assert:
+    that:
+      - "item in (pfsense_config_xml_text | lower)"
+    fail_msg: "Expected package marker {{ item }} was not found in pfSense config.xml"
+  loop: "{{ pfsense_expected_package_markers }}"

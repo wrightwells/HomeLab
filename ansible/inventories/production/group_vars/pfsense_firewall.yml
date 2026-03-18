@@ -1,0 +1,331 @@
+---
+pfsense_manual_packages:
+  - pfBlockerNG-devel
+  - Tailscale
+
+pfsense_manual_services:
+  - OpenVPN client configuration for PIA_VPN
+
+pfsense_vlans:
+  - interface: vtnet1
+    vlan_id: 99
+    descr: Management
+  - interface: vtnet1
+    vlan_id: 10
+    descr: Workstations
+  - interface: vtnet1
+    vlan_id: 20
+    descr: Servers
+  - interface: vtnet1
+    vlan_id: 30
+    descr: Media
+  - interface: vtnet1
+    vlan_id: 40
+    descr: IOT
+  - interface: vtnet1
+    vlan_id: 50
+    descr: CCTV
+  - interface: vtnet1
+    vlan_id: 60
+    descr: Guest
+
+pfsense_interfaces:
+  - descr: LAN
+    interface: vtnet1
+    enable: true
+    ipv4_type: static
+    ipv4_address: 10.10.1.1
+    ipv4_prefixlen: 24
+  - descr: vETH
+    interface: vtnet2
+    enable: true
+    ipv4_type: static
+    ipv4_address: 10.10.66.1
+    ipv4_prefixlen: 24
+  - descr: Management
+    interface: vtnet1.99
+    enable: true
+    ipv4_type: static
+    ipv4_address: 10.10.99.1
+    ipv4_prefixlen: 24
+  - descr: Workstations
+    interface: vtnet1.10
+    enable: true
+    ipv4_type: static
+    ipv4_address: 10.10.10.1
+    ipv4_prefixlen: 24
+  - descr: Servers
+    interface: vtnet1.20
+    enable: true
+    ipv4_type: static
+    ipv4_address: 10.10.20.1
+    ipv4_prefixlen: 24
+  - descr: Media
+    interface: vtnet1.30
+    enable: true
+    ipv4_type: static
+    ipv4_address: 10.10.30.1
+    ipv4_prefixlen: 24
+  - descr: IOT
+    interface: vtnet1.40
+    enable: true
+    ipv4_type: static
+    ipv4_address: 10.10.40.1
+    ipv4_prefixlen: 24
+  - descr: CCTV
+    interface: vtnet1.50
+    enable: true
+    ipv4_type: static
+    ipv4_address: 10.10.50.1
+    ipv4_prefixlen: 24
+  - descr: Guest
+    interface: vtnet1.60
+    enable: true
+    ipv4_type: static
+    ipv4_address: 10.10.60.1
+    ipv4_prefixlen: 24
+
+pfsense_aliases:
+  - name: RFC1918
+    type: network
+    address: "192.168.0.0/16 172.16.0.0/12 10.0.0.0/8"
+    detail: "RFC1918||RFC1918||RFC1918"
+    descr: RFC1918
+  - name: LittleDown
+    type: network
+    address: "10.10.0.0/16"
+    detail: "all LittleDown networks"
+    descr: LittleDown
+  - name: Goue
+    type: network
+    address: "10.20.0.0/16"
+    detail: "all Goue networks"
+    descr: Goue
+  - name: proxmox_host
+    type: host
+    address: "10.10.99.10"
+    detail: "Proxmox host"
+    descr: proxmox_host
+  - name: ai_vm
+    type: host
+    address: "10.10.20.210"
+    detail: "AI GPU VM"
+    descr: ai_vm
+  - name: teslamate_host
+    type: host
+    address: "10.10.20.220"
+    detail: "Teslamate host"
+    descr: teslamate_host
+  - name: nginx_public
+    type: host
+    address: "10.10.66.240"
+    detail: "Public nginx host"
+    descr: nginx_public
+  - name: media_host
+    type: host
+    address: "10.10.20.230"
+    detail: "Media host"
+    descr: media_host
+  - name: mqtt_host
+    type: host
+    address: "10.10.20.250"
+    detail: "MQTT on infra host"
+    descr: mqtt_host
+  - name: tailscale_peer_relay
+    type: host
+    address: "10.10.66.110"
+    detail: "Tailscale peer relay"
+    descr: tailscale_peer_relay
+  - name: Plex_port
+    type: port
+    address: "32400"
+    detail: "Plex_port"
+  - name: Jellyfin_port
+    type: port
+    address: "8096"
+    detail: "Jellyfin_port"
+  - name: MQTT_port
+    type: port
+    address: "1883"
+    detail: "MQTT_port"
+  - name: Browsing
+    type: port
+    address: "80 443 8080 53 5353"
+    detail: "http||https||alt-http||dns||mdns"
+  - name: tailscale_port
+    type: port
+    address: "41641"
+    detail: "tailscale_port"
+  - name: rustdesk_relay_port
+    type: port
+    address: "40000"
+    detail: "rustdesk_relay_port"
+
+pfsense_rule_groups:
+  management:
+    - name: "Management to Proxmox"
+      interface: opt2
+      action: pass
+      protocol: tcp
+      source: NET:opt2
+      destination: proxmox_host
+      destination_port: "8006"
+    - name: "Management to Nginx"
+      interface: opt2
+      action: pass
+      protocol: tcp
+      source: NET:opt2
+      destination: nginx_public
+      destination_port: Browsing
+    - name: "Management to RFC1918"
+      interface: opt2
+      action: pass
+      protocol: any
+      source: NET:opt2
+      destination: RFC1918
+  servers:
+    - name: "Servers to RFC1918"
+      interface: opt4
+      action: pass
+      protocol: any
+      source: NET:opt4
+      destination: RFC1918
+    - name: "Servers to Internet"
+      interface: opt4
+      action: pass
+      protocol: any
+      source: NET:opt4
+      destination: any
+  media:
+    - name: "Media to Plex"
+      interface: opt5
+      action: pass
+      protocol: tcp
+      source: NET:opt5
+      destination: media_host
+      destination_port: Plex_port
+    - name: "Media to Jellyfin"
+      interface: opt5
+      action: pass
+      protocol: tcp
+      source: NET:opt5
+      destination: media_host
+      destination_port: Jellyfin_port
+  iot:
+    - name: "IOT to Home Assistant"
+      interface: opt6
+      action: pass
+      protocol: any
+      source: NET:opt6
+      destination: ai_vm
+    - name: "IOT to MQTT"
+      interface: opt6
+      action: pass
+      protocol: tcp
+      source: NET:opt6
+      destination: mqtt_host
+      destination_port: MQTT_port
+  cctv:
+    - name: "CCTV to Home Assistant"
+      interface: opt7
+      action: pass
+      protocol: any
+      source: NET:opt7
+      destination: ai_vm
+  guest:
+    - name: "Guest to Browsing"
+      interface: opt8
+      action: pass
+      protocol: tcp/udp
+      source: NET:opt8
+      destination: any
+      destination_port: Browsing
+  tailscale:
+    - name: "Tailscale to Nginx"
+      interface: opt10
+      action: pass
+      protocol: tcp
+      source: any
+      destination: nginx_public
+      destination_port: "443"
+    - name: "Tailscale to RustDesk relay"
+      interface: opt10
+      action: pass
+      protocol: udp
+      source: any
+      destination: tailscale_peer_relay
+      destination_port: rustdesk_relay_port
+
+pfsense_nat_rules:
+  - descr: Teslamate
+    interface: wan
+    protocol: tcp/udp
+    source: any
+    destination: "wanip:4000"
+    target: "teslamate_host:4000"
+    associated_rule: associated
+  - descr: Access to Nginx HTTPS
+    interface: wan
+    protocol: tcp
+    source: any
+    destination: "wanip:443"
+    target: "nginx_public:443"
+    associated_rule: associated
+  - descr: Access to Nginx HTTP
+    interface: wan
+    protocol: tcp
+    source: any
+    destination: "wanip:80"
+    target: "nginx_public:80"
+    associated_rule: associated
+  - descr: RustDesk relay from WAN
+    interface: wan
+    protocol: udp
+    source: any
+    destination: "wanip:40000"
+    target: "tailscale_peer_relay:40000"
+    associated_rule: associated
+  - descr: Access to Nginx from Tailscale
+    interface: opt10
+    protocol: tcp
+    source: any
+    destination: "wanip:443"
+    target: "nginx_public:443"
+    associated_rule: associated
+  - descr: RustDesk relay from Tailscale
+    interface: opt10
+    protocol: udp
+    source: any
+    destination: "wanip:40000"
+    target: "tailscale_peer_relay:40000"
+    associated_rule: associated
+
+pfsense_expected_gateways:
+  - WANGW
+  - PIA_VPN_VPNV4
+  - TAILSCALE_GW
+
+pfsense_expected_dhcp_ranges:
+  - "10.10.1.100"
+  - "10.10.1.200"
+  - "10.10.99.100"
+  - "10.10.99.199"
+  - "10.10.10.100"
+  - "10.10.10.199"
+  - "10.10.20.150"
+  - "10.10.20.199"
+  - "10.10.30.100"
+  - "10.10.30.199"
+  - "10.10.40.100"
+  - "10.10.40.199"
+  - "10.10.50.100"
+  - "10.10.50.199"
+  - "10.10.60.100"
+  - "10.10.60.199"
+  - "10.10.66.110"
+  - "10.10.66.199"
+
+pfsense_expected_package_markers:
+  - pfblockerng
+  - tailscale
+  - openvpn

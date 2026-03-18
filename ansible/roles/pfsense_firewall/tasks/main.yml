@@ -1,0 +1,8 @@
+---
+- name: Apply pfSense configuration
+  ansible.builtin.include_tasks: apply.yml
+  when: pfsense_apply_config
+
+- name: Validate pfSense configuration
+  ansible.builtin.include_tasks: validate.yml
+  when: pfsense_validate_config

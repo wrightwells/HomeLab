@@ -1,0 +1,57 @@
+---
+- name: Configure VLAN intent
+  pfsensible.core.pfsense_vlan:
+    interface: "{{ item.interface }}"
+    vlan_id: "{{ item.vlan_id }}"
+    descr: "{{ item.descr }}"
+    state: present
+  loop: "{{ pfsense_vlans }}"
+
+- name: Configure interface assignments
+  pfsensible.core.pfsense_interface:
+    descr: "{{ item.descr }}"
+    interface: "{{ item.interface }}"
+    enable: "{{ item.enable | default(true) }}"
+    ipv4_type: "{{ item.ipv4_type | default('none') }}"
+    ipv4_address: "{{ item.ipv4_address | default(omit) }}"
+    ipv4_prefixlen: "{{ item.ipv4_prefixlen | default(omit) }}"
+    state: present
+  loop: "{{ pfsense_interfaces }}"
+
+- name: Configure aliases
+  pfsensible.core.pfsense_alias:
+    name: "{{ item.name }}"
+    type: "{{ item.type }}"
+    address: "{{ item.address | default(omit) }}"
+    descr: "{{ item.descr | default(omit) }}"
+    detail: "{{ item.detail | default(omit) }}"
+    state: present
+  loop: "{{ pfsense_aliases }}"
+
+- name: Build flattened firewall rule list
+  ansible.builtin.set_fact:
+    pfsense_rules_flat: "{{ pfsense_rule_groups | dict2items | map(attribute='value') | flatten }}"
+
+- name: Configure firewall rules
+  pfsensible.core.pfsense_rule:
+    name: "{{ item.name }}"
+    action: "{{ item.action }}"
+    interface: "{{ item.interface }}"
+    protocol: "{{ item.protocol | default('any') }}"
+    source: "{{ item.source | default('any') }}"
+    destination: "{{ item.destination | default('any') }}"
+    destination_port: "{{ item.destination_port | default(omit) }}"
+    state: present
+  loop: "{{ pfsense_rules_flat }}"
+
+- name: Configure NAT rules
+  pfsensible.core.pfsense_nat_port_forward:
+    descr: "{{ item.descr }}"
+    interface: "{{ item.interface }}"
+    protocol: "{{ item.protocol }}"
+    source: "{{ item.source | default('any') }}"
+    destination: "{{ item.destination }}"
+    target: "{{ item.target }}"
+    associated_rule: "{{ item.associated_rule | default('associated') }}"
+    state: present
+  loop: "{{ pfsense_nat_rules }}"
