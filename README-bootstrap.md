@@ -4,13 +4,8 @@ This guide walks through the initial setup of this repo on a host that already
 has:
 
 - Proxmox VE installed
-- Terraform installed
-- Ansible installed
 
-If Terraform, Ansible, or Git are not installed yet on the Proxmox host, you
-can install them first.
-
-Example on a Proxmox VE host:
+First install Terraform, Ansible, and Git on a Proxmox VE host:
 
 ```bash
 sudo apt update
@@ -33,6 +28,58 @@ ansible --version
 terraform version
 ```
 
+Recommended Proxmox host preflight before you start the build:
+
+```bash
+sudo apt update
+sudo apt full-upgrade -y
+sudo apt install -y wget jq unzip pciutils lsblk
+```
+
+Why these help:
+
+- `apt full-upgrade` brings the Proxmox host fully up to date before you build on top of it
+- `wget` is used for cloud image downloads
+- `jq` is useful for API troubleshooting
+- `unzip` is commonly useful for downloaded tooling and archives
+- `pciutils` provides `lspci` for GPU passthrough discovery
+- `lsblk` is useful for checking storage devices before the storage bootstrap
+
+If the host kernel or core Proxmox packages change during the upgrade, reboot
+the Proxmox host before continuing.
+
+Optional Community Scripts preflight:
+
+- Recommended: Proxmox VE Post Install
+- Optional later: CPU Scaling Governor
+- Not recommended for this repo: Community Scripts app/LXC/VM installer scripts for services that this repo already manages with Terraform and Ansible
+
+Recommended Community Script:
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/pve/post-pve-install.sh)"
+```
+
+Why it helps:
+
+- checks and corrects Proxmox package sources
+- can disable the enterprise repo if you are not using a subscription
+- can enable the no-subscription repo
+- can update the host cleanly before you build on top of it
+
+Optional later, after the system is stable:
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/pve/scaling-governor.sh)"
+```
+
+Use that only if you want to tune power or performance behavior after the
+baseline build is complete.
+
+Do not use Community Scripts to install application LXCs or service VMs for
+this repo's workloads, because this repo already defines those resources and
+their configuration.
+
 It assumes:
 
 - the onboard NIC is your Proxmox management connection
@@ -50,12 +97,12 @@ Before you run anything, collect the following:
 - Proxmox API token secret
 - desired fixed management IP for the Proxmox host
 - storage names for:
-  - VM disks
-  - LXC root filesystems
-  - cloud-init disks
+  - VM disks, recommended: `local-lvm`
+  - LXC root filesystems, recommended: `local-lvm`
+  - cloud-init disks, recommended: `local-lvm`
 - the VMID of the prepared Ubuntu Server 24.04 LTS VM template clone source
 - the RTX 3060 PCI address later, after the host is built, for example `0000:02:00`
-- the Debian LXC template path already present in Proxmox
+- confirm the Debian 12 standard LXC template exists at the expected Proxmox path, or note the actual path if it differs
 - your Ansible SSH public key
 - your Ansible vault password
 
@@ -158,6 +205,12 @@ Before applying Terraform, make sure Proxmox already has:
 - the Debian LXC template referenced by `debian_lxc_template`
 - a prepared VM template for the AI VM clone source
 - the required storage targets such as `local-lvm`
+
+Recommended storage names for this repo:
+
+- `vm_storage = "local-lvm"`
+- `lxc_storage = "local-lvm"`
+- `cloudinit_storage = "local-lvm"`
 
 ### LXC template
 
@@ -283,7 +336,29 @@ After the initial format-and-create run, set:
 proxmox_storage_allow_destructive_create: false
 ```
 
-## 8. Configure Terraform variables
+## 8. Add Tailscale to the Proxmox host if required
+
+If you want secure remote access to the Proxmox host over Tailscale, run the
+dedicated Proxmox host playbook:
+
+- [proxmox-host.yml](ansible/playbooks/proxmox-host.yml)
+
+This playbook installs Tailscale on the Proxmox host and brings it online using
+the vaulted `TS_AUTHKEY` already stored in:
+
+- [stack.env.vault](ansible/files/compose/lxc240-docker-external/tailscale-peer-relay/stack.env.vault)
+
+Run:
+
+```bash
+cd ansible
+ansible-playbook -i inventories/production/hosts.ini playbooks/proxmox-host.yml
+```
+
+This gives you Tailscale access to the Proxmox host itself, including the
+management interface on `eno1`.
+
+## 9. Configure Terraform variables
 
 Copy the example file and update it:
 
@@ -311,7 +386,7 @@ Set at least:
 - `ansible_user`
 - `ssh_public_key`
 
-## 9. Prepare GPU passthrough on Proxmox if required
+## 10. Prepare GPU passthrough on Proxmox if required
 
 Do this after the Proxmox host exists and the RTX 3060 is physically installed,
 but before you expect the AI VM to use the GPU.
@@ -369,7 +444,7 @@ Important:
 - pfSense needs separate WAN, LAN/trunk, and DMZ interfaces for this design.
 - External exposure and NAT are expected to be handled in pfSense, not Terraform.
 
-## 10. Initialize and validate Terraform
+## 11. Initialize and validate Terraform
 
 Run:
 
@@ -381,7 +456,7 @@ terraform -chdir=terraform validate
 
 Review the plan before applying.
 
-## 11. Apply Terraform
+## 12. Apply Terraform
 
 Run:
 
@@ -394,7 +469,7 @@ Terraform will:
 - create the declared Proxmox VMs and LXCs
 - render the Ansible inventory file used by the playbooks
 
-## 12. Verify Ansible can see the hosts
+## 13. Verify Ansible can see the hosts
 
 Run:
 
@@ -410,7 +485,7 @@ If this fails, check:
 - the configured `ansible_user`
 - that your vault password file is available
 
-## 13. Run the full deployment
+## 14. Run the full deployment
 
 Run:
 
@@ -428,7 +503,7 @@ This will:
 - ping all hosts
 - run the Ansible site playbook
 
-## 14. Pull the initial Ollama models
+## 15. Pull the initial Ollama models
 
 After the AI VM stack is up, log into the AI VM and run these commands in the
 AI VM terminal to load the initial coding models into Ollama:
@@ -440,7 +515,7 @@ docker exec -it ollama ollama pull qwen2.5-coder:14b
 
 These become available through the Open WebUI API layer.
 
-## 15. Configure the Continue API front door
+## 16. Configure the Continue API front door
 
 If you want one consistent API front door and plan to add more providers later,
 point Continue at Open WebUI instead of talking directly to Ollama.
@@ -486,7 +561,7 @@ Notes:
 - this keeps Continue pointed at one OpenAI-compatible endpoint even if you add
   more local or remote providers later
 
-## 16. Add encrypted stack environment files
+## 17. Add encrypted stack environment files
 
 When a Docker stack needs secrets:
 
@@ -504,7 +579,7 @@ ansible-vault encrypt ansible/files/compose/lxc220-docker-apps/my-service/stack.
 At deploy time, Ansible decrypts `stack.env.vault` and writes `stack.env` onto
 the target host.
 
-## 17. Information you may still need to fill in manually
+## 18. Information you may still need to fill in manually
 
 Depending on the environment, you may still need to provide:
 
