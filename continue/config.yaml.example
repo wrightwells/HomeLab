@@ -3,15 +3,33 @@ version: 0.0.1
 schema: v1
 
 models:
+  - name: qwen3chat8b-webui
+    provider: openai
+    model: qwen3:8b
+    apiBase: http://10.10.20.250:3000/api
+    apiKey: your-open-webui-api-key
+
   - name: qwen25coder7b-webui
     provider: openai
     model: qwen2.5-coder:7b
     apiBase: http://10.10.20.250:3000/api
     apiKey: your-open-webui-api-key
 
-  - name: qwen25coder14b-webui
+  - name: qwen25vl7b-webui
     provider: openai
-    model: qwen2.5-coder:14b
+    model: qwen2.5vl:7b
+    apiBase: http://10.10.20.250:3000/api
+    apiKey: your-open-webui-api-key
+
+  - name: qwen3mini4b-webui
+    provider: openai
+    model: qwen3:4b
+    apiBase: http://10.10.20.250:3000/api
+    apiKey: your-open-webui-api-key
+
+  - name: qwen3vl4b-webui
+    provider: openai
+    model: qwen3-vl:4b
     apiBase: http://10.10.20.250:3000/api
     apiKey: your-open-webui-api-key
 

@@ -506,14 +506,31 @@ This will:
 ## 15. Pull the initial Ollama models
 
 After the AI VM stack is up, log into the AI VM and run these commands in the
-AI VM terminal to load the initial coding models into Ollama:
+AI VM terminal to load the initial Ollama models:
 
 ```bash
+docker exec -it ollama ollama pull qwen3:8b
+docker exec -it ollama ollama pull qwen3:4b
 docker exec -it ollama ollama pull qwen2.5-coder:7b
-docker exec -it ollama ollama pull qwen2.5-coder:14b
+docker exec -it ollama ollama pull qwen2.5vl:7b
+docker exec -it ollama ollama pull qwen3-vl:4b
 ```
 
-These become available through the Open WebUI API layer.
+Recommended use:
+
+- Chat: `qwen3:8b`
+- Coding: `qwen2.5-coder:7b`
+- OCR, PDFs, and screenshots: `qwen2.5vl:7b`
+- Home Assistant intent and tools: `phi4-mini` later, or `qwen3:4b` now
+- Frigate image event summaries: `qwen2.5vl:7b` or `qwen3-vl:4b`
+
+If you later add a model that is not already in Ollama, pull it the same way:
+
+```bash
+docker exec -it ollama ollama pull MODEL_NAME
+```
+
+These models then become available through the Open WebUI API layer.
 
 ## 16. Configure the Continue API front door
 
@@ -535,15 +552,33 @@ version: 0.0.1
 schema: v1
 
 models:
+  - name: qwen3chat8b-webui
+    provider: openai
+    model: qwen3:8b
+    apiBase: http://10.10.20.250:3000/api
+    apiKey: your-open-webui-api-key
+
   - name: qwen25coder7b-webui
     provider: openai
     model: qwen2.5-coder:7b
     apiBase: http://10.10.20.250:3000/api
     apiKey: your-open-webui-api-key
 
-  - name: qwen25coder14b-webui
+  - name: qwen25vl7b-webui
     provider: openai
-    model: qwen2.5-coder:14b
+    model: qwen2.5vl:7b
+    apiBase: http://10.10.20.250:3000/api
+    apiKey: your-open-webui-api-key
+
+  - name: qwen3mini4b-webui
+    provider: openai
+    model: qwen3:4b
+    apiBase: http://10.10.20.250:3000/api
+    apiKey: your-open-webui-api-key
+
+  - name: qwen3vl4b-webui
+    provider: openai
+    model: qwen3-vl:4b
     apiBase: http://10.10.20.250:3000/api
     apiKey: your-open-webui-api-key
 
@@ -558,6 +593,8 @@ Notes:
 
 - replace `10.10.20.250` with the real IP or DNS name for your AI VM
 - create and use a real Open WebUI API key after logging into Open WebUI
+- Open WebUI will expose models that you have already pulled into Ollama
+- Frigate and Home Assistant model selection is configured in those applications, not in these Docker Compose files
 - this keeps Continue pointed at one OpenAI-compatible endpoint even if you add
   more local or remote providers later
 
