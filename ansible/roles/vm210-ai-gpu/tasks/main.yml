@@ -1,4 +1,20 @@
 ---
+- name: Ensure Frigate config directory exists
+  ansible.builtin.file:
+    path: "{{ frigate_config_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy managed Frigate config template
+  ansible.builtin.template:
+    src: frigate-config.yml.j2
+    dest: "{{ frigate_config_root }}/config.yml"
+    owner: root
+    group: root
+    mode: "0640"
+
 - name: Deploy compose bundles for AI GPU VM
   ansible.builtin.include_role:
     name: docker

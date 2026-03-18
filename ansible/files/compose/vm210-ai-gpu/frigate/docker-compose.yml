@@ -14,4 +14,6 @@ services:
       - /mnt/appdata/configs/frigate:/config
       - /mnt/ai_cache/frigate:/media/frigate
       - /etc/localtime:/etc/localtime:ro
+    tmpfs:
+      - /tmp/cache:size=1073741824
     gpus: all

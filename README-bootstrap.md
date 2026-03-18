@@ -546,6 +546,13 @@ docker exec -it ollama ollama pull MODEL_NAME
 
 These models then become available through the Open WebUI API layer.
 
+Frigate storage layout in this repo is intended to be:
+
+- `/tmp/cache` -> `tmpfs` in RAM
+- `/media/frigate/recordings` -> fast persistent storage under `/mnt/ai_cache/frigate`
+- `/media/frigate/exports` -> persistent storage under `/mnt/ai_cache/frigate`
+- `/dev/shm` -> left as container shared memory, sized with `shm_size`
+
 ## 17. Configure the Continue API front door
 
 If you want one consistent API front door and plan to add more providers later,

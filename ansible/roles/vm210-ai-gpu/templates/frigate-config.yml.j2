@@ -1,0 +1,250 @@
+#
+# Managed by Ansible.
+# Active config below uses go2rtc restreams.
+# Your previous direct-RTSP version is preserved as comments at the bottom
+# so you can compare and adjust it during first deployment.
+#
+mqtt:
+  enabled: {{ frigate_mqtt_enabled | to_json }}
+  host: "{{ frigate_mqtt_host }}"
+  user: "{{ frigate_mqtt_user }}"
+  password: "{{ frigate_mqtt_password }}"
+
+detect:
+  fps: {{ frigate_global_detect_fps }}
+  enabled: {{ frigate_global_detect_enabled | to_json }}
+
+objects:
+  track:
+{% for item in frigate_tracked_objects %}
+    - {{ item }}
+{% endfor %}
+
+review:
+  alerts:
+    labels: []
+  detections:
+    labels:
+{% for item in frigate_review_detection_labels %}
+      - {{ item }}
+{% endfor %}
+
+record:
+  enabled: {{ frigate_record_enabled | to_json }}
+  retain:
+    days: {{ frigate_record_retain_days }}
+  events:
+    retain:
+      default: {{ frigate_event_retain_days }}
+
+ffmpeg:
+  hwaccel_args: preset-nvidia-h264
+
+detectors:
+  {{ frigate_detector_name }}:
+    type: {{ frigate_detector_type }}
+    device: {{ frigate_detector_device }}
+
+go2rtc:
+  streams:
+    {{ frigate_camera_name }}_sub:
+      - "{{ frigate_camera_sub_rtsp_url }}"
+    {{ frigate_camera_name }}_main:
+      - "{{ frigate_camera_main_rtsp_url }}"
+    {{ frigate_example_camera_name }}_sub:
+      - "{{ frigate_example_camera_sub_rtsp_url }}"
+    {{ frigate_example_camera_name }}_main:
+      - "{{ frigate_example_camera_main_rtsp_url }}"
+
+cameras:
+  {{ frigate_camera_name }}:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: "rtsp://127.0.0.1:8554/{{ frigate_camera_name }}_sub"
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+        - path: "rtsp://127.0.0.1:8554/{{ frigate_camera_name }}_main"
+          input_args: preset-rtsp-restream
+          roles:
+            - record
+      output_args:
+        record: preset-record-generic-audio-copy
+    detect:
+      enabled: true
+      width: {{ frigate_camera_detect_width }}
+      height: {{ frigate_camera_detect_height }}
+      fps: {{ frigate_camera_detect_fps }}
+    record:
+      enabled: true
+      retain:
+        days: {{ frigate_camera_record_retain_days }}
+        mode: motion
+      alerts:
+        retain:
+          days: {{ frigate_camera_alert_retain_days }}
+          mode: motion
+      detections:
+        retain:
+          days: {{ frigate_camera_detection_retain_days }}
+          mode: motion
+    objects:
+      track:
+        - person
+        - car
+      filters:
+        person:
+          min_area: {{ frigate_person_min_area }}
+          max_area: {{ frigate_person_max_area }}
+        car:
+          min_area: {{ frigate_car_min_area }}
+    snapshots:
+      enabled: true
+      timestamp: true
+      bounding_box: true
+      crop: false
+      retain:
+        default: 7
+    zones: {}
+    review: {}
+    motion: {}
+  {{ frigate_example_camera_name }}:
+    enabled: {{ frigate_example_camera_enabled | to_json }}
+    ffmpeg:
+      inputs:
+        - path: "rtsp://127.0.0.1:8554/{{ frigate_example_camera_name }}_sub"
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+        - path: "rtsp://127.0.0.1:8554/{{ frigate_example_camera_name }}_main"
+          input_args: preset-rtsp-restream
+          roles:
+            - record
+      output_args:
+        record: preset-record-generic-audio-copy
+    detect:
+      enabled: {{ frigate_example_camera_enabled | to_json }}
+      width: {{ frigate_example_camera_detect_width }}
+      height: {{ frigate_example_camera_detect_height }}
+      fps: {{ frigate_example_camera_detect_fps }}
+    record:
+      enabled: {{ frigate_example_camera_enabled | to_json }}
+      retain:
+        days: {{ frigate_camera_record_retain_days }}
+        mode: motion
+      alerts:
+        retain:
+          days: {{ frigate_camera_alert_retain_days }}
+          mode: motion
+      detections:
+        retain:
+          days: {{ frigate_camera_detection_retain_days }}
+          mode: motion
+    objects:
+      track:
+        - person
+        - car
+    snapshots:
+      enabled: {{ frigate_example_camera_enabled | to_json }}
+      timestamp: true
+      bounding_box: true
+      crop: false
+      retain:
+        default: 7
+    zones: {}
+    review: {}
+    motion: {}
+
+version: 0.16-0
+
+# Previous direct-RTSP config kept for reference while you tune go2rtc:
+# mqtt:
+#   enabled: true
+#   host: 10.20.20.210
+#   user: mqtt_user
+#   password: mirror
+#
+# detect:
+#   fps: 5
+#   enabled: true
+#
+# objects:
+#   track:
+#     - person
+#     - car
+#     - animal
+#
+# audio:
+#   enabled: true
+#   listen:
+#     - scream
+#     - speech
+#     - yell
+#
+# review:
+#   alerts:
+#     labels: []
+#   detections:
+#     labels:
+#       - car
+#       - person
+#       - speech
+#
+# cameras:
+#   trackmix_front:
+#     enabled: true
+#     ffmpeg:
+#       inputs:
+#         - path: rtsp://admin:St4nl3y11@10.20.1.11:554/h264Preview_01_sub
+#           roles:
+#             - detect
+#         - path: rtsp://admin:St4nl3y11@10.20.1.11:554/h264Preview_01_main
+#           roles:
+#             - record
+#       output_args:
+#         record: preset-record-generic-audio-copy
+#
+#     detect:
+#       enabled: true
+#       width: 640
+#       height: 360
+#       fps: 7
+#
+#     record:
+#       enabled: true
+#       retain:
+#         days: 7
+#         mode: motion
+#       alerts:
+#         retain:
+#           days: 14
+#           mode: motion
+#       detections:
+#         retain:
+#           days: 14
+#           mode: motion
+#
+#     objects:
+#       track:
+#         - person
+#         - car
+#       filters:
+#         person:
+#           min_area: 5000
+#           max_area: 100000
+#         car:
+#           min_area: 15000
+#
+#     snapshots:
+#       enabled: true
+#       timestamp: true
+#       bounding_box: true
+#       crop: false
+#       retain:
+#         default: 7
+#     zones: {}
+#     review: {}
+#     motion: {}
+#
+# version: 0.16-0
