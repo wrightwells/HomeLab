@@ -1,41 +1,11 @@
 ---
-- name: Ensure compose root exists
-  ansible.builtin.file:
-    path: "{{ docker_compose_root }}"
-    state: directory
-    owner: root
-    group: root
-    mode: "0755"
-
-- name: Ensure application directories exist
-  ansible.builtin.file:
-    path: "{{ docker_compose_root }}/{{ item }}"
-    state: directory
-    owner: root
-    group: root
-    mode: "0755"
-  loop:
-    - immich
-    - owncloud
-    - syncthing
-
-- name: Copy compose files
-  ansible.builtin.copy:
-    src: "{{ item }}/"
-    dest: "{{ docker_compose_root }}/{{ item }}/"
-    owner: root
-    group: root
-    mode: preserve
-  loop:
-    - immich
-    - owncloud
-    - syncthing
-
-- name: Start compose stacks
-  community.docker.docker_compose_v2:
-    project_src: "{{ docker_compose_root }}/{{ item }}"
-    state: present
-  loop:
-    - immich
-    - owncloud
-    - syncthing
+- name: Deploy compose bundles for docker-services
+  ansible.builtin.include_role:
+    name: docker
+    tasks_from: deploy_compose_bundle.yml
+  vars:
+    compose_bundle_name: lxc200-docker-services
+    compose_stacks:
+      - immich
+      - owncloud
+      - syncthing

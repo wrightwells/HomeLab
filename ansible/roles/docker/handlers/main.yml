@@ -1,5 +1,3 @@
----
----
 - name: Restart docker stack
   community.docker.docker_compose_v2:
     project_src: "{{ stack_dir }}"

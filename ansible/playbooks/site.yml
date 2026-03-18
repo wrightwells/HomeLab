@@ -5,6 +5,13 @@
   roles:
     - common
 
+- name: pfSense placeholder
+  hosts: firewall
+  become: true
+  gather_facts: false
+  roles:
+    - vm100-pfsense
+
 - name: Install Docker on docker-capable hosts
   hosts: docker_hosts:ai_gpu
   become: true

@@ -1,0 +1,55 @@
+---
+- name: Ensure compose root exists
+  ansible.builtin.file:
+    path: "{{ docker_compose_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Ensure application directories exist
+  ansible.builtin.file:
+    path: "{{ docker_compose_root }}/{{ item }}"
+    state: directory
+    owner: "{{ docker_project_owner }}"
+    group: "{{ docker_project_group }}"
+    mode: "{{ docker_stack_root_mode }}"
+  loop: "{{ compose_stacks }}"
+
+- name: Copy compose bundle contents
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../files/compose/{{ compose_bundle_name }}/{{ item }}/"
+    dest: "{{ docker_compose_root }}/{{ item }}/"
+    owner: "{{ docker_project_owner }}"
+    group: "{{ docker_project_group }}"
+    mode: preserve
+  loop: "{{ compose_stacks }}"
+
+- name: Render stack.env from vaulted source when present
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../files/compose/{{ compose_bundle_name }}/{{ item }}/stack.env.vault"
+    dest: "{{ docker_compose_root }}/{{ item }}/stack.env"
+    owner: "{{ docker_project_owner }}"
+    group: "{{ docker_project_group }}"
+    mode: "{{ docker_stack_env_mode }}"
+    decrypt: true
+  loop: "{{ compose_stacks }}"
+  when: lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/stack.env.vault', wantlist=True) | length > 0
+
+- name: Render stack.env from example when no vaulted source exists
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../files/compose/{{ compose_bundle_name }}/{{ item }}/stack.env.example"
+    dest: "{{ docker_compose_root }}/{{ item }}/stack.env"
+    owner: "{{ docker_project_owner }}"
+    group: "{{ docker_project_group }}"
+    mode: "{{ docker_stack_env_mode }}"
+  loop: "{{ compose_stacks }}"
+  when:
+    - lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/stack.env.vault', wantlist=True) | length == 0
+    - lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/stack.env.example', wantlist=True) | length > 0
+
+- name: Start compose stacks
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker_compose_root }}/{{ item }}"
+    state: present
+  loop: "{{ compose_stacks }}"
