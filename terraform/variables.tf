@@ -85,12 +85,12 @@ variable "ansible_user" {
   default     = "ansible"
 }
 
-variable "vm210_clone_vmid" {
-  description = "Template VMID used to clone the AI GPU VM"
+variable "vm_template_vmid" {
+  description = "Template VMID for the Ubuntu Server 24.04 LTS cloud image used to clone the AI GPU VM"
   type        = number
   validation {
-    condition     = var.vm210_clone_vmid > 0
-    error_message = "vm210_clone_vmid must be a positive VMID."
+    condition     = var.vm_template_vmid > 0
+    error_message = "vm_template_vmid must be a positive VMID."
   }
 }
 
@@ -101,7 +101,7 @@ variable "vm210_gpu_pci_address" {
 }
 
 variable "debian_lxc_template" {
-  description = "Proxmox LXC template file id"
+  description = "Proxmox Debian 12 standard LXC template file id"
   type        = string
   default     = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
 }

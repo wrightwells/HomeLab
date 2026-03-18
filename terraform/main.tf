@@ -86,7 +86,7 @@ module "vm100_pfsense" {
 module "vm210_ai_gpu" {
   source            = "./modules/vm210-ai-gpu"
   proxmox_node      = var.proxmox_node
-  clone_vmid        = var.vm210_clone_vmid
+  clone_vmid        = var.vm_template_vmid
   vm_storage        = var.vm_storage
   cloudinit_storage = var.cloudinit_storage
   ssh_public_key    = var.ssh_public_key

@@ -27,7 +27,7 @@ Before you run anything, collect the following:
   - VM disks
   - LXC root filesystems
   - cloud-init disks
-- the VMID of the prepared AI VM template clone source
+- the VMID of the prepared Ubuntu Server 24.04 LTS VM template clone source
 - the RTX 3060 PCI address later, after the host is built, for example `0000:02:00`
 - the Debian LXC template path already present in Proxmox
 - your Ansible SSH public key
@@ -133,12 +133,57 @@ Before applying Terraform, make sure Proxmox already has:
 - a prepared VM template for the AI VM clone source
 - the required storage targets such as `local-lvm`
 
-The AI VM in this repo is clone-only, so you must provide a valid template VMID.
+### LXC template
+
+Debian LXC templates can be downloaded from Proxmox's template repository via
+`pveam`. Proxmox documents that templates are available through both the GUI
+and `pveam`.
+
+Example on the Proxmox host:
+
+```bash
+pveam update
+pveam available | grep debian-12
+pveam download local debian-12-standard_12.*_amd64.tar.zst
+```
+
+In the Proxmox GUI:
+
+```text
+Node -> local -> CT Templates -> Templates
+```
+
+### VM template
+
+For the AI VM clone source, download an Ubuntu cloud image onto the Proxmox
+host and convert it into a Proxmox template.
+
+Example download on the Proxmox host:
+
+```bash
+cd /var/lib/vz/template/iso
+wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+```
+
+Then turn it into a Proxmox template:
+
+```bash
+qm create 9000 --name ubuntu-2404-ai-template --memory 4096 --cores 4 --net0 virtio,bridge=vmbr0
+qm importdisk 9000 /var/lib/vz/template/iso/noble-server-cloudimg-amd64.img local-lvm
+qm set 9000 --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-9000-disk-0
+qm set 9000 --ide2 local-lvm:cloudinit
+qm set 9000 --boot c --bootdisk scsi0
+qm set 9000 --serial0 socket --vga serial0
+qm template 9000
+```
+
+The AI VM in this repo is clone-only, so you must provide a valid Ubuntu Server
+24.04 LTS template VMID.
 
 Example:
 
 ```hcl
-vm210_clone_vmid = 9000
+vm_template_vmid = 9000
 ```
 
 If you want the host storage prepared by Ansible, run the dedicated Proxmox host
@@ -227,7 +272,7 @@ Set at least:
 - `pm_api_token_secret`
 - `pm_tls_insecure`
 - `proxmox_node`
-- `vm210_clone_vmid`
+- `vm_template_vmid`
 - `vm210_gpu_pci_address`
 - `vm_storage`
 - `lxc_storage`
