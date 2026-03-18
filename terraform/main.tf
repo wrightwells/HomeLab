@@ -67,7 +67,7 @@ locals {
       name   = "infra"
       type   = "lxc"
       vmid   = 250
-      ip     = "10.10.66.250"
+      ip     = "10.10.20.250"
       groups = ["infra", "docker_hosts"]
       user   = "root"
     }
@@ -78,8 +78,9 @@ module "vm100_pfsense" {
   source       = "./modules/vm100-pfsense"
   proxmox_node = var.proxmox_node
   vm_storage   = var.vm_storage
-  vm_bridge    = var.vm_bridge
-  vm_vlan      = var.vm_vlan
+  wan_bridge   = var.pfsense_wan_bridge
+  lan_bridge   = var.pfsense_lan_bridge
+  dmz_bridge   = var.pfsense_dmz_bridge
 }
 
 module "vm210_ai_gpu" {
@@ -88,8 +89,6 @@ module "vm210_ai_gpu" {
   clone_vmid        = var.vm210_clone_vmid
   vm_storage        = var.vm_storage
   cloudinit_storage = var.cloudinit_storage
-  vm_bridge         = var.vm_bridge
-  vm_vlan           = var.vm_vlan
   ssh_public_key    = var.ssh_public_key
   ansible_user      = var.ansible_user
 }
@@ -98,8 +97,6 @@ module "lxc066_docker_arr" {
   source              = "./modules/lxc066-docker-arr"
   proxmox_node        = var.proxmox_node
   lxc_storage         = var.lxc_storage
-  vm_bridge           = var.vm_bridge
-  vm_vlan             = var.vm_vlan
   ssh_public_key      = var.ssh_public_key
   debian_lxc_template = var.debian_lxc_template
 }
@@ -108,8 +105,6 @@ module "lxc200_docker_services" {
   source              = "./modules/lxc200-docker-services"
   proxmox_node        = var.proxmox_node
   lxc_storage         = var.lxc_storage
-  vm_bridge           = var.vm_bridge
-  vm_vlan             = var.vm_vlan
   ssh_public_key      = var.ssh_public_key
   debian_lxc_template = var.debian_lxc_template
 }
@@ -118,8 +113,6 @@ module "lxc220_docker_apps" {
   source              = "./modules/lxc220-docker-apps"
   proxmox_node        = var.proxmox_node
   lxc_storage         = var.lxc_storage
-  vm_bridge           = var.vm_bridge
-  vm_vlan             = var.vm_vlan
   ssh_public_key      = var.ssh_public_key
   debian_lxc_template = var.debian_lxc_template
 }
@@ -128,8 +121,6 @@ module "lxc230_docker_media" {
   source              = "./modules/lxc230-docker-media"
   proxmox_node        = var.proxmox_node
   lxc_storage         = var.lxc_storage
-  vm_bridge           = var.vm_bridge
-  vm_vlan             = var.vm_vlan
   ssh_public_key      = var.ssh_public_key
   debian_lxc_template = var.debian_lxc_template
 }
@@ -138,8 +129,6 @@ module "lxc240_docker_external" {
   source              = "./modules/lxc240-docker-external"
   proxmox_node        = var.proxmox_node
   lxc_storage         = var.lxc_storage
-  vm_bridge           = var.vm_bridge
-  vm_vlan             = var.vm_vlan
   ssh_public_key      = var.ssh_public_key
   debian_lxc_template = var.debian_lxc_template
 }
@@ -148,8 +137,6 @@ module "lxc250_infra" {
   source              = "./modules/lxc250-infra"
   proxmox_node        = var.proxmox_node
   lxc_storage         = var.lxc_storage
-  vm_bridge           = var.vm_bridge
-  vm_vlan             = var.vm_vlan
   ssh_public_key      = var.ssh_public_key
   debian_lxc_template = var.debian_lxc_template
 }

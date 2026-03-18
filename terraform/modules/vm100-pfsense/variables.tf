@@ -1,7 +1,5 @@
 variable "proxmox_node" { type = string }
 variable "vm_storage" { type = string }
-variable "vm_bridge" { type = string }
-variable "vm_vlan" {
-  type    = number
-  default = null
-}
+variable "wan_bridge" { type = string }
+variable "lan_bridge" { type = string }
+variable "dmz_bridge" { type = string }

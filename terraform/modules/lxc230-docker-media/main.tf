@@ -18,8 +18,8 @@ resource "proxmox_virtual_environment_container" "this" {
 
     ip_config {
       ipv4 {
-        address = "10.10.66.230/24"
-        gateway = "10.10.66.1"
+        address = "10.10.20.230/24"
+        gateway = "10.10.20.1"
       }
     }
 
@@ -50,8 +50,8 @@ resource "proxmox_virtual_environment_container" "this" {
 
   network_interface {
     name    = "eth0"
-    bridge  = var.vm_bridge
-    vlan_id = var.vm_vlan
+    bridge  = "vmbr1"
+    vlan_id = 20
   }
 
   features {

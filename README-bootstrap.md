@@ -10,7 +10,7 @@ has:
 It assumes:
 
 - the onboard NIC is your Proxmox management connection
-- that management network is connected to a router at `10.10.1.1`
+- that management network is connected to a router at `10.10.99.1`
 - Proxmox itself should use a fixed management IP on that network
 - a separate NIC will later be used by pfSense for WAN/LAN duties
 
@@ -23,7 +23,6 @@ Before you run anything, collect the following:
 - Proxmox API token ID
 - Proxmox API token secret
 - desired fixed management IP for the Proxmox host
-- bridge name for VM/LXC networking, for example `vmbr0`
 - storage names for:
   - VM disks
   - LXC root filesystems
@@ -33,36 +32,73 @@ Before you run anything, collect the following:
 - your Ansible SSH public key
 - your Ansible vault password
 
-## 2. Configure the Proxmox management NIC
+## 2. Configure the Proxmox host network manually
+
+Terraform in this repo does not configure the Proxmox host networking or write
+`/etc/network/interfaces`. You must create the host NIC and bridge layout
+manually first. Terraform only attaches VMs and LXCs to bridges that already
+exist in Proxmox.
 
 Use the onboard NIC as the fixed management interface.
 
 Example `/etc/network/interfaces` layout:
 
 ```text
+# Loopback
 auto lo
 iface lo inet loopback
 
-iface eno1 inet manual
+# Onboard NIC for Proxmox management
+auto eno1
+iface eno1 inet static
+    address 10.10.99.10/24
+    gateway 10.10.99.1
+# Only for Proxmox host access, no VLANs, isolated from data traffic
 
+# X520 Port 1 - WAN
+auto enp2s0
+iface enp2s0 inet manual
+# Directly connected to ISP, used by pfSense VM
+
+# X520 Port 2 - LAN trunk to managed switch
+auto enp2s1
+iface enp2s1 inet manual
+# Carries all internal VLANs to switch, pfSense handles tagging/routing
+
+# WAN bridge for pfSense VM
 auto vmbr0
-iface vmbr0 inet static
-    address 10.10.1.10/24
-    gateway 10.10.1.1
-    bridge-ports eno1
+iface vmbr0 inet manual
+    bridge-ports enp2s0
     bridge-stp off
     bridge-fd 0
 
-iface eno2 inet manual
-iface eno3 inet manual
+# VLAN-aware LAN bridge (trunk for pfSense to handle VLANs 10-60)
+auto vmbr1
+iface vmbr1 inet manual
+    bridge-ports enp2s1
+    bridge-stp off
+    bridge-fd 0
+    bridge-vlan-aware yes
+    bridge-vids 2-4094
+
+# Optional untrusted bridge for AI VM / experimental LXCs
+auto vmbr2
+iface vmbr2 inet manual
+    bridge-ports none
+    bridge-stp off
+    bridge-fd 0
 ```
 
 Notes:
 
-- Replace `eno1` with the onboard NIC name on your host.
-- Replace `10.10.1.10/24` with the fixed Proxmox management IP you want.
-- `eno2` and `eno3` are placeholders for the additional NICs you may later pass
-  through or dedicate for pfSense WAN/LAN use.
+- Replace `eno1`, `enp2s0`, and `enp2s1` with the real NIC names on your host.
+- Replace `10.10.99.10/24` with the fixed Proxmox management IP you want.
+- `vmbr0` is intended for pfSense WAN.
+- `vmbr1` is intended for pfSense LAN/trunk and internal VM/LXC networking.
+- `vmbr2` is optional and can be used for isolated or experimental workloads.
+- Guests on the internal network should use `bridge = "vmbr1"` with `vlan_id = 20`.
+- You do not need host-side bridge names like `vmbr1.20` for guest attachment in this repo.
+- `vmbr2` is treated as a separate DMZ-style segment, so guests there do not use `vlan_id = 66`.
 - Apply network changes carefully, especially on a remote host.
 
 ## 3. Create the Proxmox API token
@@ -159,11 +195,34 @@ Set at least:
 - `vm_storage`
 - `lxc_storage`
 - `cloudinit_storage`
-- `vm_bridge`
-- `vm_vlan`
+- `pfsense_wan_bridge`
+- `pfsense_lan_bridge`
+- `pfsense_dmz_bridge`
 - `debian_lxc_template`
 - `ansible_user`
 - `ssh_public_key`
+
+## Current guest IP layout
+
+- Proxmox host management IP: `10.10.99.10/24` on `eno1`
+- `vm100_pfsense`: `10.10.99.1` on `vmbr0`
+- `vm210_ai_gpu`: `10.10.20.210` on `vmbr1` with VLAN tag `20`
+- `lxc066_docker_arr`: `10.10.66.66` on `vmbr2`
+- `lxc200_docker_services`: `10.10.20.200` on `vmbr1` with VLAN tag `20`
+- `lxc220_docker_apps`: `10.10.20.220` on `vmbr1` with VLAN tag `20`
+- `lxc230_docker_media`: `10.10.20.230` on `vmbr1` with VLAN tag `20`
+- `lxc240_docker_external`: `10.10.66.240` on `vmbr2`
+- `lxc250_infra`: `10.10.20.250` on `vmbr1` with VLAN tag `20`
+
+## Network intent
+
+- `vmbr1` is the trusted internal trunk, and the current workloads use VLAN `20` on the `10.10.20.0/24` segment.
+- `vmbr2` is the DMZ-style network for isolated or public-facing workloads on the `10.10.66.0/24` segment.
+- `lxc066_docker_arr` stays on `vmbr2` and should not have broad access back into the trusted internal network.
+- `lxc240_docker_external` stays on `vmbr2` because it serves public-facing workloads.
+- `lxc250_infra` stays on `vmbr1` so the reverse proxy can reach trusted internal services directly.
+- pfSense needs separate WAN, LAN/trunk, and DMZ interfaces for this design.
+- External exposure and NAT are expected to be handled in pfSense, not Terraform.
 
 ## 8. Initialize and validate Terraform
 

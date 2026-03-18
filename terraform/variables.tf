@@ -54,16 +54,22 @@ variable "cloudinit_storage" {
   default     = "local-lvm"
 }
 
-variable "vm_bridge" {
-  description = "Bridge name"
+variable "pfsense_wan_bridge" {
+  description = "Bridge used for the pfSense WAN interface"
   type        = string
   default     = "vmbr0"
 }
 
-variable "vm_vlan" {
-  description = "Optional VLAN tag"
-  type        = number
-  default     = null
+variable "pfsense_lan_bridge" {
+  description = "Bridge used for the pfSense LAN/trunk interface"
+  type        = string
+  default     = "vmbr1"
+}
+
+variable "pfsense_dmz_bridge" {
+  description = "Bridge used for the pfSense DMZ interface"
+  type        = string
+  default     = "vmbr2"
 }
 
 variable "ssh_public_key" {
