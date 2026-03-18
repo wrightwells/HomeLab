@@ -21,7 +21,7 @@ locals {
     lxc066_docker_arr = {
       name   = "docker-arr"
       type   = "lxc"
-      vmid   = 66
+      vmid   = 166
       ip     = "10.10.66.66"
       groups = ["docker_arr", "docker_hosts"]
       user   = "root"
@@ -85,6 +85,7 @@ module "vm100_pfsense" {
 module "vm210_ai_gpu" {
   source            = "./modules/vm210-ai-gpu"
   proxmox_node      = var.proxmox_node
+  clone_vmid        = var.vm210_clone_vmid
   vm_storage        = var.vm_storage
   cloudinit_storage = var.cloudinit_storage
   vm_bridge         = var.vm_bridge
@@ -151,11 +152,4 @@ module "lxc250_infra" {
   vm_vlan             = var.vm_vlan
   ssh_public_key      = var.ssh_public_key
   debian_lxc_template = var.debian_lxc_template
-}
-
-resource "local_file" "ansible_inventory" {
-  filename = "${path.module}/../ansible/inventories/production/hosts.yml"
-  content = templatefile("${path.module}/templates/ansible_inventory.tftpl", {
-    hosts = local.inventory_hosts
-  })
 }

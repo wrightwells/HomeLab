@@ -1,28 +1,25 @@
 locals {
-  ai_vm_host_entry = (
-    var.ai_vm_enabled && trimspace(var.ai_vm_ip) != ""
-  ) ? {
-    (var.ai_vm_inventory_name) = {
-      ansible_host = var.ai_vm_ip
-      ansible_user = var.ai_vm_ansible_user
-      extra_vars   = {}
-    }
-  } : {}
-
-  generated_inventory_groups = merge(
-    var.existing_inventory_groups,
-    {
-      for group_name in var.ai_vm_groups :
-      group_name => merge(
-        lookup(var.existing_inventory_groups, group_name, {}),
-        local.ai_vm_host_entry
-      )
-    }
+  ansible_inventory_path_resolved = coalesce(
+    var.ansible_inventory_path,
+    "${path.module}/../ansible/inventories/production/hosts.ini"
   )
+
+  generated_inventory_groups = {
+    for group_name in distinct(flatten([for host in values(local.inventory_hosts) : host.groups])) :
+    group_name => {
+      for host_key, host in local.inventory_hosts :
+      host_key => {
+        ansible_host = host.ip
+        ansible_user = host.user
+        extra_vars   = {}
+      }
+      if contains(host.groups, group_name)
+    }
+  }
 }
 
 resource "local_file" "ansible_inventory" {
-  filename = var.ansible_inventory_path
+  filename = local.ansible_inventory_path_resolved
   content = templatefile("${path.module}/templates/ansible_inventory.tftpl", {
     groups               = local.generated_inventory_groups
     ansible_default_user = var.ansible_default_user

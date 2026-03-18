@@ -1,9 +1,17 @@
+terraform {
+  required_providers {
+    proxmox = {
+      source = "bpg/proxmox"
+    }
+  }
+}
+
 resource "proxmox_virtual_environment_container" "this" {
-  node_name    = var.proxmox_node
-  vm_id        = 200
-  started      = false
-  on_boot      = true
-  unprivileged = true
+  node_name     = var.proxmox_node
+  vm_id         = 200
+  started       = false
+  start_on_boot = true
+  unprivileged  = true
 
   initialization {
     hostname = "docker-services"

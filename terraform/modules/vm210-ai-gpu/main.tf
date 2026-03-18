@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    proxmox = {
+      source = "bpg/proxmox"
+    }
+  }
+}
+
 resource "proxmox_virtual_environment_vm" "this" {
   name      = "ai-gpu"
   node_name = var.proxmox_node
@@ -17,6 +25,10 @@ resource "proxmox_virtual_environment_vm" "this" {
 
   agent {
     enabled = true
+  }
+
+  clone {
+    vm_id = var.clone_vmid
   }
 
   disk {
@@ -51,5 +63,5 @@ resource "proxmox_virtual_environment_vm" "this" {
     type = "l26"
   }
 
-  description = "Starter AI VM. Extend later with template clone and GPU passthrough."
+  description = "AI VM cloned from a prepared Proxmox template. Extend with GPU passthrough as needed."
 }

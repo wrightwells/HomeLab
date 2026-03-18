@@ -1,14 +1,16 @@
-pm_api_url          = "https://10.10.99.2:8006/api2/json"
+pm_api_url          = "https://pve.example.com:8006/api2/json"
 pm_api_token_id     = "terraform@pve!provider"
-pm_api_token_secret = "REPLACE_ME"
+pm_api_token_secret = "replace-me"
+pm_tls_insecure     = true
 
-proxmox_node         = "littledown"
-vm_storage           = "local-lvm"
-lxc_storage          = "local-lvm"
-cloudinit_storage    = "local-lvm"
-vm_bridge            = "vmbr0"
-vm_vlan              = 66
-debian_lxc_template  = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
+proxmox_node        = "littledown"
+vm210_clone_vmid    = 9000
+vm_storage          = "local-lvm"
+lxc_storage         = "local-lvm"
+cloudinit_storage   = "local-lvm"
+vm_bridge           = "vmbr0"
+vm_vlan             = 66
+debian_lxc_template = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
 
 ansible_user   = "ansible"
 ssh_public_key = "ssh-ed25519 AAAA_REPLACE_ME"

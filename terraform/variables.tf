@@ -2,6 +2,10 @@ variable "pm_api_url" {
   description = "Proxmox API URL"
   type        = string
   sensitive   = true
+  validation {
+    condition     = can(regex("^https://", var.pm_api_url))
+    error_message = "pm_api_url must be a valid HTTPS URL."
+  }
 }
 
 variable "pm_api_token_id" {
@@ -16,10 +20,20 @@ variable "pm_api_token_secret" {
   sensitive   = true
 }
 
+variable "pm_tls_insecure" {
+  description = "Set true when using self-signed Proxmox TLS certificates"
+  type        = bool
+  default     = true
+}
+
 variable "proxmox_node" {
   description = "Proxmox node name"
   type        = string
   default     = "littledown"
+  validation {
+    condition     = length(trimspace(var.proxmox_node)) > 0
+    error_message = "proxmox_node cannot be empty."
+  }
 }
 
 variable "vm_storage" {
@@ -63,6 +77,15 @@ variable "ansible_user" {
   description = "Ansible SSH username"
   type        = string
   default     = "ansible"
+}
+
+variable "vm210_clone_vmid" {
+  description = "Template VMID used to clone the AI GPU VM"
+  type        = number
+  validation {
+    condition     = var.vm210_clone_vmid > 0
+    error_message = "vm210_clone_vmid must be a positive VMID."
+  }
 }
 
 variable "debian_lxc_template" {

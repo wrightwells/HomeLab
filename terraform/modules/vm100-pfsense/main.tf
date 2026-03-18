@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    proxmox = {
+      source = "bpg/proxmox"
+    }
+  }
+}
+
 resource "proxmox_virtual_environment_vm" "this" {
   name      = "pfsense"
   node_name = var.proxmox_node
