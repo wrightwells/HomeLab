@@ -12,7 +12,6 @@ services:
       - "11434:11434"
     volumes:
       - /mnt/ai_models/ollama:/root/.ollama
-      - /mnt/ai_cache/ollama:/root/.ollama
     gpus: all
 
   open-webui:

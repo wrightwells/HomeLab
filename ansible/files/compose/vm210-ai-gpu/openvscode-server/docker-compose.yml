@@ -14,4 +14,4 @@ services:
       - CONNECTION_TOKEN=${CONNECTION_TOKEN}
     volumes:
       - /mnt/appdata/openvscode/config:/config
-      - /srv/code:/workspace
+      - /mnt/appdata/code:/workspace
