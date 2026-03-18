@@ -45,3 +45,10 @@ Notes:
 - SSD 500GB: Proxmox OS, Terraform repo, LXC rootfs, VM root disks, Docker runtime
 - RAID1 2x4TB: /mnt/appdata for config, databases, Docker volumes, Syncthing critical data
 - Media pool 4x12TB: /mnt/media_pool via mergerfs
+
+## Guides
+
+- [Bootstrap Guide](/home/ww/HomeLab/HomeLab/README-bootstrap.md)
+- [Add Docker Component](/home/ww/HomeLab/HomeLab/README-add-docker-component.md)
+- [Continue Config Example](/home/ww/HomeLab/HomeLab/continue/config.yaml.example)
+  This is a local client-side example and is not part of the automated deployment.

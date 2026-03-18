@@ -224,7 +224,64 @@ This will:
 - ping all hosts
 - run the Ansible site playbook
 
-## 12. Add encrypted stack environment files
+## 12. Pull the initial Ollama models
+
+After the AI VM stack is up, load the initial coding models into Ollama:
+
+```bash
+docker exec -it ollama ollama pull qwen2.5-coder:7b
+docker exec -it ollama ollama pull qwen2.5-coder:14b
+```
+
+These become available through the Open WebUI API layer.
+
+## 13. Configure the Continue API front door
+
+If you want one consistent API front door and plan to add more providers later,
+point Continue at Open WebUI instead of talking directly to Ollama.
+
+Start from:
+
+- [config.yaml.example](/home/ww/HomeLab/HomeLab/continue/config.yaml.example)
+
+This file is a local client-side example for Continue. It is not deployed by
+Terraform, Ansible, or Docker Compose.
+
+Example `config.yaml`:
+
+```yaml
+name: Homelab Continue
+version: 0.0.1
+schema: v1
+
+models:
+  - name: qwen25coder7b-webui
+    provider: openai
+    model: qwen2.5-coder:7b
+    apiBase: http://10.10.20.250:3000/api
+    apiKey: your-open-webui-api-key
+
+  - name: qwen25coder14b-webui
+    provider: openai
+    model: qwen2.5-coder:14b
+    apiBase: http://10.10.20.250:3000/api
+    apiKey: your-open-webui-api-key
+
+context:
+  - provider: code
+  - provider: docs
+  - provider: diff
+  - provider: terminal
+```
+
+Notes:
+
+- replace `10.10.20.250` with the real IP or DNS name for your AI VM
+- create and use a real Open WebUI API key after logging into Open WebUI
+- this keeps Continue pointed at one OpenAI-compatible endpoint even if you add
+  more local or remote providers later
+
+## 14. Add encrypted stack environment files
 
 When a Docker stack needs secrets:
 
@@ -242,7 +299,7 @@ ansible-vault encrypt ansible/files/compose/lxc220-docker-apps/my-service/stack.
 At deploy time, Ansible decrypts `stack.env.vault` and writes `stack.env` onto
 the target host.
 
-## 13. Information you may still need to fill in manually
+## 15. Information you may still need to fill in manually
 
 Depending on the environment, you may still need to provide:
 

@@ -1,0 +1,22 @@
+name: Homelab Continue
+version: 0.0.1
+schema: v1
+
+models:
+  - name: qwen25coder7b-webui
+    provider: openai
+    model: qwen2.5-coder:7b
+    apiBase: http://10.10.20.250:3000/api
+    apiKey: your-open-webui-api-key
+
+  - name: qwen25coder14b-webui
+    provider: openai
+    model: qwen2.5-coder:14b
+    apiBase: http://10.10.20.250:3000/api
+    apiKey: your-open-webui-api-key
+
+context:
+  - provider: code
+  - provider: docs
+  - provider: diff
+  - provider: terminal
