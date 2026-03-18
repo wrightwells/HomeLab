@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
-set -euo pipefail
-cd "$(dirname "$0")/../terraform"
+
+source "$(dirname "$0")/_common.sh"
+
+cd "$TERRAFORM_DIR"
 terraform plan

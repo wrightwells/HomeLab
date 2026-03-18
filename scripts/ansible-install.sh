@@ -6,4 +6,4 @@ ensure_vault_file
 setup_ansible_env
 
 cd "$ANSIBLE_DIR"
-ansible all -m ping
+ansible-galaxy collection install -r requirements.yml

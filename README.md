@@ -2,6 +2,32 @@
 
 Infrastructure-as-code repository for a Proxmox homelab.
 
+## Before You Run
+
+Create an Ansible vault password file on the machine that will run the playbooks.
+This password is used to decrypt any `stack.env.vault` files during deployment and
+write them to the target hosts as plain `stack.env` files.
+
+Example setup:
+
+```bash
+mkdir -p ~/.config/ansible
+printf '%s\n' 'REPLACE_WITH_YOUR_VAULT_PASSWORD' > ~/.config/ansible/homelab-vault-pass.txt
+chmod 600 ~/.config/ansible/homelab-vault-pass.txt
+```
+
+Run Ansible with:
+
+```bash
+ANSIBLE_VAULT_PASSWORD_FILE=~/.config/ansible/homelab-vault-pass.txt ansible-playbook ansible/playbooks/site.yml
+```
+
+Notes:
+
+- Do not commit the vault password file.
+- If you prefer an interactive prompt, use `ansible-playbook --ask-vault-pass`.
+- Terraform should be run first so it can render the Ansible inventory.
+
 ## Hosts
 
 - VM100 pfSense
