@@ -7,6 +7,32 @@ has:
 - Terraform installed
 - Ansible installed
 
+If Terraform, Ansible, or Git are not installed yet on the Proxmox host, you
+can install them first.
+
+Example on a Proxmox VE host:
+
+```bash
+sudo apt update
+sudo apt install -y git curl gnupg software-properties-common python3-pip ansible
+
+wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(. /etc/os-release && echo ${VERSION_CODENAME}) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update
+sudo apt install -y terraform
+
+git clone https://github.com/wrightwells/HomeLab.git ~/HomeLab
+cd ~/HomeLab/HomeLab
+```
+
+Verify:
+
+```bash
+git --version
+ansible --version
+terraform version
+```
+
 It assumes:
 
 - the onboard NIC is your Proxmox management connection
@@ -113,7 +139,7 @@ You will need:
 
 Then update:
 
-- [terraform.tfvars.example](/home/ww/HomeLab/HomeLab/terraform/terraform.tfvars.example)
+ - [terraform.tfvars.example](terraform/terraform.tfvars.example)
 - your local `terraform/terraform.tfvars`
 
 The key values are:
@@ -189,10 +215,10 @@ vm_template_vmid = 9000
 If you want the host storage prepared by Ansible, run the dedicated Proxmox host
 storage playbook before Terraform:
 
-- [README-storage.md](/home/ww/HomeLab/HomeLab/README-storage.md)
-- [proxmox-storage.yml](/home/ww/HomeLab/HomeLab/ansible/playbooks/proxmox-storage.yml)
+- [README-storage.md](README-storage.md)
+- [proxmox-storage.yml](ansible/playbooks/proxmox-storage.yml)
 
-Treat [README-storage.md](/home/ww/HomeLab/HomeLab/README-storage.md) as the
+Treat [README-storage.md](README-storage.md) as the
 detailed sub-guide for this one first-install step, then return here and
 continue the main bootstrap checklist.
 
@@ -208,7 +234,7 @@ chmod 600 ~/.config/ansible/homelab-vault-pass.txt
 
 This file is not committed to git.
 
-The helper scripts in [`scripts/`](/home/ww/HomeLab/HomeLab/scripts) will use:
+The helper scripts in [`scripts/`](scripts/) will use:
 
 ```text
 ~/.config/ansible/homelab-vault-pass.txt
@@ -230,14 +256,14 @@ From the repo root:
 
 This installs the collections declared in:
 
-- [requirements.yml](/home/ww/HomeLab/HomeLab/ansible/requirements.yml)
+- [requirements.yml](ansible/requirements.yml)
 
 ## 7. Bootstrap Proxmox host storage if required
 
 If this is the first build and you want Ansible to prepare the host NVMe,
 appdata ZFS mirror, and initial MergerFS media disk, update:
 
-- [proxmox.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/group_vars/proxmox.yml)
+- [proxmox.yml](ansible/inventories/production/group_vars/proxmox.yml)
 
 Then run:
 
@@ -249,7 +275,7 @@ ansible-playbook -i inventories/production/hosts.ini playbooks/proxmox-storage.y
 Before you run that playbook, replace the placeholder `/dev/disk/by-id/...`
 values in:
 
-- [proxmox.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/group_vars/proxmox.yml)
+- [proxmox.yml](ansible/inventories/production/group_vars/proxmox.yml)
 
 After the initial format-and-create run, set:
 
@@ -285,58 +311,14 @@ Set at least:
 - `ansible_user`
 - `ssh_public_key`
 
-## Current guest IP layout
+## 9. Prepare GPU passthrough on Proxmox if required
 
-- Proxmox host management IP: `10.10.99.10/24` on `eno1`
-- `vm100_pfsense`: `10.10.99.1` on `vmbr0`
-- `vm210_ai_gpu`: `10.10.20.210` on `vmbr1` with VLAN tag `20`
-- `lxc066_docker_arr`: `10.10.66.66` on `vmbr2`
-- `lxc200_docker_services`: `10.10.20.200` on `vmbr1` with VLAN tag `20`
-- `lxc220_docker_apps`: `10.10.20.220` on `vmbr1` with VLAN tag `20`
-- `lxc230_docker_media`: `10.10.20.230` on `vmbr1` with VLAN tag `20`
-- `lxc240_docker_external`: `10.10.66.240` on `vmbr2`
-- `lxc250_infra`: `10.10.20.250` on `vmbr1` with VLAN tag `20`
+Do this after the Proxmox host exists and the RTX 3060 is physically installed,
+but before you expect the AI VM to use the GPU.
 
-## Network intent
-
-- `vmbr1` is the trusted internal trunk, and the current workloads use VLAN `20` on the `10.10.20.0/24` segment.
-- `vmbr2` is the DMZ-style network for isolated or public-facing workloads on the `10.10.66.0/24` segment.
-- `lxc066_docker_arr` stays on `vmbr2` and should not have broad access back into the trusted internal network.
-- `lxc240_docker_external` stays on `vmbr2` because it serves public-facing workloads.
-- `lxc250_infra` stays on `vmbr1` so the reverse proxy can reach trusted internal services directly.
-- pfSense needs separate WAN, LAN/trunk, and DMZ interfaces for this design.
-- External exposure and NAT are expected to be handled in pfSense, not Terraform.
-
-## 9. Initialize and validate Terraform
-
-Run:
-
-```bash
-./scripts/terraform-init.sh
-terraform -chdir=terraform validate
-./scripts/terraform-plan.sh
-```
-
-Review the plan before applying.
-
-## 10. Apply Terraform
-
-Run:
-
-```bash
-./scripts/terraform-apply.sh
-```
-
-Terraform will:
-
-- create the declared Proxmox VMs and LXCs
-- render the Ansible inventory file used by the playbooks
-
-## 11. Add GPU passthrough later, after the Proxmox host exists
-
-The AI VM can be created now without the RTX 3060 attached. Once the host is
-built, Proxmox is installed, and the GPU is physically present, finish the
-passthrough setup in two parts.
+This is a Proxmox host preparation step, not a post-Terraform application step.
+Terraform can create the AI VM without the GPU attached, but passthrough itself
+depends on the host being configured first.
 
 On the Proxmox host:
 
@@ -364,6 +346,53 @@ Important:
 - This repo intentionally does not guess that block before the host exists.
 - When the host is ready, update the `vm210-ai-gpu` module to attach the PCI
   device at that recorded address.
+
+## Current guest IP layout
+
+- Proxmox host management IP: `10.10.99.10/24` on `eno1`
+- `vm100_pfsense`: `10.10.99.1` on `vmbr0`
+- `vm210_ai_gpu`: `10.10.20.210` on `vmbr1` with VLAN tag `20`
+- `lxc066_docker_arr`: `10.10.66.66` on `vmbr2`
+- `lxc200_docker_services`: `10.10.20.200` on `vmbr1` with VLAN tag `20`
+- `lxc220_docker_apps`: `10.10.20.220` on `vmbr1` with VLAN tag `20`
+- `lxc230_docker_media`: `10.10.20.230` on `vmbr1` with VLAN tag `20`
+- `lxc240_docker_external`: `10.10.66.240` on `vmbr2`
+- `lxc250_infra`: `10.10.20.250` on `vmbr1` with VLAN tag `20`
+
+## Network intent
+
+- `vmbr1` is the trusted internal trunk, and the current workloads use VLAN `20` on the `10.10.20.0/24` segment.
+- `vmbr2` is the DMZ-style network for isolated or public-facing workloads on the `10.10.66.0/24` segment.
+- `lxc066_docker_arr` stays on `vmbr2` and should not have broad access back into the trusted internal network.
+- `lxc240_docker_external` stays on `vmbr2` because it serves public-facing workloads.
+- `lxc250_infra` stays on `vmbr1` so the reverse proxy can reach trusted internal services directly.
+- pfSense needs separate WAN, LAN/trunk, and DMZ interfaces for this design.
+- External exposure and NAT are expected to be handled in pfSense, not Terraform.
+
+## 10. Initialize and validate Terraform
+
+Run:
+
+```bash
+./scripts/terraform-init.sh
+terraform -chdir=terraform validate
+./scripts/terraform-plan.sh
+```
+
+Review the plan before applying.
+
+## 11. Apply Terraform
+
+Run:
+
+```bash
+./scripts/terraform-apply.sh
+```
+
+Terraform will:
+
+- create the declared Proxmox VMs and LXCs
+- render the Ansible inventory file used by the playbooks
 
 ## 12. Verify Ansible can see the hosts
 
@@ -401,7 +430,8 @@ This will:
 
 ## 14. Pull the initial Ollama models
 
-After the AI VM stack is up, load the initial coding models into Ollama:
+After the AI VM stack is up, log into the AI VM and run these commands in the
+AI VM terminal to load the initial coding models into Ollama:
 
 ```bash
 docker exec -it ollama ollama pull qwen2.5-coder:7b
@@ -417,7 +447,7 @@ point Continue at Open WebUI instead of talking directly to Ollama.
 
 Start from:
 
-- [config.yaml.example](/home/ww/HomeLab/HomeLab/continue/config.yaml.example)
+- [config.yaml.example](continue/config.yaml.example)
 
 This file is a local client-side example for Continue. It is not deployed by
 Terraform, Ansible, or Docker Compose.
@@ -488,6 +518,6 @@ Depending on the environment, you may still need to provide:
 
 ## Related guides
 
-- [README.md](/home/ww/HomeLab/HomeLab/README.md)
-- [README-add-docker-component.md](/home/ww/HomeLab/HomeLab/README-add-docker-component.md)
-- [README.md](/home/ww/HomeLab/HomeLab/ansible/README.md)
+- [README.md](README.md)
+- [README-add-docker-component.md](README-add-docker-component.md)
+- [README.md](ansible/README.md)
