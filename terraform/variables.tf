@@ -94,6 +94,12 @@ variable "vm210_clone_vmid" {
   }
 }
 
+variable "vm210_gpu_pci_address" {
+  description = "Optional Proxmox PCI address for later GPU passthrough to vm210, for example 0000:02:00"
+  type        = string
+  default     = ""
+}
+
 variable "debian_lxc_template" {
   description = "Proxmox LXC template file id"
   type        = string

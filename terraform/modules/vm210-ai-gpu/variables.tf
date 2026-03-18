@@ -4,3 +4,4 @@ variable "vm_storage" { type = string }
 variable "cloudinit_storage" { type = string }
 variable "ssh_public_key" { type = string }
 variable "ansible_user" { type = string }
+variable "gpu_pci_address" { type = string }

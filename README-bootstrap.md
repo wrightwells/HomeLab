@@ -28,6 +28,7 @@ Before you run anything, collect the following:
   - LXC root filesystems
   - cloud-init disks
 - the VMID of the prepared AI VM template clone source
+- the RTX 3060 PCI address later, after the host is built, for example `0000:02:00`
 - the Debian LXC template path already present in Proxmox
 - your Ansible SSH public key
 - your Ansible vault password
@@ -192,6 +193,7 @@ Set at least:
 - `pm_tls_insecure`
 - `proxmox_node`
 - `vm210_clone_vmid`
+- `vm210_gpu_pci_address`
 - `vm_storage`
 - `lxc_storage`
 - `cloudinit_storage`
@@ -249,7 +251,40 @@ Terraform will:
 - create the declared Proxmox VMs and LXCs
 - render the Ansible inventory file used by the playbooks
 
-## 10. Verify Ansible can see the hosts
+## 10. Add GPU passthrough later, after the Proxmox host exists
+
+The AI VM can be created now without the RTX 3060 attached. Once the host is
+built, Proxmox is installed, and the GPU is physically present, finish the
+passthrough setup in two parts.
+
+On the Proxmox host:
+
+1. Enable IOMMU in GRUB.
+2. Load the VFIO modules.
+3. Bind the RTX 3060 and its audio function to `vfio-pci`.
+4. Reboot the host.
+5. Confirm the device address with:
+
+```bash
+lspci -nn | grep -iE 'vga|3d|audio'
+```
+
+Then update your local `terraform/terraform.tfvars`:
+
+```hcl
+vm210_gpu_pci_address = "0000:02:00"
+```
+
+Important:
+
+- Leave `vm210_gpu_pci_address` blank until you know the real PCI address.
+- The exact Terraform PCI device block depends on the installed `bpg/proxmox`
+  provider version and the final host hardware layout.
+- This repo intentionally does not guess that block before the host exists.
+- When the host is ready, update the `vm210-ai-gpu` module to attach the PCI
+  device at that recorded address.
+
+## 11. Verify Ansible can see the hosts
 
 Run:
 
@@ -265,7 +300,7 @@ If this fails, check:
 - the configured `ansible_user`
 - that your vault password file is available
 
-## 11. Run the full deployment
+## 12. Run the full deployment
 
 Run:
 
@@ -283,7 +318,7 @@ This will:
 - ping all hosts
 - run the Ansible site playbook
 
-## 12. Pull the initial Ollama models
+## 13. Pull the initial Ollama models
 
 After the AI VM stack is up, load the initial coding models into Ollama:
 
@@ -294,7 +329,7 @@ docker exec -it ollama ollama pull qwen2.5-coder:14b
 
 These become available through the Open WebUI API layer.
 
-## 13. Configure the Continue API front door
+## 14. Configure the Continue API front door
 
 If you want one consistent API front door and plan to add more providers later,
 point Continue at Open WebUI instead of talking directly to Ollama.
@@ -340,7 +375,7 @@ Notes:
 - this keeps Continue pointed at one OpenAI-compatible endpoint even if you add
   more local or remote providers later
 
-## 14. Add encrypted stack environment files
+## 15. Add encrypted stack environment files
 
 When a Docker stack needs secrets:
 
@@ -358,7 +393,7 @@ ansible-vault encrypt ansible/files/compose/lxc220-docker-apps/my-service/stack.
 At deploy time, Ansible decrypts `stack.env.vault` and writes `stack.env` onto
 the target host.
 
-## 15. Information you may still need to fill in manually
+## 16. Information you may still need to fill in manually
 
 Depending on the environment, you may still need to provide:
 

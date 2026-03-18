@@ -13,7 +13,7 @@ locals {
       name   = "ai-gpu"
       type   = "vm"
       vmid   = 210
-      ip     = "10.10.66.210"
+      ip     = "10.10.20.210"
       groups = ["ai_gpu", "docker_hosts"]
       user   = var.ansible_user
     }
@@ -31,7 +31,7 @@ locals {
       name   = "docker-services"
       type   = "lxc"
       vmid   = 200
-      ip     = "10.10.66.200"
+      ip     = "10.10.20.200"
       groups = ["docker_services", "docker_hosts"]
       user   = "root"
     }
@@ -40,7 +40,7 @@ locals {
       name   = "docker-apps"
       type   = "lxc"
       vmid   = 220
-      ip     = "10.10.66.220"
+      ip     = "10.10.20.220"
       groups = ["docker_apps", "docker_hosts"]
       user   = "root"
     }
@@ -49,7 +49,7 @@ locals {
       name   = "docker-media"
       type   = "lxc"
       vmid   = 230
-      ip     = "10.10.66.230"
+      ip     = "10.10.20.230"
       groups = ["docker_media", "docker_hosts"]
       user   = "root"
     }
@@ -91,6 +91,7 @@ module "vm210_ai_gpu" {
   cloudinit_storage = var.cloudinit_storage
   ssh_public_key    = var.ssh_public_key
   ansible_user      = var.ansible_user
+  gpu_pci_address   = var.vm210_gpu_pci_address
 }
 
 module "lxc066_docker_arr" {
