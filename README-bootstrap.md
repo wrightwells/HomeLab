@@ -1,7 +1,177 @@
 # Bootstrap Guide
 
-This guide walks through the initial setup of this repo on a host that already
-has:
+## 0. Bare Metal to Proxmox Install
+
+Use this section only for the very first install on the physical host.
+
+### 0.1 BIOS Configuration
+
+Boot into the Z420 BIOS with `F10` and set:
+
+- Storage:
+  - `SATA Mode -> AHCI`
+  - disable RAID mode
+- Boot:
+  - enable UEFI boot
+  - disable legacy boot
+- CPU:
+  - `Intel VT-x -> Enable`
+  - `Intel VT-d -> Enable`
+- PCI:
+  - `Above 4G decoding -> Enable` if the option exists
+
+Save the changes and reboot.
+
+Before continuing, also check whether the Z420 is already on a reasonably
+current BIOS version. Older workstation BIOS revisions can affect `VT-d`,
+PCIe behavior, and GPU passthrough stability.
+
+If a BIOS update is needed:
+
+- download the latest HP Z420 BIOS update from HP's support site on another machine
+- follow HP's recommended update method for the Z420, usually from a bootable USB or HP firmware update media
+- complete the BIOS update before installing Proxmox
+- re-enter BIOS afterward and re-check the settings above, because firmware updates can reset them
+
+Why these matter:
+
+- `AHCI` keeps the storage setup simple for the Proxmox OS disk
+- `UEFI` matches the recommended modern Proxmox install path
+- `VT-x` and `VT-d` are required for virtualization and later GPU passthrough
+- `Above 4G decoding` is strongly recommended for PCIe GPU passthrough
+
+### 0.2 Prepare the Proxmox Installer
+
+From another machine, download the latest Proxmox VE ISO:
+
+- <https://www.proxmox.com/en/downloads>
+
+Create a bootable USB on Linux:
+
+```bash
+sudo dd if=proxmox-ve_*.iso of=/dev/sdX bs=4M status=progress oflag=sync
+```
+
+Replace `/dev/sdX` with the correct USB device before running the command.
+
+### 0.3 Install Proxmox
+
+Boot from the USB installer and use these baseline choices:
+
+- target disk: `500 GB SATA SSD`
+- filesystem: `ext4`
+- hostname example: `pve01.uk.wrightwells.com`
+- management NIC: onboard `1 Gb` NIC
+
+Recommended installer network values for this repo:
+
+- IP: `10.10.99.10`
+- gateway: `10.10.99.1`
+- DNS: `10.10.99.1`
+
+After install, the Proxmox web UI should be reachable at:
+
+- `https://10.10.99.10:8006`
+
+Recommended Proxmox hostname pattern:
+
+- `pve01.uk.wrightwells.com`
+- `pve01.fr.wrightwells.com`
+
+If you later add more Proxmox nodes at a site:
+
+- `pve02.uk.wrightwells.com`
+- `pve02.fr.wrightwells.com`
+
+Why this works well:
+
+- `pve` identifies the role immediately
+- `01` leaves room for clustering or additional hosts later
+- the site is explicit
+- it fits your real domains better than a placeholder like `.local`
+
+Use `ext4` for the Proxmox OS install disk. Do not use ZFS for the OS disk in
+this build, because the repo's storage plan uses:
+
+- `ext4` for the AI NVMe
+- a separate `ZFS mirror` for appdata
+- `xfs` plus `mergerfs` for media disks
+
+### 0.4 First Host Upgrade
+
+SSH to the new Proxmox host:
+
+```bash
+ssh root@10.10.99.10
+```
+
+If you are not using a Proxmox subscription, disable the enterprise repo and
+enable the no-subscription repo:
+
+```bash
+sed -i 's/^deb/#deb/g' /etc/apt/sources.list.d/pve-enterprise.list
+echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-no-sub.list
+apt update
+apt full-upgrade -y
+reboot
+```
+
+### 0.5 Connect from Another Machine with VS Code
+
+After SSH access is working to the Proxmox host, you can connect from another
+machine with VS Code so you can run Terraform and Ansible from this repo more
+comfortably and use Codex to help diagnose first-run issues.
+
+Recommended workflow:
+
+1. Install VS Code on your workstation.
+2. Install the `Remote - SSH` extension in VS Code.
+3. Verify SSH access from your workstation:
+
+```bash
+ssh root@10.10.99.10
+```
+
+4. In VS Code, run `Remote-SSH: Connect to Host...`
+5. Connect to:
+
+```text
+root@10.10.99.10
+```
+
+6. Open the repo on the Proxmox host:
+
+```text
+~/HomeLab/HomeLab
+```
+
+This lets you:
+
+- run Terraform directly on the Proxmox host where the tooling is installed
+- run Ansible from the same checked-out repo
+- use Codex in the connected workspace to inspect files, fix config issues, and
+  help diagnose first-run failures
+
+This is especially useful on the first build when you may need to:
+
+- inspect Terraform validation or apply failures
+- review generated inventory files
+- check Ansible syntax or task failures
+- compare the live host state with the repo configuration
+
+### 0.6 Identify the Disks
+
+After reboot, confirm the disks before running any storage bootstrap:
+
+```bash
+lsblk -o NAME,SIZE,MODEL
+```
+
+You should see the OS SSD plus the NVMe and data disks you expect. Confirm the
+real device names and, later, prefer `/dev/disk/by-id/...` values when filling
+in the storage variables.
+
+This guide walks through the initial setup of this repo on a host that now has:
 
 - Proxmox VE installed
 
