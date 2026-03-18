@@ -180,3 +180,30 @@
     fstype: fuse.mergerfs
     opts: "{{ proxmox_mergerfs_opts }}"
     state: mounted
+
+- name: Ensure top-level media pool directories exist
+  ansible.builtin.file:
+    path: "{{ proxmox_media_pool_mount }}/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ proxmox_media_pool_directories }}"
+
+- name: Ensure torrent subdirectories exist
+  ansible.builtin.file:
+    path: "{{ proxmox_media_pool_mount }}/torrents/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ proxmox_torrents_directories }}"
+
+- name: Ensure shared appdata directories exist
+  ansible.builtin.file:
+    path: "{{ proxmox_appdata_mountpoint }}/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ proxmox_appdata_directories }}"

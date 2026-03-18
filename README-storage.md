@@ -111,6 +111,7 @@ Based on our discussion, the intended storage model is:
 - Host NVMe: fast AI storage, kept on the Proxmox host
 - Mirrored application disk set: ZFS mirror mounted for `/mnt/appdata`
 - Media disks with MergerFS: `/mnt/media_pool`
+- Shared directory layout created during bootstrap under `/mnt/appdata` and `/mnt/media_pool`
 
 That is a good design, but only part of it is currently automated.
 
@@ -329,6 +330,25 @@ proxmox_storage_allow_destructive_create: false
 ```
 
 That keeps later runs in a safer reconciliation mode.
+
+The storage bootstrap also creates the shared host directories used by the lab:
+
+- `/mnt/media_pool/books`
+- `/mnt/media_pool/music`
+- `/mnt/media_pool/movies`
+- `/mnt/media_pool/tv`
+- `/mnt/media_pool/torrents`
+- `/mnt/media_pool/torrents/books`
+- `/mnt/media_pool/torrents/music`
+- `/mnt/media_pool/torrents/movies`
+- `/mnt/media_pool/torrents/tv`
+- `/mnt/media_pool/torrents/incomplete`
+- `/mnt/appdata/docker_volumes`
+- `/mnt/appdata/configs`
+
+Some application-specific subdirectories may still be created later by Docker
+or individual Ansible roles, but this shared base layout is now created by the
+Proxmox host storage bootstrap itself.
 
 ## Remaining Questions Before We Automate It
 

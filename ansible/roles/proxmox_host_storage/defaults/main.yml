@@ -19,3 +19,18 @@ proxmox_media_branch_root: /mnt
 proxmox_media_branch_prefix: media_disk
 proxmox_media_pool_mount: /mnt/media_pool
 proxmox_mergerfs_opts: "defaults,allow_other,use_ino,category.create=mfs,moveonenospc=true,fsname=mergerfs"
+proxmox_media_pool_directories:
+  - books
+  - music
+  - movies
+  - tv
+  - torrents
+proxmox_torrents_directories:
+  - books
+  - music
+  - movies
+  - tv
+  - incomplete
+proxmox_appdata_directories:
+  - docker_volumes
+  - configs

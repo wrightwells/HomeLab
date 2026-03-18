@@ -500,6 +500,22 @@ values in:
 
 - [proxmox.yml](ansible/inventories/production/group_vars/proxmox.yml)
 
+That storage bootstrap also creates the shared host directories used by the
+rest of the lab:
+
+- `/mnt/media_pool/books`
+- `/mnt/media_pool/music`
+- `/mnt/media_pool/movies`
+- `/mnt/media_pool/tv`
+- `/mnt/media_pool/torrents`
+- `/mnt/media_pool/torrents/books`
+- `/mnt/media_pool/torrents/music`
+- `/mnt/media_pool/torrents/movies`
+- `/mnt/media_pool/torrents/tv`
+- `/mnt/media_pool/torrents/incomplete`
+- `/mnt/appdata/docker_volumes`
+- `/mnt/appdata/configs`
+
 After the initial format-and-create run, set:
 
 ```yaml
