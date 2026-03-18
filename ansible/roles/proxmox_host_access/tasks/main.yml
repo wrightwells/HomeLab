@@ -1,0 +1,68 @@
+---
+- name: Install Tailscale prerequisites
+  ansible.builtin.apt:
+    name:
+      - curl
+      - ca-certificates
+      - gnupg
+    state: present
+    update_cache: true
+  when: proxmox_tailscale_enabled
+
+- name: Detect Debian release for Tailscale repo
+  ansible.builtin.set_fact:
+    proxmox_tailscale_debian_release: "{{ ansible_distribution_release | lower }}"
+  when: proxmox_tailscale_enabled
+
+- name: Install Tailscale signing key
+  ansible.builtin.get_url:
+    url: "https://pkgs.tailscale.com/stable/debian/{{ proxmox_tailscale_debian_release }}.noarmor.gpg"
+    dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+    mode: "0644"
+  when: proxmox_tailscale_enabled
+
+- name: Install Tailscale apt source
+  ansible.builtin.get_url:
+    url: "https://pkgs.tailscale.com/stable/debian/{{ proxmox_tailscale_debian_release }}.tailscale-keyring.list"
+    dest: /etc/apt/sources.list.d/tailscale.list
+    mode: "0644"
+  when: proxmox_tailscale_enabled
+
+- name: Install Tailscale
+  ansible.builtin.apt:
+    name: tailscale
+    state: present
+    update_cache: true
+  when: proxmox_tailscale_enabled
+
+- name: Ensure tailscaled is enabled and running
+  ansible.builtin.service:
+    name: tailscaled
+    state: started
+    enabled: true
+  when: proxmox_tailscale_enabled
+
+- name: Read vaulted Tailscale auth key file
+  ansible.builtin.set_fact:
+    proxmox_tailscale_authkey: "{{ lookup('ansible.builtin.file', proxmox_tailscale_authkey_file) | regex_search('(?m)^TS_AUTHKEY=(.+)$', '\\1') | first }}"
+  no_log: true
+  when: proxmox_tailscale_enabled
+
+- name: Check current Tailscale status
+  ansible.builtin.command:
+    cmd: tailscale status --json
+  register: proxmox_tailscale_status
+  changed_when: false
+  failed_when: false
+  when: proxmox_tailscale_enabled
+
+- name: Bring the Proxmox host onto Tailscale
+  ansible.builtin.command:
+    cmd: >-
+      tailscale up
+      --auth-key={{ proxmox_tailscale_authkey }}
+      --hostname={{ proxmox_tailscale_hostname }}
+  no_log: true
+  when:
+    - proxmox_tailscale_enabled
+    - proxmox_tailscale_status.rc != 0

@@ -1,0 +1,7 @@
+---
+- name: Prepare Proxmox host base services
+  hosts: proxmox
+  become: true
+  gather_facts: true
+  roles:
+    - proxmox_host_access
