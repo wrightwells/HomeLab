@@ -272,6 +272,7 @@ Set at least:
 - `pm_api_token_secret`
 - `pm_tls_insecure`
 - `proxmox_node`
+- `resource_profile`
 - `vm_template_vmid`
 - `vm210_gpu_pci_address`
 - `vm_storage`

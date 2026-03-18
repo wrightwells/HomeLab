@@ -10,17 +10,17 @@ resource "proxmox_virtual_environment_vm" "this" {
   name      = "pfsense"
   node_name = var.proxmox_node
   vm_id     = 100
-  started   = false
-  on_boot   = true
+  started   = var.started
+  on_boot   = var.on_boot
   tags      = ["terraform", "firewall", "pfsense"]
 
   cpu {
-    cores = 2
+    cores = var.cpu_cores
     type  = "host"
   }
 
   memory {
-    dedicated = 4096
+    dedicated = var.memory_mb
   }
 
   disk {

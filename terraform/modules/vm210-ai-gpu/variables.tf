@@ -5,3 +5,7 @@ variable "cloudinit_storage" { type = string }
 variable "ssh_public_key" { type = string }
 variable "ansible_user" { type = string }
 variable "gpu_pci_address" { type = string }
+variable "cpu_cores" { type = number }
+variable "memory_mb" { type = number }
+variable "started" { type = bool }
+variable "on_boot" { type = bool }

@@ -1,4 +1,69 @@
 locals {
+  resource_profiles = {
+    balanced_32gb = {
+      vm100_pfsense          = { cpu = 2, memory = 4096, started = true, on_boot = true }
+      vm210_ai_gpu           = { cpu = 4, memory = 12288, started = false, on_boot = false }
+      lxc066_docker_arr      = { cpu = 2, memory = 4096, swap = 512, started = true, start_on_boot = true }
+      lxc200_docker_services = { cpu = 2, memory = 6144, swap = 512, started = true, start_on_boot = true }
+      lxc220_docker_apps     = { cpu = 2, memory = 4096, swap = 512, started = true, start_on_boot = true }
+      lxc230_docker_media    = { cpu = 2, memory = 4096, swap = 512, started = true, start_on_boot = true }
+      lxc240_docker_external = { cpu = 2, memory = 3072, swap = 512, started = true, start_on_boot = true }
+      lxc250_infra           = { cpu = 1, memory = 2048, swap = 512, started = true, start_on_boot = true }
+    }
+    ai_focus_32gb = {
+      vm100_pfsense          = { cpu = 2, memory = 4096, started = true, on_boot = true }
+      vm210_ai_gpu           = { cpu = 8, memory = 24576, started = true, on_boot = true }
+      lxc066_docker_arr      = { cpu = 2, memory = 4096, swap = 512, started = false, start_on_boot = false }
+      lxc200_docker_services = { cpu = 2, memory = 6144, swap = 512, started = false, start_on_boot = false }
+      lxc220_docker_apps     = { cpu = 2, memory = 4096, swap = 512, started = false, start_on_boot = false }
+      lxc230_docker_media    = { cpu = 2, memory = 4096, swap = 512, started = false, start_on_boot = false }
+      lxc240_docker_external = { cpu = 2, memory = 3072, swap = 512, started = false, start_on_boot = false }
+      lxc250_infra           = { cpu = 1, memory = 2048, swap = 512, started = false, start_on_boot = false }
+    }
+    balanced_64gb = {
+      vm100_pfsense          = { cpu = 2, memory = 4096, started = true, on_boot = true }
+      vm210_ai_gpu           = { cpu = 8, memory = 24576, started = true, on_boot = true }
+      lxc066_docker_arr      = { cpu = 2, memory = 4096, swap = 512, started = true, start_on_boot = true }
+      lxc200_docker_services = { cpu = 4, memory = 8192, swap = 512, started = true, start_on_boot = true }
+      lxc220_docker_apps     = { cpu = 3, memory = 6144, swap = 512, started = true, start_on_boot = true }
+      lxc230_docker_media    = { cpu = 3, memory = 6144, swap = 512, started = true, start_on_boot = true }
+      lxc240_docker_external = { cpu = 2, memory = 4096, swap = 512, started = true, start_on_boot = true }
+      lxc250_infra           = { cpu = 2, memory = 2048, swap = 512, started = true, start_on_boot = true }
+    }
+    ai_focus_64gb = {
+      vm100_pfsense          = { cpu = 2, memory = 4096, started = true, on_boot = true }
+      vm210_ai_gpu           = { cpu = 12, memory = 53248, started = true, on_boot = true }
+      lxc066_docker_arr      = { cpu = 2, memory = 4096, swap = 512, started = false, start_on_boot = false }
+      lxc200_docker_services = { cpu = 4, memory = 8192, swap = 512, started = false, start_on_boot = false }
+      lxc220_docker_apps     = { cpu = 3, memory = 6144, swap = 512, started = false, start_on_boot = false }
+      lxc230_docker_media    = { cpu = 3, memory = 6144, swap = 512, started = false, start_on_boot = false }
+      lxc240_docker_external = { cpu = 2, memory = 4096, swap = 512, started = false, start_on_boot = false }
+      lxc250_infra           = { cpu = 2, memory = 2048, swap = 512, started = false, start_on_boot = false }
+    }
+    balanced_128gb = {
+      vm100_pfsense          = { cpu = 2, memory = 4096, started = true, on_boot = true }
+      vm210_ai_gpu           = { cpu = 12, memory = 49152, started = true, on_boot = true }
+      lxc066_docker_arr      = { cpu = 2, memory = 4096, swap = 512, started = true, start_on_boot = true }
+      lxc200_docker_services = { cpu = 4, memory = 10240, swap = 512, started = true, start_on_boot = true }
+      lxc220_docker_apps     = { cpu = 4, memory = 8192, swap = 512, started = true, start_on_boot = true }
+      lxc230_docker_media    = { cpu = 4, memory = 8192, swap = 512, started = true, start_on_boot = true }
+      lxc240_docker_external = { cpu = 2, memory = 4096, swap = 512, started = true, start_on_boot = true }
+      lxc250_infra           = { cpu = 2, memory = 4096, swap = 512, started = true, start_on_boot = true }
+    }
+    ai_focus_128gb = {
+      vm100_pfsense          = { cpu = 2, memory = 4096, started = true, on_boot = true }
+      vm210_ai_gpu           = { cpu = 16, memory = 114688, started = true, on_boot = true }
+      lxc066_docker_arr      = { cpu = 2, memory = 4096, swap = 512, started = false, start_on_boot = false }
+      lxc200_docker_services = { cpu = 4, memory = 10240, swap = 512, started = false, start_on_boot = false }
+      lxc220_docker_apps     = { cpu = 4, memory = 8192, swap = 512, started = false, start_on_boot = false }
+      lxc230_docker_media    = { cpu = 4, memory = 8192, swap = 512, started = false, start_on_boot = false }
+      lxc240_docker_external = { cpu = 2, memory = 4096, swap = 512, started = false, start_on_boot = false }
+      lxc250_infra           = { cpu = 2, memory = 4096, swap = 512, started = false, start_on_boot = false }
+    }
+  }
+
+  profile = local.resource_profiles[var.resource_profile]
+
   inventory_hosts = {
     vm100_pfsense = {
       name   = "pfsense"
@@ -81,6 +146,10 @@ module "vm100_pfsense" {
   wan_bridge   = var.pfsense_wan_bridge
   lan_bridge   = var.pfsense_lan_bridge
   dmz_bridge   = var.pfsense_dmz_bridge
+  cpu_cores    = local.profile.vm100_pfsense.cpu
+  memory_mb    = local.profile.vm100_pfsense.memory
+  started      = local.profile.vm100_pfsense.started
+  on_boot      = local.profile.vm100_pfsense.on_boot
 }
 
 module "vm210_ai_gpu" {
@@ -92,6 +161,10 @@ module "vm210_ai_gpu" {
   ssh_public_key    = var.ssh_public_key
   ansible_user      = var.ansible_user
   gpu_pci_address   = var.vm210_gpu_pci_address
+  cpu_cores         = local.profile.vm210_ai_gpu.cpu
+  memory_mb         = local.profile.vm210_ai_gpu.memory
+  started           = local.profile.vm210_ai_gpu.started
+  on_boot           = local.profile.vm210_ai_gpu.on_boot
 }
 
 module "lxc066_docker_arr" {
@@ -100,6 +173,11 @@ module "lxc066_docker_arr" {
   lxc_storage         = var.lxc_storage
   ssh_public_key      = var.ssh_public_key
   debian_lxc_template = var.debian_lxc_template
+  cpu_cores           = local.profile.lxc066_docker_arr.cpu
+  memory_mb           = local.profile.lxc066_docker_arr.memory
+  swap_mb             = local.profile.lxc066_docker_arr.swap
+  started             = local.profile.lxc066_docker_arr.started
+  start_on_boot       = local.profile.lxc066_docker_arr.start_on_boot
 }
 
 module "lxc200_docker_services" {
@@ -108,6 +186,11 @@ module "lxc200_docker_services" {
   lxc_storage         = var.lxc_storage
   ssh_public_key      = var.ssh_public_key
   debian_lxc_template = var.debian_lxc_template
+  cpu_cores           = local.profile.lxc200_docker_services.cpu
+  memory_mb           = local.profile.lxc200_docker_services.memory
+  swap_mb             = local.profile.lxc200_docker_services.swap
+  started             = local.profile.lxc200_docker_services.started
+  start_on_boot       = local.profile.lxc200_docker_services.start_on_boot
 }
 
 module "lxc220_docker_apps" {
@@ -116,6 +199,11 @@ module "lxc220_docker_apps" {
   lxc_storage         = var.lxc_storage
   ssh_public_key      = var.ssh_public_key
   debian_lxc_template = var.debian_lxc_template
+  cpu_cores           = local.profile.lxc220_docker_apps.cpu
+  memory_mb           = local.profile.lxc220_docker_apps.memory
+  swap_mb             = local.profile.lxc220_docker_apps.swap
+  started             = local.profile.lxc220_docker_apps.started
+  start_on_boot       = local.profile.lxc220_docker_apps.start_on_boot
 }
 
 module "lxc230_docker_media" {
@@ -124,6 +212,11 @@ module "lxc230_docker_media" {
   lxc_storage         = var.lxc_storage
   ssh_public_key      = var.ssh_public_key
   debian_lxc_template = var.debian_lxc_template
+  cpu_cores           = local.profile.lxc230_docker_media.cpu
+  memory_mb           = local.profile.lxc230_docker_media.memory
+  swap_mb             = local.profile.lxc230_docker_media.swap
+  started             = local.profile.lxc230_docker_media.started
+  start_on_boot       = local.profile.lxc230_docker_media.start_on_boot
 }
 
 module "lxc240_docker_external" {
@@ -132,6 +225,11 @@ module "lxc240_docker_external" {
   lxc_storage         = var.lxc_storage
   ssh_public_key      = var.ssh_public_key
   debian_lxc_template = var.debian_lxc_template
+  cpu_cores           = local.profile.lxc240_docker_external.cpu
+  memory_mb           = local.profile.lxc240_docker_external.memory
+  swap_mb             = local.profile.lxc240_docker_external.swap
+  started             = local.profile.lxc240_docker_external.started
+  start_on_boot       = local.profile.lxc240_docker_external.start_on_boot
 }
 
 module "lxc250_infra" {
@@ -140,4 +238,9 @@ module "lxc250_infra" {
   lxc_storage         = var.lxc_storage
   ssh_public_key      = var.ssh_public_key
   debian_lxc_template = var.debian_lxc_template
+  cpu_cores           = local.profile.lxc250_infra.cpu
+  memory_mb           = local.profile.lxc250_infra.memory
+  swap_mb             = local.profile.lxc250_infra.swap
+  started             = local.profile.lxc250_infra.started
+  start_on_boot       = local.profile.lxc250_infra.start_on_boot
 }

@@ -4,6 +4,7 @@ pm_api_token_secret = "replace-me"
 pm_tls_insecure     = true
 
 proxmox_node        = "littledown"
+resource_profile    = "balanced_32gb"
 vm_template_vmid    = 9000
 # Set this later, after the Proxmox host is built and the RTX 3060 PCI address
 # is known from lspci, for example "0000:02:00". Leave blank for now.

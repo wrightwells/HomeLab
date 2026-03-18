@@ -10,17 +10,17 @@ resource "proxmox_virtual_environment_vm" "this" {
   name      = "ai-gpu"
   node_name = var.proxmox_node
   vm_id     = 210
-  started   = false
-  on_boot   = true
+  started   = var.started
+  on_boot   = var.on_boot
   tags      = ["terraform", "ai", "gpu", "docker"]
 
   cpu {
-    cores = 8
+    cores = var.cpu_cores
     type  = "host"
   }
 
   memory {
-    dedicated = 32768
+    dedicated = var.memory_mb
   }
 
   agent {

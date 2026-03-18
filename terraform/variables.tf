@@ -85,6 +85,23 @@ variable "ansible_user" {
   default     = "ansible"
 }
 
+variable "resource_profile" {
+  description = "Sizing and startup profile for guest CPU, memory, and auto-start behavior"
+  type        = string
+  default     = "balanced_32gb"
+  validation {
+    condition = contains([
+      "balanced_32gb",
+      "ai_focus_32gb",
+      "balanced_64gb",
+      "ai_focus_64gb",
+      "balanced_128gb",
+      "ai_focus_128gb",
+    ], var.resource_profile)
+    error_message = "resource_profile must be one of balanced_32gb, ai_focus_32gb, balanced_64gb, ai_focus_64gb, balanced_128gb, or ai_focus_128gb."
+  }
+}
+
 variable "vm_template_vmid" {
   description = "Template VMID for the Ubuntu Server 24.04 LTS cloud image used to clone the AI GPU VM"
   type        = number

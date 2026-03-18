@@ -3,3 +3,7 @@ variable "vm_storage" { type = string }
 variable "wan_bridge" { type = string }
 variable "lan_bridge" { type = string }
 variable "dmz_bridge" { type = string }
+variable "cpu_cores" { type = number }
+variable "memory_mb" { type = number }
+variable "started" { type = bool }
+variable "on_boot" { type = bool }

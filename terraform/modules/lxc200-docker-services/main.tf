@@ -9,8 +9,8 @@ terraform {
 resource "proxmox_virtual_environment_container" "this" {
   node_name     = var.proxmox_node
   vm_id         = 200
-  started       = false
-  start_on_boot = true
+  started       = var.started
+  start_on_boot = var.start_on_boot
   unprivileged  = true
 
   initialization {
@@ -35,12 +35,12 @@ resource "proxmox_virtual_environment_container" "this" {
   }
 
   cpu {
-    cores = 4
+    cores = var.cpu_cores
   }
 
   memory {
-    dedicated = 8192
-    swap      = 512
+    dedicated = var.memory_mb
+    swap      = var.swap_mb
   }
 
   disk {
