@@ -25,8 +25,12 @@
       - frigate
       - home-assistant
       - ai-models
+      - n8n
       - openvscode-server
     docker_host_paths:
+      - path: /mnt/appdata/docker_volumes/n8n
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
       - path: /mnt/appdata/openvscode/config
         owner: "{{ docker_app_uid }}"
         group: "{{ docker_app_gid }}"
