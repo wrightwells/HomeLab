@@ -1,0 +1,17 @@
+services:
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    restart: unless-stopped
+    user: "0"
+    env_file:
+      - stack.env
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --web.external-url=${ALERTMANAGER_EXTERNAL_URL}
+    ports:
+      - "9093:9093"
+    volumes:
+      - /mnt/appdata/configs/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - /mnt/appdata/docker_volumes/alertmanager/data:/alertmanager

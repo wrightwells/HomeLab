@@ -1,4 +1,31 @@
 ---
+- name: Ensure infra monitoring config directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - /mnt/appdata/configs/alertmanager
+    - /mnt/appdata/configs/prometheus
+
+- name: Deploy Alertmanager config
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../files/compose/lxc250-infra/alertmanager/alertmanager.yml"
+    dest: /mnt/appdata/configs/alertmanager/alertmanager.yml
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy Prometheus config
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../files/compose/lxc250-infra/prometheus/prometheus.yml"
+    dest: /mnt/appdata/configs/prometheus/prometheus.yml
+    owner: root
+    group: root
+    mode: "0644"
+
 - name: Deploy compose bundles for infra
   ansible.builtin.include_role:
     name: docker
@@ -6,9 +33,20 @@
   vars:
     compose_bundle_name: lxc250-infra
     compose_stacks:
+      - alertmanager
+      - grafana
       - mqtt
       - homebridge
+      - prometheus
+      - uptime-kuma
     docker_host_paths:
+      - path: /mnt/appdata/configs/alertmanager
+      - path: /mnt/appdata/docker_volumes/alertmanager/data
+      - path: /mnt/appdata/docker_volumes/grafana/data
+      - path: /mnt/appdata/docker_volumes/grafana/log
       - path: /mnt/appdata/configs/homebridge
         owner: "{{ docker_app_uid }}"
         group: "{{ docker_app_gid }}"
+      - path: /mnt/appdata/configs/prometheus
+      - path: /mnt/appdata/docker_volumes/prometheus/data
+      - path: /mnt/appdata/docker_volumes/uptime-kuma
