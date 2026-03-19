@@ -54,9 +54,10 @@ Note:
 
 ## Guides
 
-- [Bootstrap Guide](/home/ww/HomeLab/HomeLab/README-bootstrap.md)
-- [Storage Guide](/home/ww/HomeLab/HomeLab/README-storage.md)
-- [Sizing Guide](/home/ww/HomeLab/HomeLab/README-sizing.md)
-- [Add Docker Component](/home/ww/HomeLab/HomeLab/README-add-docker-component.md)
-- [Continue Config Example](/home/ww/HomeLab/HomeLab/continue/config.yaml.example)
+- [Bootstrap Guide](README-bootstrap.md)
+- [Storage Guide](README-storage.md)
+- [Sizing Guide](README-sizing.md)
+- [Service Catalog](README-services.md)
+- [Add Docker Component](README-add-docker-component.md)
+- [Continue Config Example](continue/config.yaml.example)
   This is a local client-side example and is not part of the automated deployment.
