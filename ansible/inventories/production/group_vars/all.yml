@@ -14,6 +14,8 @@ ollama_base_url: "http://127.0.0.1:11434"
 docker_compose_bin: /usr/bin/docker
 docker_project_owner: root
 docker_project_group: root
+docker_app_uid: "1000"
+docker_app_gid: "1000"
 
 docker_stack_root_mode: "0750"
 docker_stack_compose_mode: "0640"

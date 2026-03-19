@@ -9,3 +9,10 @@
       - immich
       - owncloud
       - syncthing
+    docker_host_paths:
+      - path: /mnt/appdata/docker_volumes/syncthing/config
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
+      - path: /mnt/appdata/syncthing_sync
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"

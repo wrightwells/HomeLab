@@ -11,6 +11,7 @@ stack_compose: {}
 
 docker_project_owner: root
 docker_project_group: root
+docker_host_paths: []
 
 docker_stack_root_mode: "0750"
 docker_stack_compose_mode: "0640"

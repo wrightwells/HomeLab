@@ -8,3 +8,7 @@
     compose_stacks:
       - mqtt
       - homebridge
+    docker_host_paths:
+      - path: /mnt/appdata/configs/homebridge
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"

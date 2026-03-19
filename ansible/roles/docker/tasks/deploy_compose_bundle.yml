@@ -16,6 +16,15 @@
     mode: "{{ docker_stack_root_mode }}"
   loop: "{{ compose_stacks }}"
 
+- name: Ensure declared host bind-mount paths exist
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: "{{ item.state | default('directory') }}"
+    owner: "{{ item.owner | default(docker_project_owner) }}"
+    group: "{{ item.group | default(docker_project_group) }}"
+    mode: "{{ item.mode | default('0755') }}"
+  loop: "{{ docker_host_paths }}"
+
 - name: Copy compose bundle contents
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/../files/compose/{{ compose_bundle_name }}/{{ item }}/"

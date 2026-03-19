@@ -3,8 +3,12 @@ services:
     image: homebridge/homebridge:latest
     container_name: homebridge
     restart: unless-stopped
+    env_file:
+      - stack.env
     environment:
-      - TZ=Europe/London
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
     ports:
       - "8582:8581"
     volumes:

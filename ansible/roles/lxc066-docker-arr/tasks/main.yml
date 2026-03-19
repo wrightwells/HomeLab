@@ -10,3 +10,39 @@
       - jellyseerr
       - aurral
       - arr-stack
+    docker_host_paths:
+      - path: /mnt/appdata/docker_volumes/filebrowser/database
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
+      - path: /mnt/appdata/docker_volumes/filebrowser/settings.json
+        state: touch
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
+        mode: "0644"
+      - path: /mnt/appdata/docker_volumes/aurral
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
+      - path: /mnt/appdata/docker_volumes/qbittorrent
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
+      - path: /mnt/appdata/docker_volumes/prowlarr
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
+      - path: /mnt/appdata/docker_volumes/sonarr
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
+      - path: /mnt/appdata/docker_volumes/radarr
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
+      - path: /mnt/appdata/docker_volumes/lidarr
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
+      - path: /mnt/appdata/docker_volumes/bazarr
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
+      - path: /mnt/appdata/docker_volumes/bazarr/config
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
+      - path: /mnt/appdata/docker_volumes/readarr
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"

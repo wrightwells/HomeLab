@@ -20,3 +20,13 @@
       - homarr
       - semaphore
       - pairdrop
+    docker_host_paths:
+      - path: /mnt/appdata/configs/homebridge
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
+      - path: /mnt/appdata/docker_volumes/calibre
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
+      - path: /mnt/appdata/docker_volumes/calibre-web
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
