@@ -2,6 +2,7 @@
 pfsense_manual_packages:
   - pfBlockerNG-devel
   - Tailscale
+  - ntopng
 
 pfsense_manual_services:
   - OpenVPN client configuration for PIA_VPN
@@ -328,4 +329,5 @@ pfsense_expected_dhcp_ranges:
 pfsense_expected_package_markers:
   - pfblockerng
   - tailscale
+  - ntopng
   - openvpn

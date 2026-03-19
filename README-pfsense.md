@@ -46,7 +46,30 @@ Why it stays manual:
 - node registration and auth are package-specific
 - interface/package lifecycle is safer to complete in the GUI first
 
-### 3. Manually configure the `PIA_VPN` OpenVPN client
+### 3. Install `ntopng`
+
+In the pfSense GUI:
+
+```text
+System -> Package Manager -> Available Packages
+```
+
+Install:
+
+- `ntopng`
+
+Recommended first-pass package configuration:
+
+- enable the package
+- select the interfaces you want it to monitor
+- confirm it starts correctly before relying on it operationally
+
+Why it stays manual:
+
+- package tuning and traffic-observation choices are package-specific
+- the right interfaces and retention settings are easier to verify live first
+
+### 4. Manually configure the `PIA_VPN` OpenVPN client
 
 In the pfSense GUI:
 
