@@ -57,6 +57,7 @@ Note:
 - [Bootstrap Guide](README-bootstrap.md)
 - [Storage Guide](README-storage.md)
 - [Sizing Guide](README-sizing.md)
+- [Session Prompt](README-session-prompt.md)
 - [Service Catalog](README-services.md)
 - [Add Docker Component](README-add-docker-component.md)
 - [Continue Config Example](continue/config.yaml.example)
