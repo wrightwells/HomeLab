@@ -8,8 +8,15 @@
     compose_stacks:
       - immich
       - owncloud
+      - paperless-ngx
       - syncthing
     docker_host_paths:
+      - path: /mnt/appdata/docker_volumes/paperless-ngx
+      - path: /mnt/appdata/docker_volumes/paperless-ngx/db
+      - path: /mnt/appdata/docker_volumes/paperless-ngx/data
+      - path: /mnt/appdata/docker_volumes/paperless-ngx/media
+      - path: /mnt/appdata/docker_volumes/paperless-ngx/export
+      - path: /mnt/appdata/docker_volumes/paperless-ngx/consume
       - path: /mnt/appdata/docker_volumes/syncthing/config
         owner: "{{ docker_app_uid }}"
         group: "{{ docker_app_gid }}"

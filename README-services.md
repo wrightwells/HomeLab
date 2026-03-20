@@ -51,6 +51,11 @@ Notes:
 | `owncloud` | `lxc200-docker-services` | `10.10.20.200` | `http://10.10.20.200:9090` | `9090` | File sync and collaboration |
 | `owncloud_db` | `lxc200-docker-services` | `10.10.20.200` | `internal-only` | `N/A` | OwnCloud MariaDB |
 | `owncloud_redis` | `lxc200-docker-services` | `10.10.20.200` | `internal-only` | `N/A` | OwnCloud Redis |
+| `paperless` | `lxc200-docker-services` | `10.10.20.200` | `http://10.10.20.200:8000` | `8000` | Document management, OCR, and inbox workflow for scanned files |
+| `paperless_db` | `lxc200-docker-services` | `10.10.20.200` | `internal-only` | `N/A` | Paperless-ngx PostgreSQL |
+| `paperless_broker` | `lxc200-docker-services` | `10.10.20.200` | `internal-only` | `N/A` | Paperless-ngx Redis broker |
+| `paperless_gotenberg` | `lxc200-docker-services` | `10.10.20.200` | `internal-only` | `N/A` | PDF conversion helper for Paperless-ngx |
+| `paperless_tika` | `lxc200-docker-services` | `10.10.20.200` | `internal-only` | `N/A` | Text extraction helper for Paperless-ngx |
 | `syncthing` | `lxc200-docker-services` | `10.10.20.200` | `http://10.10.20.200:8384` | `8384`, `22000/tcp`, `22000/udp`, `21027/udp` | Sync service for important data between systems |
 | `blinko` | `lxc220-docker-apps` | `10.10.20.220` | `http://10.10.20.220:1111` | `1111` | Notes or knowledge app with Ollama integration |
 | `blinko-db` | `lxc220-docker-apps` | `10.10.20.220` | `internal-only` | `N/A` | Blinko PostgreSQL |

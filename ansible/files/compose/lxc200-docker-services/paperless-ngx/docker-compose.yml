@@ -1,0 +1,56 @@
+services:
+  broker:
+    image: redis:7-alpine
+    container_name: paperless_broker
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    container_name: paperless_db
+    restart: unless-stopped
+    env_file:
+      - stack.env
+    environment:
+      - POSTGRES_DB=${PAPERLESS_DBNAME}
+      - POSTGRES_USER=${PAPERLESS_DBUSER}
+      - POSTGRES_PASSWORD=${PAPERLESS_DBPASS}
+    volumes:
+      - /mnt/appdata/docker_volumes/paperless-ngx/db:/var/lib/postgresql/data
+
+  gotenberg:
+    image: docker.io/gotenberg/gotenberg:8.21
+    container_name: paperless_gotenberg
+    restart: unless-stopped
+    command:
+      - gotenberg
+      - --chromium-disable-javascript=true
+
+  tika:
+    image: apache/tika:latest
+    container_name: paperless_tika
+    restart: unless-stopped
+
+  webserver:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    container_name: paperless
+    restart: unless-stopped
+    depends_on:
+      - broker
+      - db
+      - gotenberg
+      - tika
+    env_file:
+      - stack.env
+    environment:
+      - PAPERLESS_REDIS=redis://broker:6379
+      - PAPERLESS_DBHOST=db
+      - PAPERLESS_TIKA_ENABLED=1
+      - PAPERLESS_TIKA_GOTENBERG_ENDPOINT=http://gotenberg:3000
+      - PAPERLESS_TIKA_ENDPOINT=http://tika:9998
+    ports:
+      - "8000:8000"
+    volumes:
+      - /mnt/appdata/docker_volumes/paperless-ngx/data:/usr/src/paperless/data
+      - /mnt/appdata/docker_volumes/paperless-ngx/media:/usr/src/paperless/media
+      - /mnt/appdata/docker_volumes/paperless-ngx/export:/usr/src/paperless/export
+      - /mnt/appdata/docker_volumes/paperless-ngx/consume:/usr/src/paperless/consume

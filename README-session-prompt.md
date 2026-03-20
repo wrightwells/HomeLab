@@ -262,6 +262,13 @@ List bundles by:
     - `db` -> container `owncloud_db` -> image `mariadb:10.11`
     - `redis` -> container `owncloud_redis` -> image `redis:7-alpine`
     - `cron` -> container auto-generated -> image `owncloud/server:${OWNCLOUD_VERSION}`
+- bundle `paperless-ngx`
+  - compose services:
+    - `broker` -> container `paperless_broker` -> image `redis:7-alpine`
+    - `db` -> container `paperless_db` -> image `postgres:16`
+    - `gotenberg` -> container `paperless_gotenberg` -> image `docker.io/gotenberg/gotenberg:8.21`
+    - `tika` -> container `paperless_tika` -> image `apache/tika:latest`
+    - `webserver` -> container `paperless` -> image `ghcr.io/paperless-ngx/paperless-ngx:latest`
 - bundle `syncthing`
   - compose services:
     - `syncthing` -> container `syncthing` -> image `lscr.io/linuxserver/syncthing:latest`
