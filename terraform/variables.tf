@@ -88,7 +88,7 @@ variable "ansible_user" {
 variable "resource_profile" {
   description = "Sizing and startup profile for guest CPU, memory, and auto-start behavior"
   type        = string
-  default     = "balanced_32gb"
+  default     = "balanced_128gb"
   validation {
     condition = contains([
       "balanced_32gb",

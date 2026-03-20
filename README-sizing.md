@@ -48,18 +48,42 @@ The current profiles are:
 
 The current default is:
 
-- `balanced_32gb`
+- `balanced_128gb`
 
 ## Current Default Plan
 
 The repo is currently set up to start from:
 
 ```hcl
-resource_profile = "balanced_32gb"
+resource_profile = "balanced_128gb"
 ```
 
-That profile is the minimal practical starting point for your current 32 GB
-host.
+That profile is now the default starting point in the repo for a host that has
+already been upgraded to 128 GB RAM.
+
+If you are still on a smaller host, choose one of the lower-memory profiles
+explicitly in your `terraform.tfvars`.
+
+### `balanced_128gb`
+
+- `vm100_pfsense`: 2 cores, 4 GB, starts automatically
+- `vm210_ai_gpu`: 12 cores, 48 GB, starts automatically
+- `lxc066_docker_arr`: 2 cores, 4 GB, starts automatically
+- `lxc200_docker_services`: 4 cores, 10 GB, starts automatically
+- `lxc220_docker_apps`: 4 cores, 8 GB, starts automatically
+- `lxc230_docker_media`: 4 cores, 8 GB, starts automatically
+- `lxc240_docker_external`: 2 cores, 4 GB, starts automatically
+- `lxc250_infra`: 2 cores, 4 GB, starts automatically
+
+Why this is the default:
+
+- it assumes the long-term target host memory
+- it gives the AI VM enough headroom to be useful without switching profiles immediately
+- it keeps the rest of the lab online in a normal multi-service mode
+
+## Lower-Memory Profiles
+
+Use these when the host has not yet reached the 128 GB target.
 
 ### `balanced_32gb`
 
@@ -71,12 +95,6 @@ host.
 - `lxc230_docker_media`: 2 cores, 4 GB, starts automatically
 - `lxc240_docker_external`: 2 cores, 3 GB, starts automatically
 - `lxc250_infra`: 1 core, 2 GB, starts automatically
-
-Why this is the default:
-
-- it keeps the always-on services reasonably small
-- it avoids giving the AI VM all available RAM on day one
-- it lets you bring up the core homelab first
 
 Important:
 
