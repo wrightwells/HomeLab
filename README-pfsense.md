@@ -69,7 +69,29 @@ Why it stays manual:
 - package tuning and traffic-observation choices are package-specific
 - the right interfaces and retention settings are easier to verify live first
 
-### 4. Manually configure the `PIA_VPN` OpenVPN client
+### 4. Manually configure the WAN `PPPoE` connection
+
+In the pfSense GUI:
+
+```text
+Interfaces -> WAN
+```
+
+Configure the WAN for your ISP's PPPoE connection, including:
+
+- PPPoE username
+- PPPoE password
+- any ISP-specific MTU, MSS, VLAN, or service-name requirements
+
+Why it stays manual:
+
+- the currently installed `pfsensible.core` interface module in this repo does
+  not expose PPPoE as a supported `ipv4_type`
+- PPPoE credentials are sensitive
+- WAN connectivity is too critical to make first-pass bring-up depend on
+  lower-level or brittle automation
+
+### 5. Manually configure the `PIA_VPN` OpenVPN client
 
 In the pfSense GUI:
 
