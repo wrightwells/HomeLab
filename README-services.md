@@ -31,6 +31,9 @@ Notes:
 | `open-webui` | `vm210-ai-gpu` | `10.10.20.210` | `http://10.10.20.210:3000` | `3000` | Browser UI and OpenAI-compatible API front door for Ollama models |
 | `frigate` | `vm210-ai-gpu` | `10.10.20.210` | `http://10.10.20.210:5000` | `5000` default | NVR, object detection, and camera event review |
 | `homeassistant` | `vm210-ai-gpu` | `10.10.20.210` | `http://10.10.20.210:8123` | `8123` default | Home automation, device integrations, dashboards |
+| `wyoming-piper` | `vm210-ai-gpu` | `10.10.20.210` | `tcp://10.10.20.210:10200` | `10200` | Local Wyoming TTS service for Assist voice replies |
+| `wyoming-whisper` | `vm210-ai-gpu` | `10.10.20.210` | `tcp://10.10.20.210:10300` | `10300` | Local Wyoming STT service for Assist speech recognition |
+| `wyoming-openwakeword` | `vm210-ai-gpu` | `10.10.20.210` | `tcp://10.10.20.210:10400` | `10400` | Local Wyoming wake word service for voice pipelines |
 | `n8n` | `vm210-ai-gpu` | `10.10.20.210` | `http://10.10.20.210:5678` | `5678` | Workflow automation and service orchestration |
 | `openvscode-server` | `vm210-ai-gpu` | `10.10.20.210` | `http://10.10.20.210:3100` | `3100` | Remote VS Code-style editor for homelab work |
 | `gluetun` | `lxc066-docker-arr` | `10.10.66.66` | `N/A` | `6881`, `6881/udp` | VPN sidecar and network gateway for the ARR/download stack |

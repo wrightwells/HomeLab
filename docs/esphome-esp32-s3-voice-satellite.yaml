@@ -1,0 +1,134 @@
+esphome:
+  name: esp32-s3-voice-satellite
+  friendly_name: ESP32-S3 Voice Satellite
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+
+logger:
+
+api:
+  encryption:
+    key: "REPLACE_WITH_API_KEY"
+
+ota:
+  - platform: esphome
+    password: "REPLACE_WITH_OTA_PASSWORD"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "ESP32-S3-Voice-Fallback"
+    password: "REPLACE_WITH_FALLBACK_PASSWORD"
+
+captive_portal:
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+i2s_audio:
+  - id: i2s_in
+    i2s_lrclk_pin: GPIO4
+    i2s_bclk_pin: GPIO5
+  - id: i2s_out
+    i2s_lrclk_pin: GPIO6
+    i2s_bclk_pin: GPIO7
+
+microphone:
+  - platform: i2s_audio
+    id: mic
+    i2s_audio_id: i2s_in
+    i2s_din_pin: GPIO8
+    adc_type: external
+    pdm: false
+    channel: left
+    sample_rate: 16000
+    bits_per_sample: 32bit
+
+speaker:
+  - platform: i2s_audio
+    id: speaker_out
+    i2s_audio_id: i2s_out
+    dac_type: external
+    i2s_dout_pin: GPIO9
+    channel: mono
+    sample_rate: 48000
+    bits_per_sample: 16bit
+
+media_player:
+  - platform: speaker
+    name: Voice Satellite Speaker
+    id: voice_speaker
+    announcement_pipeline:
+      speaker: speaker_out
+      format: WAV
+      sample_rate: 48000
+      num_channels: 1
+
+light:
+  - platform: status_led
+    name: Voice Satellite Status LED
+    pin:
+      number: GPIO48
+      inverted: true
+
+binary_sensor:
+  - platform: gpio
+    id: listen_button
+    name: Voice Satellite Button
+    pin:
+      number: GPIO0
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    on_press:
+      then:
+        - if:
+            condition:
+              voice_assistant.is_running:
+            then:
+              - voice_assistant.stop
+            else:
+              - voice_assistant.start
+
+voice_assistant:
+  id: va
+  microphone: mic
+  media_player: voice_speaker
+  use_wake_word: true
+  auto_gain: 31dBFS
+  noise_suppression_level: 2
+  volume_multiplier: 2.0
+  on_error:
+    - logger.log:
+        format: "Voice assistant error: %s"
+        args: ["code.c_str()"]
+
+sensor:
+  - platform: wifi_signal
+    name: Voice Satellite WiFi Signal
+    update_interval: 60s
+
+  - platform: uptime
+    name: Voice Satellite Uptime
+
+text_sensor:
+  - platform: version
+    name: Voice Satellite ESPHome Version
+
+# Pins to verify
+# - GPIO4: I2S WS/LRCLK for microphone side
+# - GPIO5: I2S BCLK for microphone side
+# - GPIO8: INMP441 SD/DOUT
+# - GPIO6: I2S WS/LRCLK for speaker side
+# - GPIO7: I2S BCLK for speaker side
+# - GPIO9: MAX98357A DIN
+# - GPIO48: status LED, if your board exposes one
+# - GPIO0: push button, if your board uses a different BOOT button pin change it
+# - Some ESP32-S3 boards prefer sharing one I2S bus for mic and speaker; if this
+#   board does, collapse the two i2s_audio blocks into one and keep the correct pins

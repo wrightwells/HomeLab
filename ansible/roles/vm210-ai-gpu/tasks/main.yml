@@ -24,10 +24,16 @@
     compose_stacks:
       - frigate
       - home-assistant
+      - home-assistant-voice
       - ai-models
       - n8n
       - openvscode-server
     docker_host_paths:
+      - path: /mnt/appdata/docker_volumes/home-assistant-voice
+      - path: /mnt/appdata/docker_volumes/home-assistant-voice/piper
+      - path: /mnt/appdata/docker_volumes/home-assistant-voice/whisper
+      - path: /mnt/appdata/docker_volumes/home-assistant-voice/openwakeword
+      - path: /mnt/appdata/docker_volumes/home-assistant-voice/openwakeword/custom
       - path: /mnt/appdata/docker_volumes/n8n
         owner: "{{ docker_app_uid }}"
         group: "{{ docker_app_gid }}"

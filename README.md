@@ -59,6 +59,8 @@ Note:
 - [Sizing Guide](README-sizing.md)
 - [Session Prompt](README-session-prompt.md)
 - [Service Catalog](README-services.md)
+- [Home Assistant Voice Stack](docs/home-assistant-voice-stack.md)
+- [Home Assistant Ollama Setup](docs/home-assistant-ollama.md)
 - [Add Docker Component](README-add-docker-component.md)
 - [Semaphore Guide](README-semaphore.md)
 - [Stack Env Vault Script](README-stack-env-vaults.md)

@@ -1,0 +1,47 @@
+services:
+  wyoming-piper:
+    image: rhasspy/wyoming-piper:latest
+    container_name: wyoming-piper
+    restart: unless-stopped
+    env_file:
+      - stack.env
+    ports:
+      - "10200:10200"
+    command:
+      - --voice
+      - ${PIPER_VOICE}
+    volumes:
+      - /mnt/appdata/docker_volumes/home-assistant-voice/piper:/data
+
+  wyoming-whisper:
+    image: rhasspy/wyoming-whisper:latest
+    container_name: wyoming-whisper
+    restart: unless-stopped
+    env_file:
+      - stack.env
+    ports:
+      - "10300:10300"
+    command:
+      - --model
+      - ${WHISPER_MODEL}
+      - --language
+      - ${WHISPER_LANGUAGE}
+    volumes:
+      - /mnt/appdata/docker_volumes/home-assistant-voice/whisper:/data
+
+  wyoming-openwakeword:
+    image: rhasspy/wyoming-openwakeword:latest
+    container_name: wyoming-openwakeword
+    restart: unless-stopped
+    env_file:
+      - stack.env
+    ports:
+      - "10400:10400"
+    command:
+      - --preload-model
+      - ${OPENWAKEWORD_MODEL}
+      - --custom-model-dir
+      - /custom
+    volumes:
+      - /mnt/appdata/docker_volumes/home-assistant-voice/openwakeword:/data
+      - /mnt/appdata/docker_volumes/home-assistant-voice/openwakeword/custom:/custom
