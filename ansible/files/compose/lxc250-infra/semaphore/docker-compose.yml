@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: semaphore-postgres
+    restart: unless-stopped
+    env_file:
+      - stack.env
+    environment:
+      POSTGRES_DB: semaphore
+      POSTGRES_USER: semaphore
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: Europe/London
+    volumes:
+      - /mnt/appdata/docker_volumes/semaphore/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U semaphore -d semaphore"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  semaphore:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: homelab/semaphore-runner:latest
+    container_name: ansible-semaphore
+    user: "0"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3002:3000"
+    env_file:
+      - stack.env
+    environment:
+      TZ: Europe/London
+      SEMAPHORE_DB_DIALECT: ${SEMAPHORE_DB_DIALECT}
+      SEMAPHORE_DB_HOST: ${SEMAPHORE_DB_HOST}
+      SEMAPHORE_DB_PORT: ${SEMAPHORE_DB_PORT}
+      SEMAPHORE_DB: ${SEMAPHORE_DB}
+      SEMAPHORE_DB_USER: ${SEMAPHORE_DB_USER}
+      SEMAPHORE_DB_PASS: ${SEMAPHORE_DB_PASS}
+      SEMAPHORE_DB_OPTIONS: ${SEMAPHORE_DB_OPTIONS}
+      SEMAPHORE_ADMIN: ${SEMAPHORE_ADMIN}
+      SEMAPHORE_ADMIN_PASSWORD: ${SEMAPHORE_ADMIN_PASSWORD}
+      SEMAPHORE_ADMIN_NAME: ${SEMAPHORE_ADMIN_NAME}
+      SEMAPHORE_ADMIN_EMAIL: ${SEMAPHORE_ADMIN_EMAIL}
+      SEMAPHORE_ACCESS_KEY_ENCRYPTION: ${SEMAPHORE_ACCESS_KEY_ENCRYPTION}
+      SEMAPHORE_PLAYBOOK_PATH: /tmp/semaphore
+      SEMAPHORE_SCHEDULE_TIMEZONE: Europe/London
+      ANSIBLE_HOST_KEY_CHECKING: "False"
+    volumes:
+      - /mnt/appdata/docker_volumes/semaphore:/var/lib/semaphore
+      - /mnt/appdata/docker_volumes/semaphore/workspace:/workspace
+      - /mnt/appdata/docker_volumes/semaphore/.config/ansible:/root/.config/ansible
+      - /mnt/appdata/docker_volumes/semaphore/tmp:/tmp/semaphore

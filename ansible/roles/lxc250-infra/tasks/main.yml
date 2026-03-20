@@ -38,6 +38,7 @@
       - mqtt
       - homebridge
       - prometheus
+      - semaphore
       - uptime-kuma
     docker_host_paths:
       - path: /mnt/appdata/configs/alertmanager
@@ -49,4 +50,10 @@
         group: "{{ docker_app_gid }}"
       - path: /mnt/appdata/configs/prometheus
       - path: /mnt/appdata/docker_volumes/prometheus/data
+      - path: /mnt/appdata/docker_volumes/semaphore/postgres
+      - path: /mnt/appdata/docker_volumes/semaphore/workspace
+      - path: /mnt/appdata/docker_volumes/semaphore/.config
+      - path: /mnt/appdata/docker_volumes/semaphore/.config/ansible
+      - path: /mnt/appdata/docker_volumes/semaphore/tmp
+      - path: /mnt/appdata/docker_volumes/semaphore
       - path: /mnt/appdata/docker_volumes/uptime-kuma

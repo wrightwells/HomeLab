@@ -312,8 +312,6 @@ List bundles by:
   - compose services:
     - `pairdrop` -> container `pairdrop` -> image `ghcr.io/schlagmichdoch/pairdrop:latest`
 - bundle `semaphore`
-  - compose services:
-    - `semaphore` -> container `ansible-semaphore` -> image `semaphoreui/semaphore:latest`
 - bundle `teslamate`
   - compose services:
     - `teslamate` -> container `teslamate` -> image `teslamate/teslamate:1.28.2`
@@ -383,6 +381,9 @@ List bundles by:
 - bundle `prometheus`
   - compose services:
     - `prometheus` -> container `prometheus` -> image `prom/prometheus:latest`
+- bundle `semaphore`
+  - compose services:
+    - `semaphore` -> container `ansible-semaphore` -> image `semaphoreui/semaphore:latest`
 - bundle `uptime-kuma`
   - compose services:
     - `uptime-kuma` -> container `uptime-kuma` -> image `louislam/uptime-kuma:latest`

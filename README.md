@@ -60,6 +60,7 @@ Note:
 - [Session Prompt](README-session-prompt.md)
 - [Service Catalog](README-services.md)
 - [Add Docker Component](README-add-docker-component.md)
+- [Semaphore Guide](README-semaphore.md)
 - [Stack Env Vault Script](README-stack-env-vaults.md)
 - [Continue Config Example](continue/config.yaml.example)
   This is a local client-side example and is not part of the automated deployment.

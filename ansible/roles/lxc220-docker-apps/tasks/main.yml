@@ -17,7 +17,6 @@
       - finance
       - eurgo
       - homarr
-      - semaphore
       - pairdrop
     docker_host_paths:
       - path: /mnt/appdata/docker_volumes/calibre

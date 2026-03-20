@@ -70,7 +70,6 @@ Notes:
 | `influxdb` | `lxc220-docker-apps` | `10.10.20.220` | `http://10.10.20.220:8086` | `8086` | Time-series database |
 | `node-red` | `lxc220-docker-apps` | `10.10.20.220` | `http://10.10.20.220:1880` | `1880` | Visual automation flows |
 | `pairdrop` | `lxc220-docker-apps` | `10.10.20.220` | `http://10.10.20.220:1010` | `1010` | Local file sharing in browser |
-| `ansible-semaphore` | `lxc220-docker-apps` | `10.10.20.220` | `http://10.10.20.220:3002` | `3002` | Ansible job UI and automation runner |
 | `teslamate` | `lxc220-docker-apps` | `10.10.20.220` | `http://10.10.20.220:4000` | `4000` | Tesla telemetry and trip analysis |
 | `teslamate_postgres` | `lxc220-docker-apps` | `10.10.20.220` | `postgres://10.10.20.220:5432` | `5432` | TeslaMate database |
 | `jellyfin` | `lxc230-docker-media` | `10.10.20.230` | `http://10.10.20.230:8096` | `8096` | Media server |
@@ -96,6 +95,7 @@ Notes:
 | `homebridge` | `lxc250-infra` | `10.10.20.250` | `http://10.10.20.250:8582` | `8582` | HomeKit bridge service |
 | `mosquitto` | `lxc250-infra` | `10.10.20.250` | `mqtt://10.10.20.250:1883` | `1883`, `9001` | MQTT broker for automation and sensors |
 | `prometheus` | `lxc250-infra` | `10.10.20.250` | `http://10.10.20.250:9090` | `9090` | Metrics scraping and storage |
+| `ansible-semaphore` | `lxc250-infra` | `10.10.20.250` | `http://10.10.20.250:3002` | `3002` | Ansible job UI and automation runner |
 | `uptime-kuma` | `lxc250-infra` | `10.10.20.250` | `http://10.10.20.250:3001` | `3001` | Uptime monitoring and status checks |
 
 ## Notes
