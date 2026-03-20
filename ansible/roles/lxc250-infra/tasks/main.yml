@@ -37,6 +37,7 @@
       - grafana
       - mqtt
       - homebridge
+      - portainer
       - prometheus
       - semaphore
       - uptime-kuma
@@ -49,6 +50,7 @@
         owner: "{{ docker_app_uid }}"
         group: "{{ docker_app_gid }}"
       - path: /mnt/appdata/configs/prometheus
+      - path: /mnt/appdata/docker_volumes/portainer
       - path: /mnt/appdata/docker_volumes/prometheus/data
       - path: /mnt/appdata/docker_volumes/semaphore/postgres
       - path: /mnt/appdata/docker_volumes/semaphore/workspace

@@ -21,7 +21,7 @@ Notes:
 | `lxc220-docker-apps` | `10.10.20.220` | General-purpose apps |
 | `lxc230-docker-media` | `10.10.20.230` | Media servers |
 | `lxc240-docker-external` | `10.10.66.240` | Public-facing and DMZ services |
-| `lxc250-infra` | `10.10.20.250` | Infra, monitoring, MQTT, Homebridge |
+| `lxc250-infra` | `10.10.20.250` | Infra, monitoring, MQTT, Docker management, Homebridge |
 
 ## Services
 
@@ -97,6 +97,7 @@ Notes:
 | `grafana` | `lxc250-infra` | `10.10.20.250` | `http://10.10.20.250:3000` | `3000` | Infra dashboards and monitoring UI |
 | `homebridge` | `lxc250-infra` | `10.10.20.250` | `http://10.10.20.250:8582` | `8582` | HomeKit bridge service |
 | `mosquitto` | `lxc250-infra` | `10.10.20.250` | `mqtt://10.10.20.250:1883` | `1883`, `9001` | MQTT broker for automation and sensors |
+| `portainer` | `lxc250-infra` | `10.10.20.250` | `https://10.10.20.250:9443` | `9443`, `8001` | Docker management UI for local container administration |
 | `prometheus` | `lxc250-infra` | `10.10.20.250` | `http://10.10.20.250:9090` | `9090` | Metrics scraping and storage |
 | `ansible-semaphore` | `lxc250-infra` | `10.10.20.250` | `http://10.10.20.250:3002` | `3002` | Ansible job UI and automation runner |
 | `uptime-kuma` | `lxc250-infra` | `10.10.20.250` | `http://10.10.20.250:3001` | `3001` | Uptime monitoring and status checks |

@@ -82,6 +82,19 @@ When changing service placement:
 - preserve service-to-service dependencies
 - update Terraform, Ansible roles, compose bundles, inventory, docs, and service catalog together
 
+Documentation discipline:
+- when changing architecture, service placement, networking, storage, automation, or operational workflow, update all affected documentation in the same change
+- always review whether these docs need updating:
+  - README.md
+  - README-bootstrap.md
+  - README-storage.md
+  - README-sizing.md
+  - README-services.md
+  - README-session-prompt.md
+  - README-semaphore.md
+  - README-pfsense.md
+  - docs/*
+
 Important repo files:
 - README-bootstrap.md
 - README-storage.md
@@ -171,7 +184,7 @@ Shared host directories created during storage bootstrap include:
 | `lxc220-docker-apps` | `10.10.20.220` | general-purpose apps |
 | `lxc230-docker-media` | `10.10.20.230` | media servers |
 | `lxc240-docker-external` | `10.10.66.240` | public-facing and DMZ services |
-| `lxc250-infra` | `10.10.20.250` | infra, monitoring, MQTT, Homebridge |
+| `lxc250-infra` | `10.10.20.250` | infra, monitoring, MQTT, Docker management, Homebridge |
 
 ### Placement Intent
 
@@ -197,6 +210,7 @@ Shared host directories created during storage bootstrap include:
   - MQTT
   - Homebridge
   - monitoring and uptime tooling
+  - Docker management and automation tooling
 
 ### Docker Bundles By Host
 
@@ -378,12 +392,16 @@ List bundles by:
 - bundle `mqtt`
   - compose services:
     - `mosquitto` -> container `mosquitto` -> image `eclipse-mosquitto:latest`
+- bundle `portainer`
+  - compose services:
+    - `portainer` -> container `portainer` -> image `portainer/portainer-ce:latest`
 - bundle `prometheus`
   - compose services:
     - `prometheus` -> container `prometheus` -> image `prom/prometheus:latest`
 - bundle `semaphore`
   - compose services:
-    - `semaphore` -> container `ansible-semaphore` -> image `semaphoreui/semaphore:latest`
+    - `postgres` -> container `semaphore-postgres` -> image `postgres:16-alpine`
+    - `semaphore` -> container `ansible-semaphore` -> image `homelab/semaphore-runner:latest`
 - bundle `uptime-kuma`
   - compose services:
     - `uptime-kuma` -> container `uptime-kuma` -> image `louislam/uptime-kuma:latest`
@@ -417,6 +435,7 @@ If a future build needs to move containers between hosts, preserve these checks:
 - Ansible role task list for the target host
 - compose bundle path under `ansible/files/compose/...`
 - `docker_host_paths` declarations for writable mounts
+- all affected documentation, including `README-session-prompt.md`
 - service catalog in `README-services.md`
 - bootstrap or storage docs if the architecture changes
 
