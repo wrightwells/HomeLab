@@ -35,55 +35,55 @@ pfsense_interfaces:
     interface: vtnet1
     enable: true
     ipv4_type: static
-    ipv4_address: 10.10.1.1
+    ipv4_address: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.1.1"
     ipv4_prefixlen: 24
   - descr: vETH
     interface: vtnet2
     enable: true
     ipv4_type: static
-    ipv4_address: 10.10.66.1
+    ipv4_address: "{{ dmz_gateway_ip }}"
     ipv4_prefixlen: 24
   - descr: Management
     interface: vtnet1.99
     enable: true
     ipv4_type: static
-    ipv4_address: 10.10.99.1
+    ipv4_address: "{{ management_gateway_ip }}"
     ipv4_prefixlen: 24
   - descr: Workstations
     interface: vtnet1.10
     enable: true
     ipv4_type: static
-    ipv4_address: 10.10.10.1
+    ipv4_address: "{{ workstation_gateway_ip }}"
     ipv4_prefixlen: 24
   - descr: Servers
     interface: vtnet1.20
     enable: true
     ipv4_type: static
-    ipv4_address: 10.10.20.1
+    ipv4_address: "{{ server_gateway_ip }}"
     ipv4_prefixlen: 24
   - descr: Media
     interface: vtnet1.30
     enable: true
     ipv4_type: static
-    ipv4_address: 10.10.30.1
+    ipv4_address: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.media_vlan }}.{{ homelab_site.addressing.gateway_host }}"
     ipv4_prefixlen: 24
   - descr: IOT
     interface: vtnet1.40
     enable: true
     ipv4_type: static
-    ipv4_address: 10.10.40.1
+    ipv4_address: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.iot_vlan }}.{{ homelab_site.addressing.gateway_host }}"
     ipv4_prefixlen: 24
   - descr: CCTV
     interface: vtnet1.50
     enable: true
     ipv4_type: static
-    ipv4_address: 10.10.50.1
+    ipv4_address: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.cctv_vlan }}.{{ homelab_site.addressing.gateway_host }}"
     ipv4_prefixlen: 24
   - descr: Guest
     interface: vtnet1.60
     enable: true
     ipv4_type: static
-    ipv4_address: 10.10.60.1
+    ipv4_address: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.guest_vlan }}.{{ homelab_site.addressing.gateway_host }}"
     ipv4_prefixlen: 24
 
 pfsense_aliases:
@@ -94,47 +94,47 @@ pfsense_aliases:
     descr: RFC1918
   - name: LittleDown
     type: network
-    address: "10.10.0.0/16"
+    address: "{{ homelab_site.addressing.first_octet }}.10.0.0/16"
     detail: "all LittleDown networks"
     descr: LittleDown
   - name: Goue
     type: network
-    address: "10.20.0.0/16"
+    address: "{{ homelab_site.addressing.first_octet }}.20.0.0/16"
     detail: "all Goue networks"
     descr: Goue
   - name: proxmox_host
     type: host
-    address: "10.10.99.10"
+    address: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.management_vlan }}.{{ homelab_site.proxmox.management_host_id }}"
     detail: "Proxmox host"
     descr: proxmox_host
   - name: ai_vm
     type: host
-    address: "10.10.20.210"
+    address: "{{ ai_gpu_ip }}"
     detail: "AI GPU VM"
     descr: ai_vm
   - name: teslamate_host
     type: host
-    address: "10.10.20.220"
+    address: "{{ apps_ip }}"
     detail: "Teslamate host"
     descr: teslamate_host
   - name: nginx_public
     type: host
-    address: "10.10.66.240"
+    address: "{{ external_ip }}"
     detail: "Public nginx host"
     descr: nginx_public
   - name: media_host
     type: host
-    address: "10.10.20.230"
+    address: "{{ media_ip }}"
     detail: "Media host"
     descr: media_host
   - name: mqtt_host
     type: host
-    address: "10.10.20.250"
+    address: "{{ infra_ip }}"
     detail: "MQTT on infra host"
     descr: mqtt_host
   - name: tailscale_peer_relay
     type: host
-    address: "10.10.66.110"
+    address: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.dmz_vlan }}.110"
     detail: "Tailscale peer relay"
     descr: tailscale_peer_relay
   - name: Plex_port
@@ -307,24 +307,24 @@ pfsense_expected_gateways:
   - TAILSCALE_GW
 
 pfsense_expected_dhcp_ranges:
-  - "10.10.1.100"
-  - "10.10.1.200"
-  - "10.10.99.100"
-  - "10.10.99.199"
-  - "10.10.10.100"
-  - "10.10.10.199"
-  - "10.10.20.150"
-  - "10.10.20.199"
-  - "10.10.30.100"
-  - "10.10.30.199"
-  - "10.10.40.100"
-  - "10.10.40.199"
-  - "10.10.50.100"
-  - "10.10.50.199"
-  - "10.10.60.100"
-  - "10.10.60.199"
-  - "10.10.66.110"
-  - "10.10.66.199"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.1.100"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.1.200"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.management_vlan }}.100"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.management_vlan }}.199"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.workstation_vlan }}.100"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.workstation_vlan }}.199"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.server_vlan }}.150"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.server_vlan }}.199"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.media_vlan }}.100"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.media_vlan }}.199"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.iot_vlan }}.100"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.iot_vlan }}.199"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.cctv_vlan }}.100"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.cctv_vlan }}.199"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.guest_vlan }}.100"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.guest_vlan }}.199"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.dmz_vlan }}.110"
+  - "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.dmz_vlan }}.199"
 
 pfsense_expected_package_markers:
   - pfblockerng

@@ -4,6 +4,12 @@ build_inventory:
     vm100_pfsense:
       enabled: true
       notes: "Always required."
+    vm050_mint:
+      enabled: true
+      required_mounts:
+        - ai_models
+        - ai_cache
+        - media
     vm210_ai_gpu:
       enabled: true
       required_mounts:

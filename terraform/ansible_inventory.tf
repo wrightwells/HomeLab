@@ -8,7 +8,7 @@ locals {
     for group_name in distinct(flatten([for host in values(local.enabled_inventory_hosts) : host.groups])) :
     group_name => {
       for host_key, host in local.enabled_inventory_hosts :
-      host_key => {
+      host.name => {
         ansible_host = host.ip
         ansible_user = host.user
         extra_vars   = {}

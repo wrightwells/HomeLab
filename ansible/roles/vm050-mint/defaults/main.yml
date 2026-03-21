@@ -1,0 +1,32 @@
+---
+vm050_mint_hostname_short: "{{ homelab_site.guests.vm050_mint.hostname }}"
+vm050_mint_hostname_fqdn: "{{ vm050_mint_hostname_short }}.{{ homelab_site.domain_suffix }}"
+vm050_mint_user_home: "/home/{{ ansible_user }}"
+vm050_mint_repo_url: "https://github.com/wrightwells/HomeLab.git"
+vm050_mint_repo_dest: "{{ vm050_mint_user_home }}/HomeLab"
+vm050_mint_tools:
+  - git
+  - curl
+  - wget
+  - vim
+  - htop
+  - jq
+  - unzip
+  - software-properties-common
+  - ca-certificates
+  - gnupg
+  - apt-transport-https
+  - python3
+  - python3-pip
+  - ansible
+  - qemu-guest-agent
+  - openssh-server
+  - dbus-x11
+vm050_mint_tailscale_enabled: true
+vm050_mint_tailscale_hostname: "{{ vm050_mint_hostname_short }}-{{ homelab_site.site_code }}"
+vm050_mint_tailscale_authkey_file: "{{ playbook_dir }}/../files/compose/lxc240-docker-external/tailscale-peer-relay/stack.env.vault"
+vm050_mint_nvme_device: "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1"
+vm050_mint_media_device: "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi2"
+vm050_mint_nvme_label: MINT_NVME
+vm050_mint_media_label: MINT_MEDIA
+vm050_mint_wallpaper_name: "{{ 'fr-flag.svg' if homelab_site.site_code == 'fr' else 'uk-flag.svg' }}"

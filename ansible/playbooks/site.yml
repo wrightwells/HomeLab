@@ -1,8 +1,9 @@
 ---
 - name: Baseline for all Linux hosts
-  hosts: docker_hosts:ai_gpu
+  hosts: docker_hosts:ai_gpu:mint_desktop
   become: true
   vars_files:
+    - ../inventories/production/site_config.yml
     - ../inventories/production/build_inventory.yml
   roles:
     - common
@@ -11,14 +12,25 @@
   hosts: docker_hosts:ai_gpu
   become: true
   vars_files:
+    - ../inventories/production/site_config.yml
     - ../inventories/production/build_inventory.yml
   roles:
     - docker
+
+- name: Configure Linux Mint workstation VM
+  hosts: mint_desktop
+  become: true
+  vars_files:
+    - ../inventories/production/site_config.yml
+    - ../inventories/production/build_inventory.yml
+  roles:
+    - vm050-mint
 
 - name: Configure AI GPU VM
   hosts: ai_gpu
   become: true
   vars_files:
+    - ../inventories/production/site_config.yml
     - ../inventories/production/build_inventory.yml
   roles:
     - vm210-ai-gpu
@@ -27,6 +39,7 @@
   hosts: docker_arr
   become: true
   vars_files:
+    - ../inventories/production/site_config.yml
     - ../inventories/production/build_inventory.yml
   roles:
     - lxc066-docker-arr
@@ -35,6 +48,7 @@
   hosts: docker_services
   become: true
   vars_files:
+    - ../inventories/production/site_config.yml
     - ../inventories/production/build_inventory.yml
   roles:
     - lxc200-docker-services
@@ -43,6 +57,7 @@
   hosts: docker_apps
   become: true
   vars_files:
+    - ../inventories/production/site_config.yml
     - ../inventories/production/build_inventory.yml
   roles:
     - lxc220-docker-apps
@@ -51,6 +66,7 @@
   hosts: docker_media
   become: true
   vars_files:
+    - ../inventories/production/site_config.yml
     - ../inventories/production/build_inventory.yml
   roles:
     - lxc230-docker-media
@@ -59,6 +75,7 @@
   hosts: docker_external
   become: true
   vars_files:
+    - ../inventories/production/site_config.yml
     - ../inventories/production/build_inventory.yml
   roles:
     - lxc240-docker-external
@@ -69,6 +86,7 @@
   hosts: infra
   become: true
   vars_files:
+    - ../inventories/production/site_config.yml
     - ../inventories/production/build_inventory.yml
   roles:
     - lxc250-infra

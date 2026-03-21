@@ -1,0 +1,76 @@
+---
+homelab_site:
+  site_code: uk
+  site_name: United Kingdom
+  domain_suffix: uk.linux
+  timezone: Europe/London
+
+  addressing:
+    first_octet: 10
+    second_octet: 10
+    gateway_host: 1
+    management_vlan: 99
+    workstation_vlan: 10
+    server_vlan: 20
+    media_vlan: 30
+    iot_vlan: 40
+    cctv_vlan: 50
+    guest_vlan: 60
+    dmz_vlan: 66
+
+  bridges:
+    management: vmbr0
+    trusted: vmbr1
+    dmz: vmbr2
+
+  proxmox:
+    hostname: pve01
+    management_host_id: 10
+    management_nic: eno1
+
+  guests:
+    vm050_mint:
+      hostname: vm050-mint
+      host_id: 50
+      network: workstation
+      bridge: vmbr1
+    vm100_pfsense:
+      hostname: pfsense
+      host_id: 1
+      network: management
+      bridge: vmbr0
+    vm210_ai_gpu:
+      hostname: ai-gpu
+      host_id: 210
+      network: servers
+      bridge: vmbr1
+    lxc066_docker_arr:
+      hostname: docker-arr
+      host_id: 66
+      network: dmz
+      bridge: vmbr2
+    lxc200_docker_services:
+      hostname: docker-services
+      host_id: 200
+      network: servers
+      bridge: vmbr1
+    lxc220_docker_apps:
+      hostname: docker-apps
+      host_id: 220
+      network: servers
+      bridge: vmbr1
+    lxc230_docker_media:
+      hostname: docker-media
+      host_id: 230
+      network: servers
+      bridge: vmbr1
+    lxc240_docker_external:
+      hostname: docker-external
+      host_id: 240
+      network: dmz
+      bridge: vmbr2
+    lxc250_infra:
+      hostname: infra-01
+      host_id: 250
+      network: servers
+      bridge: vmbr1

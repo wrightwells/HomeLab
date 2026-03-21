@@ -8,18 +8,18 @@ terraform {
 
 resource "proxmox_virtual_environment_container" "this" {
   node_name     = var.proxmox_node
-  vm_id         = 250
+  vm_id         = var.vm_id
   started       = var.started
   start_on_boot = var.start_on_boot
   unprivileged  = true
 
   initialization {
-    hostname = "infra"
+    hostname = var.hostname
 
     ip_config {
       ipv4 {
-        address = "10.10.20.250/24"
-        gateway = "10.10.20.1"
+        address = var.ipv4_address
+        gateway = var.ipv4_gateway
       }
     }
 
@@ -50,8 +50,8 @@ resource "proxmox_virtual_environment_container" "this" {
 
   network_interface {
     name    = "eth0"
-    bridge  = "vmbr1"
-    vlan_id = 20
+    bridge  = var.bridge
+    vlan_id = var.vlan_id
   }
 
   features {

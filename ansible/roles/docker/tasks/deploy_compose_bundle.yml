@@ -34,6 +34,16 @@
     mode: preserve
   loop: "{{ compose_stacks }}"
 
+- name: Render docker-compose from template when present
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/../files/compose/{{ compose_bundle_name }}/{{ item }}/docker-compose.yml.j2"
+    dest: "{{ docker_compose_root }}/{{ item }}/docker-compose.yml"
+    owner: "{{ docker_project_owner }}"
+    group: "{{ docker_project_group }}"
+    mode: "{{ docker_stack_compose_mode }}"
+  loop: "{{ compose_stacks }}"
+  when: lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/docker-compose.yml.j2', wantlist=True) | length > 0
+
 - name: Render stack.env from vaulted source when present
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/../files/compose/{{ compose_bundle_name }}/{{ item }}/stack.env.vault"
@@ -45,6 +55,18 @@
   loop: "{{ compose_stacks }}"
   when: lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/stack.env.vault', wantlist=True) | length > 0
 
+- name: Render stack.env from template when present
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/../files/compose/{{ compose_bundle_name }}/{{ item }}/stack.env.example.j2"
+    dest: "{{ docker_compose_root }}/{{ item }}/stack.env"
+    owner: "{{ docker_project_owner }}"
+    group: "{{ docker_project_group }}"
+    mode: "{{ docker_stack_env_mode }}"
+  loop: "{{ compose_stacks }}"
+  when:
+    - lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/stack.env.vault', wantlist=True) | length == 0
+    - lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/stack.env.example.j2', wantlist=True) | length > 0
+
 - name: Render stack.env from example when no vaulted source exists
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/../files/compose/{{ compose_bundle_name }}/{{ item }}/stack.env.example"
@@ -55,6 +77,7 @@
   loop: "{{ compose_stacks }}"
   when:
     - lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/stack.env.vault', wantlist=True) | length == 0
+    - lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/stack.env.example.j2', wantlist=True) | length == 0
     - lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/stack.env.example', wantlist=True) | length > 0
 
 - name: Start compose stacks

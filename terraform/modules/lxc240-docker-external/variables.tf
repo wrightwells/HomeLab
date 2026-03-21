@@ -1,3 +1,5 @@
+variable "vm_id" { type = number }
+variable "hostname" { type = string }
 variable "proxmox_node" { type = string }
 variable "lxc_storage" { type = string }
 variable "ssh_public_key" { type = string }
@@ -7,3 +9,7 @@ variable "memory_mb" { type = number }
 variable "swap_mb" { type = number }
 variable "started" { type = bool }
 variable "start_on_boot" { type = bool }
+variable "ipv4_address" { type = string }
+variable "ipv4_gateway" { type = string }
+variable "bridge" { type = string }
+variable "vlan_id" { type = number }

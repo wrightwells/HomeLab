@@ -6,7 +6,7 @@ frigate_event_retain_days: 7
 frigate_shm_size: 512mb
 frigate_cache_tmpfs_size: 1073741824
 frigate_mqtt_enabled: true
-frigate_mqtt_host: 10.20.20.210
+frigate_mqtt_host: "{{ ai_gpu_ip }}"
 frigate_mqtt_user: mqtt_user
 frigate_mqtt_password: mirror
 frigate_global_detect_fps: 5

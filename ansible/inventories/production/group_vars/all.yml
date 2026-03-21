@@ -1,12 +1,27 @@
 ---
-timezone: Europe/London
+timezone: "{{ homelab_site.timezone }}"
 docker_compose_root: /opt/containers
 appdata_root: /mnt/appdata
 ai_models_root: /mnt/ai_models
 ai_cache_root: /mnt/ai_cache
 media_root: /mnt/media_pool
 ansible_python_interpreter: /usr/bin/python3
-
+site_second_octet: "{{ homelab_site.addressing.second_octet }}"
+management_vlan: "{{ homelab_site.addressing.management_vlan }}"
+workstation_vlan: "{{ homelab_site.addressing.workstation_vlan }}"
+server_vlan: "{{ homelab_site.addressing.server_vlan }}"
+dmz_vlan: "{{ homelab_site.addressing.dmz_vlan }}"
+management_gateway_ip: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.management_vlan }}.{{ homelab_site.addressing.gateway_host }}"
+workstation_gateway_ip: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.workstation_vlan }}.{{ homelab_site.addressing.gateway_host }}"
+server_gateway_ip: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.server_vlan }}.{{ homelab_site.addressing.gateway_host }}"
+dmz_gateway_ip: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.dmz_vlan }}.{{ homelab_site.addressing.gateway_host }}"
+ai_gpu_ip: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.server_vlan }}.{{ homelab_site.guests.vm210_ai_gpu.host_id }}"
+infra_ip: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.server_vlan }}.{{ homelab_site.guests.lxc250_infra.host_id }}"
+services_ip: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.server_vlan }}.{{ homelab_site.guests.lxc200_docker_services.host_id }}"
+apps_ip: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.server_vlan }}.{{ homelab_site.guests.lxc220_docker_apps.host_id }}"
+media_ip: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.server_vlan }}.{{ homelab_site.guests.lxc230_docker_media.host_id }}"
+external_ip: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.dmz_vlan }}.{{ homelab_site.guests.lxc240_docker_external.host_id }}"
+mint_ip: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.workstation_vlan }}.{{ homelab_site.guests.vm050_mint.host_id }}"
 
 openwebui_port: 3000
 ollama_base_url: "http://127.0.0.1:11434"

@@ -3,5 +3,7 @@
   hosts: pfsense_firewall
   gather_facts: false
   become: false
+  vars_files:
+    - ../inventories/production/site_config.yml
   roles:
     - pfsense_firewall

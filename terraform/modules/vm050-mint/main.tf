@@ -12,7 +12,7 @@ resource "proxmox_virtual_environment_vm" "this" {
   vm_id     = var.vm_id
   started   = var.started
   on_boot   = var.on_boot
-  tags      = ["terraform", "ai", "gpu", "docker"]
+  tags      = ["terraform", "desktop", "linux-mint", "tailscale"]
 
   cpu {
     cores = var.cpu_cores
@@ -34,7 +34,21 @@ resource "proxmox_virtual_environment_vm" "this" {
   disk {
     datastore_id = var.vm_storage
     interface    = "scsi0"
-    size         = 128
+    size         = var.root_disk_size_gb
+    file_format  = "raw"
+  }
+
+  disk {
+    datastore_id = var.nvme_storage
+    interface    = "scsi1"
+    size         = var.nvme_disk_size_gb
+    file_format  = "raw"
+  }
+
+  disk {
+    datastore_id = var.media_storage
+    interface    = "scsi2"
+    size         = var.media_disk_size_gb
     file_format  = "raw"
   }
 
@@ -57,11 +71,12 @@ resource "proxmox_virtual_environment_vm" "this" {
   network_device {
     bridge  = var.bridge
     vlan_id = var.vlan_id
+    model   = "virtio"
   }
 
   operating_system {
     type = "l26"
   }
 
-  description = "AI VM cloned from a prepared Proxmox template. Extend with GPU passthrough as needed."
+  description = "Linux Mint Cinnamon desktop VM cloned from a prepared Proxmox template with extra NVMe-style and media-style data disks."
 }

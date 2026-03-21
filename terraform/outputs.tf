@@ -6,6 +6,10 @@ output "vm100_pfsense_id" {
   value = module.vm100_pfsense.vm_id
 }
 
+output "vm050_mint_id" {
+  value = try(module.vm050_mint[0].vm_id, null)
+}
+
 output "vm210_ai_gpu_id" {
   value = try(module.vm210_ai_gpu[0].vm_id, null)
 }

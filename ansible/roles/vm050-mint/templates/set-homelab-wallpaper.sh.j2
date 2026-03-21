@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -eu
+
+WALLPAPER="file://{{ vm050_mint_user_home }}/.local/share/backgrounds/{{ vm050_mint_wallpaper_name }}"
+
+if command -v dbus-launch >/dev/null 2>&1; then
+  dbus-launch gsettings set org.cinnamon.desktop.background picture-uri "${WALLPAPER}"
+  exec dbus-launch gsettings set org.cinnamon.desktop.background picture-options "zoom"
+fi
+
+exit 0

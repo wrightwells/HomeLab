@@ -14,6 +14,12 @@ variable "build_inventory_file" {
   default     = "../ansible/inventories/production/build_inventory.yml"
 }
 
+variable "site_config_file" {
+  description = "Path to the shared site configuration YAML file, relative to the terraform root unless absolute"
+  type        = string
+  default     = "../ansible/inventories/production/site_config.yml"
+}
+
 variable "pm_api_token_id" {
   description = "Proxmox API token ID"
   type        = string
@@ -115,6 +121,45 @@ variable "vm_template_vmid" {
     condition     = var.vm_template_vmid > 0
     error_message = "vm_template_vmid must be a positive VMID."
   }
+}
+
+variable "vm050_mint_template_vmid" {
+  description = "Template VMID for the Linux Mint Cinnamon desktop VM clone source"
+  type        = number
+  validation {
+    condition     = var.vm050_mint_template_vmid > 0
+    error_message = "vm050_mint_template_vmid must be a positive VMID."
+  }
+}
+
+variable "vm050_mint_root_disk_size_gb" {
+  description = "Root disk size for the Linux Mint workstation VM"
+  type        = number
+  default     = 96
+}
+
+variable "vm050_mint_nvme_storage" {
+  description = "Storage backing the Linux Mint workstation NVMe-style data disk"
+  type        = string
+  default     = "local-lvm"
+}
+
+variable "vm050_mint_nvme_disk_size_gb" {
+  description = "Size of the Linux Mint workstation NVMe-style data disk"
+  type        = number
+  default     = 128
+}
+
+variable "vm050_mint_media_storage" {
+  description = "Storage backing the Linux Mint workstation media-style data disk"
+  type        = string
+  default     = "local-lvm"
+}
+
+variable "vm050_mint_media_disk_size_gb" {
+  description = "Size of the Linux Mint workstation media-style data disk"
+  type        = number
+  default     = 512
 }
 
 variable "vm210_gpu_pci_address" {
