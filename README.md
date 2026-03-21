@@ -47,9 +47,17 @@ Example use cases:
 - lightweight build with only `vm100_pfsense`, `lxc230_docker_media`, and a few core services
 - reduced storage build where `/mnt/appdata` still exists but falls back to `host_os` instead of a separate appdata disk
 
+Use [site_config.yml](ansible/inventories/production/site_config.yml) to control:
+
+- whether the build is UK or France
+- the second IP octet, for example `10.10.x.x` for UK or `10.20.x.x` for France
+- the domain suffix such as `uk.linux` or `fr.linux`
+- VLAN-backed subnet ranges used by Terraform and generated inventory
+
 ## Hosts
 
 - VM100 pfSense
+- VM050 Mint desktop
 - VM210 AI-GPU
 - LXC066 docker-arr
 - LXC200 docker-services
@@ -82,6 +90,7 @@ Note:
 - [Sizing Guide](README-sizing.md)
 - [Build Inventory Guide](README-build-inventory.md)
 - [Build Inventory](ansible/inventories/production/build_inventory.yml)
+- [Site Config](ansible/inventories/production/site_config.yml)
 - [Session Prompt](README-session-prompt.md)
 - [Service Catalog](README-services.md)
 - [Home Assistant Voice Stack](docs/home-assistant-voice-stack.md)

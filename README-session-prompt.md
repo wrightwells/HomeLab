@@ -14,6 +14,7 @@ The goal is to give a future coding agent enough context to:
 
 - understand the hardware and storage layout
 - understand the current build inventory and what is intentionally excluded
+- understand which site config is active, including UK vs France IP space and domain suffix
 - understand why VMs and LXCs are placed where they are
 - understand which Docker services live on which host
 - move services between hosts safely in a future rebuild
@@ -55,10 +56,12 @@ Terraform design:
 - Provider: bpg/proxmox
 - VMs should be clone-based or otherwise note exceptions
 - Resource sizing is profile-driven if available
+- Site, domain suffix, and IP ranges are driven by ansible/inventories/production/site_config.yml
 - Guest inclusion is driven by ansible/inventories/production/build_inventory.yml
 - Terraform creates guests, not Proxmox host networking
 
 Ansible design:
+- Site-specific hostnames, wallpaper, and network-derived values are driven by ansible/inventories/production/site_config.yml
 - Docker services are deployed from ansible/files/compose
 - Docker bundle inclusion is driven by ansible/inventories/production/build_inventory.yml
 - Writable host bind mounts should be pre-created by Ansible
@@ -113,6 +116,7 @@ Important repo files:
 - README-sizing.md
 - README-services.md
 - terraform/main.tf
+- ansible/inventories/production/site_config.yml
 - ansible/inventories/production/build_inventory.yml
 - ansible/inventories/production/hosts.ini
 - ansible/inventories/production/group_vars/all.yml
@@ -166,12 +170,16 @@ Shared host directories created during storage bootstrap include:
 
 ### Network
 
+- Site config default: `UK`
+- Site-driven second octet: `10` for UK, `20` for France
 - Proxmox management IP: `10.10.99.10/24`
 - Proxmox management NIC: `eno1`
 - Proxmox management gateway: `10.10.99.1`
 - pfSense WAN bridge: `vmbr0`
 - Internal trusted bridge: `vmbr1`
+- Workstation VLAN on trusted bridge: `10`
 - Internal trusted VLAN: `20`
+- Internal trusted desktop subnet: `10.10.10.0/24`
 - Internal trusted subnet: `10.10.20.0/24`
 - DMZ-style bridge: `vmbr2`
 - DMZ subnet: `10.10.66.0/24`
@@ -179,10 +187,12 @@ Shared host directories created during storage bootstrap include:
 ### Terraform / Ansible Design Rules
 
 - Provider source: `bpg/proxmox`
+- Linux Mint desktop VM is clone-only from a prepared Linux Mint Cinnamon template
 - AI VM is clone-only from an Ubuntu 24.04 cloud image template
 - LXCs use the Debian 12 standard LXC template
 - Terraform does not configure Proxmox host networking
 - Terraform sizing and start behavior are profile-driven
+- Site, domain suffix, and host IP ranges are driven by `ansible/inventories/production/site_config.yml`
 - Guest inclusion is driven by `ansible/inventories/production/build_inventory.yml`
 - Ansible deploys Docker compose bundles from `ansible/files/compose`
 - Docker bundle inclusion is driven by `ansible/inventories/production/build_inventory.yml`
@@ -206,6 +216,7 @@ Shared host directories created during storage bootstrap include:
 
 | Host | IP | Purpose |
 | --- | --- | --- |
+| `vm050-mint` | `10.10.10.50` | Linux Mint Cinnamon desktop VM, Tailscale client, repo tools, UK/France themed wallpaper |
 | `vm210-ai-gpu` | `10.10.20.210` | AI services, Frigate, Home Assistant, automation, coding tools |
 | `lxc066-docker-arr` | `10.10.66.66` | ARR stack, downloads, request tools |
 | `lxc200-docker-services` | `10.10.20.200` | data and sync services |
@@ -221,6 +232,11 @@ Shared host directories created during storage bootstrap include:
   - Frigate
   - Home Assistant
   - local automation and coding support
+- `vm050-mint`:
+  - Linux Mint Cinnamon desktop workstation
+  - HomeLab repo checkout and local tooling
+  - Tailscale-connected admin workstation
+  - site-aware wallpaper and hostname
 - `lxc066-docker-arr`:
   - download and media acquisition stack
   - request and file-browser helpers

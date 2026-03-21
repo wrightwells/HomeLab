@@ -53,6 +53,7 @@ cut down by flipping booleans in the build inventory.
 Important behavior:
 
 - `vm100_pfsense` is always treated as required
+- `vm050_mint` is the site-aware Linux Mint workstation VM and is sized in every profile
 - other guests can be included or excluded with `enabled: true` or `false`
 - Docker bundles are enabled per host in the same file
 - Terraform filters the generated Ansible inventory to the enabled guests
@@ -99,6 +100,7 @@ explicitly in your `terraform.tfvars`.
 ### `balanced_128gb`
 
 - `vm100_pfsense`: 2 cores, 4 GB, starts automatically
+- `vm050_mint`: 4 cores, 8 GB, starts automatically
 - `vm210_ai_gpu`: 12 cores, 48 GB, starts automatically
 - `lxc066_docker_arr`: 2 cores, 4 GB, starts automatically
 - `lxc200_docker_services`: 4 cores, 10 GB, starts automatically
@@ -120,6 +122,7 @@ Use these when the host has not yet reached the 128 GB target.
 ### `balanced_32gb`
 
 - `vm100_pfsense`: 2 cores, 4 GB, starts automatically
+- `vm050_mint`: 2 cores, 4 GB, stays off by default
 - `vm210_ai_gpu`: 4 cores, 12 GB, stays off by default
 - `lxc066_docker_arr`: 2 cores, 4 GB, starts automatically
 - `lxc200_docker_services`: 2 cores, 6 GB, starts automatically
@@ -149,6 +152,7 @@ available memory for that stage of the host.
 ### `ai_focus_32gb`
 
 - `vm100_pfsense`: 2 cores, 4 GB, starts automatically
+- `vm050_mint`: 2 cores, 4 GB, stays off by default
 - `vm210_ai_gpu`: 8 cores, 24 GB, starts automatically
 - all LXCs: configured but not started and not set to auto-start
 
@@ -157,12 +161,14 @@ This is the “AI mode” for the current 32 GB host.
 ### `ai_focus_64gb`
 
 - `vm100_pfsense`: 2 cores, 4 GB, starts automatically
+- `vm050_mint`: 2 cores, 4 GB, stays off by default
 - `vm210_ai_gpu`: 12 cores, 52 GB, starts automatically
 - all LXCs: configured but not started and not set to auto-start
 
 ### `ai_focus_128gb`
 
 - `vm100_pfsense`: 2 cores, 4 GB, starts automatically
+- `vm050_mint`: 2 cores, 4 GB, stays off by default
 - `vm210_ai_gpu`: 16 cores, 112 GB, starts automatically
 - all LXCs: configured but not started and not set to auto-start
 
@@ -174,6 +180,7 @@ upgraded.
 ### `balanced_64gb`
 
 - `vm100_pfsense`: 2 cores, 4 GB
+- `vm050_mint`: 4 cores, 8 GB
 - `vm210_ai_gpu`: 8 cores, 24 GB
 - `lxc066_docker_arr`: 2 cores, 4 GB
 - `lxc200_docker_services`: 4 cores, 8 GB
@@ -187,6 +194,7 @@ This is the recommended next step once the host reaches 64 GB.
 ### `balanced_128gb`
 
 - `vm100_pfsense`: 2 cores, 4 GB
+- `vm050_mint`: 4 cores, 8 GB
 - `vm210_ai_gpu`: 12 cores, 48 GB
 - `lxc066_docker_arr`: 2 cores, 4 GB
 - `lxc200_docker_services`: 4 cores, 10 GB

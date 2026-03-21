@@ -5,7 +5,8 @@ on, the expected IP and port, and what each service is for.
 
 Notes:
 
-- URLs below reflect the current Terraform and Ansible configuration.
+- URLs below reflect the default UK site configuration in `ansible/inventories/production/site_config.yml`.
+- France builds use the same host IDs and VLAN layout but switch to the `10.20.x.x` range.
 - Some services are internal-only helpers such as databases, VPN sidecars, or
   relays and do not have a direct browser UI.
 - A few host-networked services rely on the application's default port because
@@ -15,6 +16,7 @@ Notes:
 
 | Host | IP | Purpose |
 | --- | --- | --- |
+| `vm050-mint` | `10.10.10.50` | Linux Mint Cinnamon desktop VM with Tailscale and HomeLab tools |
 | `vm210-ai-gpu` | `10.10.20.210` | AI services, Frigate, Home Assistant, coding tools |
 | `lxc066-docker-arr` | `10.10.66.66` | ARR stack, downloads, media request tools |
 | `lxc200-docker-services` | `10.10.20.200` | Core data services and sync tools |
@@ -107,6 +109,7 @@ Notes:
 | Topic | Detail |
 | --- | --- |
 | Reverse proxy | Public HTTP and HTTPS are intended to terminate on `lxc240-docker-external` via `nginx` |
+| Site-aware addressing | Host IDs stay constant while the second octet comes from `site_config.yml`, so UK defaults are `10.10.x.x` and France builds become `10.20.x.x` |
 | AI API front door | `open-webui` is the intended single API/UI front door for local models |
 | Port reuse | Some services share the same port number on different hosts, for example `3000` on both `vm210-ai-gpu` and `lxc250-infra` |
 | Internal helpers | Databases, Redis, and sidecars are listed for completeness but are not usually user-facing |

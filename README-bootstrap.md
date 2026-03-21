@@ -65,9 +65,15 @@ Boot from the USB installer and use these baseline choices:
 
 Recommended installer network values for this repo:
 
-- IP: `10.10.99.10`
-- gateway: `10.10.99.1`
-- DNS: `10.10.99.1`
+- UK default IP: `10.10.99.10`
+- UK default gateway: `10.10.99.1`
+- UK default DNS: `10.10.99.1`
+
+Site-aware rule:
+
+- UK builds use `10.10.x.x`
+- France builds use `10.20.x.x`
+- VLAN-aware guest addressing follows `10.<site_octet>.<vlan>.<host_id>`
 
 After install, the Proxmox web UI should be reachable at:
 
@@ -223,6 +229,9 @@ the Proxmox host before continuing.
 Before running Terraform or Ansible, review
 [build_inventory.yml](ansible/inventories/production/build_inventory.yml).
 
+Also review
+[site_config.yml](ansible/inventories/production/site_config.yml) for the active site.
+
 This file lets you choose:
 
 - which guests are included in the build
@@ -230,6 +239,13 @@ This file lets you choose:
 - which logical storage mounts are expected
 - whether `appdata`, `media`, `ai_models`, or `ai_cache` use dedicated storage
   or fall back to `host_os`
+
+The site config file controls:
+
+- UK vs France build selection
+- the domain suffix such as `uk.linux` or `fr.linux`
+- the second IP octet, for example `10.10.x.x` vs `10.20.x.x`
+- VLAN-backed subnet ranges used by Terraform, pfSense, and generated inventory
 
 Use this to describe reduced builds as well as the full target design.
 
@@ -394,6 +410,7 @@ pm_tls_insecure     = true
 Before applying Terraform, make sure Proxmox already has:
 
 - the Debian LXC template referenced by `debian_lxc_template`
+- a prepared Linux Mint Cinnamon VM template for `vm050-mint`
 - a prepared VM template for the AI VM clone source
 - the required storage targets such as `local-lvm`
 
@@ -454,6 +471,44 @@ Example:
 
 ```hcl
 vm_template_vmid = 9000
+```
+
+### Linux Mint Cinnamon template
+
+For `vm050-mint`, prepare a separate Linux Mint Cinnamon desktop template.
+
+Distribution to download:
+
+- Linux Mint Cinnamon
+
+Recommended flow:
+
+1. Download the Linux Mint Cinnamon ISO to the Proxmox host.
+2. Create a temporary VM and install Mint normally.
+3. Inside the VM, install:
+   - `openssh-server`
+   - `qemu-guest-agent`
+   - `cloud-init`
+4. Shut the VM down and convert it into a Proxmox template.
+
+Example high-level flow:
+
+```bash
+qm create 9050 --name linux-mint-cinnamon-template --memory 4096 --cores 4 --net0 virtio,bridge=vmbr1
+# attach the Linux Mint Cinnamon ISO, install Mint, then inside the VM:
+sudo apt update
+sudo apt install -y openssh-server qemu-guest-agent cloud-init
+sudo systemctl enable ssh qemu-guest-agent
+sudo cloud-init clean --logs
+# back on Proxmox:
+qm shutdown 9050
+qm template 9050
+```
+
+Example Terraform variable:
+
+```hcl
+vm050_mint_template_vmid = 9050
 ```
 
 If you want the host storage prepared by Ansible, run the dedicated Proxmox host
@@ -631,19 +686,24 @@ Important:
 
 ## Current guest IP layout
 
+These are UK defaults from `ansible/inventories/production/site_config.yml`:
+
 - Proxmox host management IP: `10.10.99.10/24` on `eno1`
 - `vm100_pfsense`: `10.10.99.1` on `vmbr0`
+- `vm050_mint`: `10.10.10.50` on `vmbr1` with VLAN tag `10`
 - `vm210_ai_gpu`: `10.10.20.210` on `vmbr1` with VLAN tag `20`
-- `lxc066_docker_arr`: `10.10.66.66` on `vmbr2`
+- `lxc066_docker_arr`: `10.10.66.66` on `vmbr2` with VLAN tag `66`
 - `lxc200_docker_services`: `10.10.20.200` on `vmbr1` with VLAN tag `20`
 - `lxc220_docker_apps`: `10.10.20.220` on `vmbr1` with VLAN tag `20`
 - `lxc230_docker_media`: `10.10.20.230` on `vmbr1` with VLAN tag `20`
-- `lxc240_docker_external`: `10.10.66.240` on `vmbr2`
+- `lxc240_docker_external`: `10.10.66.240` on `vmbr2` with VLAN tag `66`
 - `lxc250_infra`: `10.10.20.250` on `vmbr1` with VLAN tag `20`
 
 ## Network intent
 
-- `vmbr1` is the trusted internal trunk, and the current workloads use VLAN `20` on the `10.10.20.0/24` segment.
+- `vmbr1` is the trusted internal trunk.
+- The current workstation workload uses VLAN `10` on the `10.10.10.0/24` segment.
+- The current server workloads use VLAN `20` on the `10.10.20.0/24` segment.
 - `vmbr2` is the DMZ-style network for isolated or public-facing workloads on the `10.10.66.0/24` segment.
 - `lxc066_docker_arr` stays on `vmbr2` and should not have broad access back into the trusted internal network.
 - `lxc240_docker_external` stays on `vmbr2` because it serves public-facing workloads.
@@ -783,31 +843,31 @@ models:
   - name: qwen3chat8b-webui
     provider: openai
     model: qwen3:8b
-    apiBase: http://10.10.20.250:3000/api
+    apiBase: http://10.10.20.210:3000/api
     apiKey: your-open-webui-api-key
 
   - name: qwen25coder7b-webui
     provider: openai
     model: qwen2.5-coder:7b
-    apiBase: http://10.10.20.250:3000/api
+    apiBase: http://10.10.20.210:3000/api
     apiKey: your-open-webui-api-key
 
   - name: qwen25vl7b-webui
     provider: openai
     model: qwen2.5vl:7b
-    apiBase: http://10.10.20.250:3000/api
+    apiBase: http://10.10.20.210:3000/api
     apiKey: your-open-webui-api-key
 
   - name: qwen3mini4b-webui
     provider: openai
     model: qwen3:4b
-    apiBase: http://10.10.20.250:3000/api
+    apiBase: http://10.10.20.210:3000/api
     apiKey: your-open-webui-api-key
 
   - name: qwen3vl4b-webui
     provider: openai
     model: qwen3-vl:4b
-    apiBase: http://10.10.20.250:3000/api
+    apiBase: http://10.10.20.210:3000/api
     apiKey: your-open-webui-api-key
 
 context:
@@ -819,7 +879,8 @@ context:
 
 Notes:
 
-- replace `10.10.20.250` with the real IP or DNS name for your AI VM
+- replace `10.10.20.210` with the real IP or DNS name for your AI VM
+- France builds would use `10.20.20.210` with the default site rules
 - create and use a real Open WebUI API key after logging into Open WebUI
 - Open WebUI will expose models that you have already pulled into Ollama
 - Frigate and Home Assistant model selection is configured in those applications, not in these Docker Compose files

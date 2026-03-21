@@ -5,12 +5,17 @@ This guide assumes:
 - Ollama is already running on `vm210-ai-gpu`
 - Home Assistant is already running
 - the Wyoming voice services are already added
+- the examples below use the default UK site config
 
 ## Recommended Server URL
 
 Use:
 
 - `http://10.10.20.210:11434`
+
+France default:
+
+- `http://10.20.20.210:11434`
 
 ## Recommended model choices
 
@@ -35,6 +40,7 @@ In Home Assistant:
 2. Search for `Ollama`.
 3. Enter the server URL:
    - `http://10.10.20.210:11434`
+   - France default: `http://10.20.20.210:11434`
 4. Select the model:
    - start with `qwen3:4b`
 

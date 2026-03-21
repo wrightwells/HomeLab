@@ -3,6 +3,13 @@
 This guide explains how to add a new Dockerized application so the existing
 Ansible structure can deploy it onto one of the Docker-capable hosts.
 
+Important:
+
+- guest inclusion and bundle enablement are controlled by
+  `ansible/inventories/production/build_inventory.yml`
+- site-specific IPs and domains are controlled by
+  `ansible/inventories/production/site_config.yml`
+
 ## 1. Choose the target host group
 
 Decide which host should run the new component. Current Docker bundle groups are:
@@ -39,6 +46,10 @@ Add one of these if the stack needs environment variables:
 
 - `stack.env.vault` for encrypted secrets
 - `stack.env.example` for non-secret defaults or placeholders
+- `stack.env.example.j2` for generated, site-aware defaults
+
+If the compose file itself needs site-aware values such as bound IPs, you can
+also use `docker-compose.yml.j2`.
 
 If both exist, Ansible will prefer `stack.env.vault` and decrypt it to
 `stack.env` on the target host at deploy time.
@@ -112,9 +123,7 @@ Example:
     tasks_from: deploy_compose_bundle.yml
   vars:
     compose_bundle_name: lxc220-docker-apps
-    compose_stacks:
-      - grafana
-      - my-service
+    compose_stacks: "{{ build_inventory.services.lxc220_docker_apps | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
     docker_host_paths:
       - path: /mnt/appdata/docker_volumes/my-service
         owner: "{{ docker_app_uid }}"
@@ -146,17 +155,47 @@ If you need a file instead of a directory, declare it explicitly:
         mode: "0644"
 ```
 
-## 6. Update the Ansible role for that host
+## 6. Update build inventory for that host
 
-Open the host role task file and add the new component to `compose_stacks`.
+Add the new component under the correct host in:
+
+- [build_inventory.yml](ansible/inventories/production/build_inventory.yml)
+
+Example:
+
+```yaml
+services:
+  lxc220_docker_apps:
+    grafana:
+      enabled: true
+    my-service:
+      enabled: true
+      required_mounts:
+        - appdata
+```
+
+If you forget this step, Ansible will not deploy the new component even if the
+files exist.
+
+## 7. Update the Ansible role only if it needs special handling
+
+Most host roles now derive `compose_stacks` from the build inventory, so you do
+not usually edit the role just to add a normal compose bundle.
+
+You still need to update a host role when:
+
+- the stack needs new `docker_host_paths`
+- the stack needs pre-rendered config files
+- the stack needs host-specific preparation steps
 
 Examples:
 
 - [main.yml](ansible/roles/lxc220-docker-apps/tasks/main.yml)
 - [main.yml](ansible/roles/lxc240-docker-external/tasks/main.yml)
 - [main.yml](ansible/roles/vm210-ai-gpu/tasks/main.yml)
+- [main.yml](ansible/roles/vm050-mint/tasks/main.yml)
 
-Example change:
+Example host-path change:
 
 ```yaml
 - name: Deploy compose bundles for docker-apps
@@ -165,14 +204,14 @@ Example change:
     tasks_from: deploy_compose_bundle.yml
   vars:
     compose_bundle_name: lxc220-docker-apps
-    compose_stacks:
-      - grafana
-      - my-service
+    compose_stacks: "{{ build_inventory.services.lxc220_docker_apps | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
+    docker_host_paths:
+      - path: /mnt/appdata/docker_volumes/my-service
+        owner: "{{ docker_app_uid }}"
+        group: "{{ docker_app_gid }}"
 ```
 
-If you forget this step, Ansible will never deploy the new component.
-
-## 7. Check whether the compose file needs `PUID` / `PGID`
+## 8. Check whether the compose file needs `PUID` / `PGID`
 
 If the image supports running as a non-root user, add:
 
@@ -195,7 +234,7 @@ and put the values in `stack.env.example` or `stack.env.vault`.
 Only do this for images that actually support the LinuxServer-style `PUID` /
 `PGID` pattern. Do not add it blindly to every image.
 
-## 8. Check whether host variables are needed
+## 9. Check whether host variables are needed
 
 Review:
 
@@ -211,7 +250,7 @@ General rule:
 - Put stack-local secrets in `stack.env.vault`
 - Put shared inventory-wide settings in group vars
 
-## 9. Check whether the playbook already covers the host
+## 10. Check whether the playbook already covers the host
 
 The top-level playbook already targets each Docker host role:
 
@@ -225,7 +264,7 @@ You only need to update `site.yml` if:
 - you create a brand-new host role
 - you add a brand-new host group
 
-## 10. If this is a brand-new Docker host
+## 11. If this is a brand-new Docker host
 
 If the new component is going onto a host that does not already exist in the
 repo, update all of the following:
@@ -238,7 +277,7 @@ repo, update all of the following:
 
 For existing hosts, you do not need these extra steps.
 
-## 11. Validate before running
+## 12. Validate before running
 
 Run:
 
@@ -252,7 +291,7 @@ If you changed Terraform inventory generation, also run:
 terraform -chdir=terraform validate
 ```
 
-## 12. Deploy
+## 13. Deploy
 
 Make sure your vault password file is available, then run:
 

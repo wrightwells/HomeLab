@@ -6,6 +6,9 @@ full homelab defined in the repo while deploying only the parts you want.
 The source of truth is
 [build_inventory.yml](ansible/inventories/production/build_inventory.yml).
 
+Site and IP layout are controlled separately in
+[site_config.yml](ansible/inventories/production/site_config.yml).
+
 ## What The Structure Does
 
 The build inventory controls four things:
@@ -59,11 +62,13 @@ Ansible:
 
 1. Edit
    [build_inventory.yml](ansible/inventories/production/build_inventory.yml)
-2. Set which guests you want in this build
-3. Set which bundles you want on each enabled guest
-4. Describe the storage stores and logical mount fallbacks for the actual host
-5. Run Terraform so it renders the matching Ansible inventory
-6. Run Ansible against that rendered inventory
+2. Edit
+   [site_config.yml](ansible/inventories/production/site_config.yml) if the build is for UK vs France or uses different VLAN-backed subnets
+3. Set which guests you want in this build
+4. Set which bundles you want on each enabled guest
+5. Describe the storage stores and logical mount fallbacks for the actual host
+6. Run Terraform so it renders the matching Ansible inventory
+7. Run Ansible against that rendered inventory
 
 ## Example: Host Disk And Media Disk Only
 

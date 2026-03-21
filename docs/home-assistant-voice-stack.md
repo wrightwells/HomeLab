@@ -12,6 +12,9 @@ This guide sets up a practical local voice path for Home Assistant Container:
 The repo deploys the voice services as a dedicated compose bundle on
 `vm210-ai-gpu`.
 
+The examples below use the default UK site config. France builds keep the same
+host ID on the servers VLAN, so the AI VM becomes `10.20.20.210`.
+
 ## Docker Compose Bundle
 
 Compose bundle path:
@@ -27,6 +30,12 @@ Service endpoints on `vm210-ai-gpu` (`10.10.20.210`):
 - Piper: `10.10.20.210:10200`
 - Whisper: `10.10.20.210:10300`
 - openWakeWord: `10.10.20.210:10400`
+
+France defaults:
+
+- Piper: `10.20.20.210:10200`
+- Whisper: `10.20.20.210:10300`
+- openWakeWord: `10.20.20.210:10400`
 
 Persistent data locations:
 

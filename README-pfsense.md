@@ -223,6 +223,6 @@ Validation:
 
 ## Notes
 
-- Current pfSense inventory IP: `10.10.99.1`
+- Current pfSense inventory IP: UK default `10.10.99.1`; France builds use `10.20.99.1` from `ansible/inventories/production/site_config.yml`
 - pfSense is intentionally separate from Linux-host roles
 - package-specific edge cases remain manual in the first pass

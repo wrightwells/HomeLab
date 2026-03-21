@@ -1,0 +1,241 @@
+---
+- name: Set Linux Mint workstation hostname
+  ansible.builtin.hostname:
+    name: "{{ vm050_mint_hostname_fqdn }}"
+
+- name: Install Linux Mint workstation packages
+  ansible.builtin.apt:
+    name: "{{ vm050_mint_tools }}"
+    state: present
+    update_cache: true
+
+- name: Read Ubuntu codename from os-release
+  ansible.builtin.shell: ". /etc/os-release && printf '%s' \"${UBUNTU_CODENAME:-$VERSION_CODENAME}\""
+  args:
+    executable: /bin/bash
+  register: vm050_mint_ubuntu_codename
+  changed_when: false
+
+- name: Install HashiCorp signing key
+  ansible.builtin.get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /usr/share/keyrings/hashicorp-archive-keyring.asc
+    mode: "0644"
+
+- name: Dearmor HashiCorp signing key
+  ansible.builtin.command:
+    cmd: gpg --dearmor --yes --output /usr/share/keyrings/hashicorp-archive-keyring.gpg /usr/share/keyrings/hashicorp-archive-keyring.asc
+  changed_when: true
+
+- name: Configure HashiCorp apt repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/hashicorp.list
+    mode: "0644"
+    content: "deb [arch=amd64 signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com {{ vm050_mint_ubuntu_codename.stdout }} main\n"
+
+- name: Install Terraform on Linux Mint workstation
+  ansible.builtin.apt:
+    name: terraform
+    state: present
+    update_cache: true
+
+- name: Ensure workstation mount points exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ ai_models_root }}"
+    - "{{ ai_cache_root }}"
+    - "{{ media_root }}"
+
+- name: Check Linux Mint workstation data disks for filesystems
+  ansible.builtin.command:
+    cmd: blkid -o value -s TYPE {{ item.device }}
+  register: vm050_mint_disk_fs
+  failed_when: false
+  changed_when: false
+  loop:
+    - { device: "{{ vm050_mint_nvme_device }}", label: "{{ vm050_mint_nvme_label }}" }
+    - { device: "{{ vm050_mint_media_device }}", label: "{{ vm050_mint_media_label }}" }
+
+- name: Format Linux Mint workstation data disks when empty
+  ansible.builtin.command:
+    cmd: mkfs.ext4 -F -L {{ item.item.label }} {{ item.item.device }}
+  when: item.rc != 0 or item.stdout | trim == ""
+  loop: "{{ vm050_mint_disk_fs.results }}"
+
+- name: Mount Linux Mint NVMe-style disk
+  ansible.posix.mount:
+    path: "{{ ai_models_root }}"
+    src: "LABEL={{ vm050_mint_nvme_label }}"
+    fstype: ext4
+    opts: defaults
+    state: mounted
+
+- name: Ensure AI cache backing directory exists on NVMe-style disk
+  ansible.builtin.file:
+    path: "{{ ai_models_root }}/cache"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Mount Linux Mint AI cache path from NVMe-style disk
+  ansible.posix.mount:
+    path: "{{ ai_cache_root }}"
+    src: "{{ ai_models_root }}/cache"
+    fstype: none
+    opts: bind
+    state: mounted
+
+- name: Mount Linux Mint media-style disk
+  ansible.posix.mount:
+    path: "{{ media_root }}"
+    src: "LABEL={{ vm050_mint_media_label }}"
+    fstype: ext4
+    opts: defaults
+    state: mounted
+
+- name: Ensure user wallpaper directory exists
+  ansible.builtin.file:
+    path: "{{ vm050_mint_user_home }}/.local/share/backgrounds"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+
+- name: Copy UK wallpaper asset
+  ansible.builtin.copy:
+    src: uk-flag.svg
+    dest: "{{ vm050_mint_user_home }}/.local/share/backgrounds/uk-flag.svg"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+
+- name: Copy France wallpaper asset
+  ansible.builtin.copy:
+    src: fr-flag.svg
+    dest: "{{ vm050_mint_user_home }}/.local/share/backgrounds/fr-flag.svg"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+
+- name: Install wallpaper helper script
+  ansible.builtin.template:
+    src: set-homelab-wallpaper.sh.j2
+    dest: /usr/local/bin/set-homelab-wallpaper.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Ensure autostart directory exists
+  ansible.builtin.file:
+    path: "{{ vm050_mint_user_home }}/.config/autostart"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+
+- name: Configure wallpaper autostart entry
+  ansible.builtin.copy:
+    dest: "{{ vm050_mint_user_home }}/.config/autostart/homelab-wallpaper.desktop"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=HomeLab Wallpaper
+      Exec=/usr/local/bin/set-homelab-wallpaper.sh
+      X-GNOME-Autostart-enabled=true
+
+- name: Attempt to apply wallpaper immediately for current user session
+  ansible.builtin.command:
+    cmd: /usr/local/bin/set-homelab-wallpaper.sh
+  become: true
+  become_user: "{{ ansible_user }}"
+  failed_when: false
+  changed_when: false
+
+- name: Install Tailscale prerequisites
+  ansible.builtin.apt:
+    name:
+      - curl
+      - ca-certificates
+      - gnupg
+    state: present
+    update_cache: true
+  when: vm050_mint_tailscale_enabled
+
+- name: Install Tailscale signing key
+  ansible.builtin.get_url:
+    url: "https://pkgs.tailscale.com/stable/ubuntu/{{ vm050_mint_ubuntu_codename.stdout }}.noarmor.gpg"
+    dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+    mode: "0644"
+  when: vm050_mint_tailscale_enabled
+
+- name: Install Tailscale apt source
+  ansible.builtin.get_url:
+    url: "https://pkgs.tailscale.com/stable/ubuntu/{{ vm050_mint_ubuntu_codename.stdout }}.tailscale-keyring.list"
+    dest: /etc/apt/sources.list.d/tailscale.list
+    mode: "0644"
+  when: vm050_mint_tailscale_enabled
+
+- name: Install Tailscale client on Linux Mint workstation
+  ansible.builtin.apt:
+    name: tailscale
+    state: present
+    update_cache: true
+  when: vm050_mint_tailscale_enabled
+
+- name: Ensure tailscaled is enabled and running
+  ansible.builtin.service:
+    name: tailscaled
+    state: started
+    enabled: true
+  when: vm050_mint_tailscale_enabled
+
+- name: Read vaulted Tailscale auth key file
+  ansible.builtin.set_fact:
+    vm050_mint_tailscale_authkey: "{{ lookup('ansible.builtin.file', vm050_mint_tailscale_authkey_file) | regex_search('(?m)^TS_AUTHKEY=(.+)$', '\\1') | first }}"
+  no_log: true
+  when: vm050_mint_tailscale_enabled
+
+- name: Check current Tailscale status
+  ansible.builtin.command:
+    cmd: tailscale status --json
+  register: vm050_mint_tailscale_status
+  changed_when: false
+  failed_when: false
+  when: vm050_mint_tailscale_enabled
+
+- name: Bring Linux Mint workstation onto Tailscale
+  ansible.builtin.command:
+    cmd: >-
+      tailscale up
+      --auth-key={{ vm050_mint_tailscale_authkey }}
+      --hostname={{ vm050_mint_tailscale_hostname }}
+  no_log: true
+  when:
+    - vm050_mint_tailscale_enabled
+    - vm050_mint_tailscale_status.rc != 0
+
+- name: Ensure HomeLab checkout parent exists
+  ansible.builtin.file:
+    path: "{{ vm050_mint_user_home }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+
+- name: Clone HomeLab repository onto Linux Mint workstation
+  ansible.builtin.git:
+    repo: "{{ vm050_mint_repo_url }}"
+    dest: "{{ vm050_mint_repo_dest }}"
+    version: main
+    update: true
+  become: true
+  become_user: "{{ ansible_user }}"
