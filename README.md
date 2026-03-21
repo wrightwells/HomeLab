@@ -80,6 +80,7 @@ Note:
 - [Bootstrap Guide](README-bootstrap.md)
 - [Storage Guide](README-storage.md)
 - [Sizing Guide](README-sizing.md)
+- [Build Inventory Guide](README-build-inventory.md)
 - [Build Inventory](ansible/inventories/production/build_inventory.yml)
 - [Session Prompt](README-session-prompt.md)
 - [Service Catalog](README-services.md)
