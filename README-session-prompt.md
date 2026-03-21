@@ -13,6 +13,7 @@ placeholders or current snapshot values as needed.
 The goal is to give a future coding agent enough context to:
 
 - understand the hardware and storage layout
+- understand the current build inventory and what is intentionally excluded
 - understand why VMs and LXCs are placed where they are
 - understand which Docker services live on which host
 - move services between hosts safely in a future rebuild
@@ -40,6 +41,7 @@ Storage design:
 - AI fast storage: [REPLACE_ME]
 - Appdata storage: [REPLACE_ME]
 - Media storage: [REPLACE_ME]
+- Logical storage stores enabled in this build: [REPLACE_ME]
 - Important mount points: [REPLACE_ME]
 
 Network design:
@@ -53,10 +55,12 @@ Terraform design:
 - Provider: bpg/proxmox
 - VMs should be clone-based or otherwise note exceptions
 - Resource sizing is profile-driven if available
+- Guest inclusion is driven by ansible/inventories/production/build_inventory.yml
 - Terraform creates guests, not Proxmox host networking
 
 Ansible design:
 - Docker services are deployed from ansible/files/compose
+- Docker bundle inclusion is driven by ansible/inventories/production/build_inventory.yml
 - Writable host bind mounts should be pre-created by Ansible
 - stack.env.vault is decrypted by Ansible at deploy time
 - pfSense is managed separately from Linux hosts
@@ -72,11 +76,19 @@ Placement rules:
 Current hosts and intended purpose:
 - [REPLACE_ME]
 
+Current build inventory state:
+- enabled guests: [REPLACE_ME]
+- disabled guests: [REPLACE_ME]
+- enabled Docker bundles by host: [REPLACE_ME]
+- disabled Docker bundles by host: [REPLACE_ME]
+- storage store enablement and fallback rules: [REPLACE_ME]
+
 Current Docker services by host:
 - [REPLACE_ME]
 
 When changing service placement:
 - preserve storage path assumptions
+- preserve build inventory semantics and disabled components unless intentionally changing them
 - preserve firewall/DMZ intent
 - preserve reverse proxy entry points
 - preserve service-to-service dependencies
@@ -101,6 +113,7 @@ Important repo files:
 - README-sizing.md
 - README-services.md
 - terraform/main.tf
+- ansible/inventories/production/build_inventory.yml
 - ansible/inventories/production/hosts.ini
 - ansible/inventories/production/group_vars/all.yml
 - ansible/playbooks/site.yml
@@ -170,9 +183,24 @@ Shared host directories created during storage bootstrap include:
 - LXCs use the Debian 12 standard LXC template
 - Terraform does not configure Proxmox host networking
 - Terraform sizing and start behavior are profile-driven
+- Guest inclusion is driven by `ansible/inventories/production/build_inventory.yml`
 - Ansible deploys Docker compose bundles from `ansible/files/compose`
+- Docker bundle inclusion is driven by `ansible/inventories/production/build_inventory.yml`
 - Ansible pre-creates important writable bind-mount directories
 - pfSense lives in its own Ansible inventory group and playbook
+
+### Build Inventory Snapshot
+
+- `vm100_pfsense` is always required
+- all other guests can be included or excluded with `enabled: true|false`
+- Docker bundles are enabled or disabled per host in `ansible/inventories/production/build_inventory.yml`
+- storage is described as logical stores and mounts:
+  - stores: `host_os`, `appdata`, `media`, `ai_fast`
+  - mounts: `appdata`, `media`, `ai_models`, `ai_cache`
+- reduced hardware is represented by changing enabled stores and fallback rules rather than renaming mount paths
+- example reduced build:
+  - `/mnt/appdata` can stay the appdata path while falling back to `host_os`
+  - `/mnt/media_pool` can remain on a dedicated media disk
 
 ### Current Host Purposes
 

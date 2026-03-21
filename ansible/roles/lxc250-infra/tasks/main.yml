@@ -9,6 +9,7 @@
   loop:
     - /mnt/appdata/configs/alertmanager
     - /mnt/appdata/configs/prometheus
+  when: build_inventory.services.lxc250_infra.alertmanager.enabled | bool or build_inventory.services.lxc250_infra.prometheus.enabled | bool
 
 - name: Deploy Alertmanager config
   ansible.builtin.copy:
@@ -17,6 +18,7 @@
     owner: root
     group: root
     mode: "0644"
+  when: build_inventory.services.lxc250_infra.alertmanager.enabled | bool
 
 - name: Deploy Prometheus config
   ansible.builtin.copy:
@@ -25,6 +27,7 @@
     owner: root
     group: root
     mode: "0644"
+  when: build_inventory.services.lxc250_infra.prometheus.enabled | bool
 
 - name: Deploy compose bundles for infra
   ansible.builtin.include_role:
@@ -32,15 +35,7 @@
     tasks_from: deploy_compose_bundle.yml
   vars:
     compose_bundle_name: lxc250-infra
-    compose_stacks:
-      - alertmanager
-      - grafana
-      - mqtt
-      - homebridge
-      - portainer
-      - prometheus
-      - semaphore
-      - uptime-kuma
+    compose_stacks: "{{ build_inventory.services.lxc250_infra | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
     docker_host_paths:
       - path: /mnt/appdata/configs/alertmanager
       - path: /mnt/appdata/docker_volumes/alertmanager/data
@@ -59,3 +54,4 @@
       - path: /mnt/appdata/docker_volumes/semaphore/tmp
       - path: /mnt/appdata/docker_volumes/semaphore
       - path: /mnt/appdata/docker_volumes/uptime-kuma
+  when: (build_inventory.services.lxc250_infra | dict2items | selectattr('value.enabled') | list | length) > 0

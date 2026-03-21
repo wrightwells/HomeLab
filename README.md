@@ -26,7 +26,26 @@ Notes:
 
 - Do not commit the vault password file.
 - If you prefer an interactive prompt, use `ansible-playbook --ask-vault-pass`.
-- Terraform should be run first so it can render the Ansible inventory.
+- Terraform should be run first so it can render the Ansible inventory from the current build inventory.
+
+## Build Inventory
+
+The repo now keeps the full homelab definition in place while letting you build
+only the pieces you want.
+
+Use [build_inventory.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/build_inventory.yml)
+to control:
+
+- which guests are included in the generated build
+- which Docker bundles are enabled on each guest
+- which logical storage mounts are expected
+- which backing stores are enabled for the current hardware layout
+
+Example use cases:
+
+- full build with every guest and service enabled
+- lightweight build with only `vm100_pfsense`, `lxc230_docker_media`, and a few core services
+- reduced storage build where `/mnt/appdata` still exists but falls back to `host_os` instead of a separate appdata disk
 
 ## Hosts
 
@@ -39,6 +58,9 @@ Notes:
 - LXC240 docker-external
 - LXC250 infra
 
+All of these remain defined in the repo. Inclusion in a given build is driven by
+the build inventory file rather than by deleting repo configuration.
+
 ## Storage model
 
 - NVMe 500GB: /mnt/ai_models, /mnt/ai_cache, Frigate recordings, LLM cache
@@ -50,6 +72,7 @@ Note:
 
 - The current repo does not format or assemble those host disks automatically.
 - Terraform consumes existing Proxmox datastores and existing host mount paths.
+- The build inventory describes which logical stores are enabled and whether a mount should prefer a dedicated disk or fall back to `host_os`.
 - See the storage guide for the full process.
 
 ## Guides
@@ -57,6 +80,7 @@ Note:
 - [Bootstrap Guide](README-bootstrap.md)
 - [Storage Guide](README-storage.md)
 - [Sizing Guide](README-sizing.md)
+- [Build Inventory](ansible/inventories/production/build_inventory.yml)
 - [Session Prompt](README-session-prompt.md)
 - [Service Catalog](README-services.md)
 - [Home Assistant Voice Stack](docs/home-assistant-voice-stack.md)

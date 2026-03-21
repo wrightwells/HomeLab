@@ -1,7 +1,7 @@
 # Sizing Guide
 
-This guide describes the sizing system that is now implemented in Terraform for
-your current host plan:
+This guide describes the sizing and inclusion system implemented in Terraform
+for your current host plan:
 
 - 12 cores / 24 threads
 - 32 GB RAM now
@@ -20,8 +20,9 @@ module.
 Instead, the root module selects a profile with:
 
 - `resource_profile`
+- `build_inventory.yml`
 
-That profile controls:
+The sizing profile controls:
 
 - CPU cores
 - RAM
@@ -29,11 +30,42 @@ That profile controls:
 - whether the guest should be started after apply
 - whether the guest should auto-start on host boot
 
+The build inventory controls:
+
+- whether each guest is included in the Terraform apply
+- whether each Docker bundle is enabled in Ansible
+- which logical mounts each guest or service expects
+- whether logical mounts such as `appdata`, `media`, `ai_models`, and `ai_cache`
+  are backed by dedicated storage or fall back to `host_os`
+
 Relevant files:
 
 - [variables.tf](/home/ww/HomeLab/HomeLab/terraform/variables.tf)
 - [main.tf](/home/ww/HomeLab/HomeLab/terraform/main.tf)
 - [terraform.tfvars.example](/home/ww/HomeLab/HomeLab/terraform/terraform.tfvars.example)
+- [build_inventory.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/build_inventory.yml)
+
+## Build Inventory Model
+
+The repo now keeps all guests and roles defined, but the generated build can be
+cut down by flipping booleans in the build inventory.
+
+Important behavior:
+
+- `vm100_pfsense` is always treated as required
+- other guests can be included or excluded with `enabled: true` or `false`
+- Docker bundles are enabled per host in the same file
+- Terraform filters the generated Ansible inventory to the enabled guests
+- Ansible deploys only the enabled compose bundles for each included host
+
+This lets the repo stay stable while the active build changes.
+
+Example reduced build:
+
+- keep `vm100_pfsense` enabled
+- disable `vm210_ai_gpu`, `lxc220_docker_apps`, and `lxc250_infra`
+- keep `lxc230_docker_media` enabled
+- move logical `appdata` to `host_os` by leaving `/mnt/appdata` enabled but using `fallback_store: host_os`
 
 ## Available Profiles
 

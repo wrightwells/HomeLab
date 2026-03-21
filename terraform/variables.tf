@@ -8,6 +8,12 @@ variable "pm_api_url" {
   }
 }
 
+variable "build_inventory_file" {
+  description = "Path to the shared build inventory YAML file, relative to the terraform root unless absolute"
+  type        = string
+  default     = "../ansible/inventories/production/build_inventory.yml"
+}
+
 variable "pm_api_token_id" {
   description = "Proxmox API token ID"
   type        = string

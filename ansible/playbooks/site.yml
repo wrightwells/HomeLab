@@ -2,54 +2,73 @@
 - name: Baseline for all Linux hosts
   hosts: docker_hosts:ai_gpu
   become: true
+  vars_files:
+    - ../inventories/production/build_inventory.yml
   roles:
     - common
 
 - name: Install Docker on docker-capable hosts
   hosts: docker_hosts:ai_gpu
   become: true
+  vars_files:
+    - ../inventories/production/build_inventory.yml
   roles:
     - docker
 
 - name: Configure AI GPU VM
   hosts: ai_gpu
   become: true
+  vars_files:
+    - ../inventories/production/build_inventory.yml
   roles:
     - vm210-ai-gpu
 
 - name: Configure docker-arr host
   hosts: docker_arr
   become: true
+  vars_files:
+    - ../inventories/production/build_inventory.yml
   roles:
     - lxc066-docker-arr
 
 - name: Configure docker-services host
   hosts: docker_services
   become: true
+  vars_files:
+    - ../inventories/production/build_inventory.yml
   roles:
     - lxc200-docker-services
 
 - name: Configure docker-apps host
   hosts: docker_apps
   become: true
+  vars_files:
+    - ../inventories/production/build_inventory.yml
   roles:
     - lxc220-docker-apps
 
 - name: Configure docker-media host
   hosts: docker_media
   become: true
+  vars_files:
+    - ../inventories/production/build_inventory.yml
   roles:
     - lxc230-docker-media
 
 - name: Configure docker-external host
   hosts: docker_external
   become: true
+  vars_files:
+    - ../inventories/production/build_inventory.yml
   roles:
     - lxc240-docker-external
-    - nginx_reverse_proxy
+    - role: nginx_reverse_proxy
+      when: build_inventory.services.lxc240_docker_external.nginx.enabled | bool
 
 - name: Configure infra host
   hosts: infra
   become: true
+  vars_files:
+    - ../inventories/production/build_inventory.yml
   roles:
     - lxc250-infra

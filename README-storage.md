@@ -20,6 +20,8 @@ Current repo behavior:
   Proxmox host.
 - Ansible deploys software into guests, but it does not currently prepare host
   block devices either.
+- The build inventory now describes the intended logical storage layout and
+  which stores are enabled for the current build.
 
 That means the repo assumes the host storage foundations already exist before
 you run the infrastructure build.
@@ -27,6 +29,18 @@ you run the infrastructure build.
 ## Disk Layers
 
 Think of the storage in four layers.
+
+The file
+[build_inventory.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/build_inventory.yml)
+describes the logical storage intent:
+
+- storage stores such as `host_os`, `appdata`, `media`, and `ai_fast`
+- logical mounts such as `appdata`, `media`, `ai_models`, and `ai_cache`
+- preferred backing stores and fallbacks
+- which guests and services require which mounts
+
+That means a lighter host layout can still be described cleanly without
+rewriting the repo.
 
 ### 1. Proxmox host OS disk
 
@@ -114,6 +128,22 @@ Based on our discussion, the intended storage model is:
 - Shared directory layout created during bootstrap under `/mnt/appdata` and `/mnt/media_pool`
 
 That is a good design, but only part of it is currently automated.
+
+It is now also documented in the build inventory so you can express variants
+such as:
+
+- host OS disk plus media disk only
+- host OS disk plus appdata mirror, without AI fast storage
+- full host OS, appdata, media, and AI fast storage
+
+For example, if a reduced build has no dedicated appdata disk yet:
+
+- keep the logical mount `/mnt/appdata`
+- mark its preferred store as `appdata`
+- let it fall back to `host_os`
+
+That keeps guest and Docker path assumptions stable while the physical hardware
+is smaller.
 
 For media, your requirement is:
 

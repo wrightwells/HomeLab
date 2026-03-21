@@ -1,0 +1,301 @@
+---
+build_inventory:
+  guests:
+    vm100_pfsense:
+      enabled: true
+      notes: "Always required."
+    vm210_ai_gpu:
+      enabled: true
+      required_mounts:
+        - appdata
+        - ai_models
+        - ai_cache
+    lxc066_docker_arr:
+      enabled: true
+      required_mounts:
+        - appdata
+        - media
+    lxc200_docker_services:
+      enabled: true
+      required_mounts:
+        - appdata
+    lxc220_docker_apps:
+      enabled: true
+      required_mounts:
+        - appdata
+    lxc230_docker_media:
+      enabled: true
+      required_mounts:
+        - appdata
+        - media
+    lxc240_docker_external:
+      enabled: true
+      required_mounts:
+        - appdata
+    lxc250_infra:
+      enabled: true
+      required_mounts:
+        - appdata
+
+  services:
+    vm210_ai_gpu:
+      frigate:
+        enabled: true
+        required_mounts:
+          - appdata
+      home-assistant:
+        enabled: true
+        required_mounts:
+          - appdata
+      home-assistant-voice:
+        enabled: true
+        required_mounts:
+          - appdata
+      ai-models:
+        enabled: true
+        required_mounts:
+          - appdata
+          - ai_models
+          - ai_cache
+      n8n:
+        enabled: true
+        required_mounts:
+          - appdata
+      openvscode-server:
+        enabled: true
+        required_mounts:
+          - appdata
+
+    lxc066_docker_arr:
+      filebrowser:
+        enabled: true
+        required_mounts:
+          - appdata
+          - media
+      jellyseerr:
+        enabled: true
+        required_mounts:
+          - appdata
+      aurral:
+        enabled: true
+        required_mounts:
+          - appdata
+      arr-stack:
+        enabled: true
+        required_mounts:
+          - appdata
+          - media
+
+    lxc200_docker_services:
+      immich:
+        enabled: true
+        required_mounts:
+          - appdata
+      owncloud:
+        enabled: true
+        required_mounts:
+          - appdata
+      paperless-ngx:
+        enabled: true
+        required_mounts:
+          - appdata
+      syncthing:
+        enabled: true
+        required_mounts:
+          - appdata
+
+    lxc220_docker_apps:
+      grafana:
+        enabled: true
+        required_mounts:
+          - appdata
+      influxdb:
+        enabled: true
+        required_mounts:
+          - appdata
+      node-red:
+        enabled: true
+        required_mounts:
+          - appdata
+      teslamate:
+        enabled: true
+        required_mounts:
+          - appdata
+      calibre:
+        enabled: true
+        required_mounts:
+          - appdata
+      calibre-web:
+        enabled: true
+        required_mounts:
+          - appdata
+          - media
+      grist:
+        enabled: true
+        required_mounts:
+          - appdata
+      blinko:
+        enabled: true
+        required_mounts:
+          - appdata
+      finance:
+        enabled: true
+        required_mounts:
+          - appdata
+      eurgo:
+        enabled: true
+        required_mounts:
+          - appdata
+      homarr:
+        enabled: true
+        required_mounts:
+          - appdata
+      pairdrop:
+        enabled: true
+
+    lxc230_docker_media:
+      plex:
+        enabled: true
+        required_mounts:
+          - appdata
+          - media
+      jellyfin:
+        enabled: true
+        required_mounts:
+          - appdata
+          - media
+      jellyswarrm:
+        enabled: true
+        required_mounts:
+          - media
+
+    lxc240_docker_external:
+      nginx:
+        enabled: true
+        required_mounts:
+          - appdata
+      tailscale-peer-relay:
+        enabled: true
+      rustdesk:
+        enabled: true
+        required_mounts:
+          - appdata
+      ghost:
+        enabled: true
+        required_mounts:
+          - appdata
+      dnns:
+        enabled: true
+      kutt:
+        enabled: true
+        required_mounts:
+          - appdata
+      wordpress:
+        enabled: true
+        required_mounts:
+          - appdata
+      walletpage:
+        enabled: true
+
+    lxc250_infra:
+      alertmanager:
+        enabled: true
+        required_mounts:
+          - appdata
+      grafana:
+        enabled: true
+        required_mounts:
+          - appdata
+      mqtt:
+        enabled: true
+        required_mounts:
+          - appdata
+      homebridge:
+        enabled: true
+        required_mounts:
+          - appdata
+      portainer:
+        enabled: true
+        required_mounts:
+          - appdata
+      prometheus:
+        enabled: true
+        required_mounts:
+          - appdata
+      semaphore:
+        enabled: true
+        required_mounts:
+          - appdata
+      uptime-kuma:
+        enabled: true
+        required_mounts:
+          - appdata
+
+  storage:
+    stores:
+      host_os:
+        enabled: true
+        description: "Proxmox host OS disk and fallback local storage."
+        example_devices:
+          - "500 GB SATA SSD"
+        backs:
+          - proxmox_os
+          - local_vm_lxc_storage
+          - appdata_fallback
+      appdata:
+        enabled: true
+        description: "Preferred persistent appdata store for configs, Docker volumes, and databases."
+        example_devices:
+          - "ZFS mirror"
+        backs:
+          - appdata_mount
+      media:
+        enabled: true
+        description: "Media library and downloads."
+        example_devices:
+          - "mergerfs pool"
+        backs:
+          - media_mount
+      ai_fast:
+        enabled: true
+        description: "Fast local storage for models and AI cache."
+        example_devices:
+          - "NVMe"
+        backs:
+          - ai_models_mount
+          - ai_cache_mount
+
+    mounts:
+      appdata:
+        enabled: true
+        host_path: /mnt/appdata
+        preferred_store: appdata
+        fallback_store: host_os
+        contents:
+          - docker_volumes
+          - configs
+          - databases
+      media:
+        enabled: true
+        host_path: /mnt/media_pool
+        preferred_store: media
+        contents:
+          - books
+          - music
+          - movies
+          - tv
+          - torrents
+      ai_models:
+        enabled: true
+        host_path: /mnt/ai_models
+        preferred_store: ai_fast
+        fallback_store: host_os
+        contents:
+          - model_weights
+      ai_cache:
+        enabled: true
+        host_path: /mnt/ai_cache
+        preferred_store: ai_fast
+        fallback_store: host_os
+        contents:
+          - model_cache

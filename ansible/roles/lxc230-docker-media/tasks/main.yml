@@ -5,10 +5,7 @@
     tasks_from: deploy_compose_bundle.yml
   vars:
     compose_bundle_name: lxc230-docker-media
-    compose_stacks:
-      - plex
-      - jellyfin
-      - jellyswarrm
+    compose_stacks: "{{ build_inventory.services.lxc230_docker_media | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
     docker_host_paths:
       - path: /mnt/appdata/docker_volumes/plex
         owner: "{{ docker_app_uid }}"
@@ -16,3 +13,4 @@
       - path: /mnt/appdata/docker_volumes/jellyfin
         owner: "{{ docker_app_uid }}"
         group: "{{ docker_app_gid }}"
+  when: (build_inventory.services.lxc230_docker_media | dict2items | selectattr('value.enabled') | list | length) > 0

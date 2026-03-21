@@ -5,9 +5,9 @@ locals {
   )
 
   generated_inventory_groups = {
-    for group_name in distinct(flatten([for host in values(local.inventory_hosts) : host.groups])) :
+    for group_name in distinct(flatten([for host in values(local.enabled_inventory_hosts) : host.groups])) :
     group_name => {
-      for host_key, host in local.inventory_hosts :
+      for host_key, host in local.enabled_inventory_hosts :
       host_key => {
         ansible_host = host.ip
         ansible_user = host.user

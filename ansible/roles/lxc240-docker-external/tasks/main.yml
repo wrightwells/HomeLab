@@ -5,12 +5,5 @@
     tasks_from: deploy_compose_bundle.yml
   vars:
     compose_bundle_name: lxc240-docker-external
-    compose_stacks:
-      - nginx
-      - tailscale-peer-relay
-      - rustdesk
-      - ghost
-      - dnns
-      - kutt
-      - wordpress
-      - walletpage
+    compose_stacks: "{{ build_inventory.services.lxc240_docker_external | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
+  when: (build_inventory.services.lxc240_docker_external | dict2items | selectattr('value.enabled') | list | length) > 0

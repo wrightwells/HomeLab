@@ -5,11 +5,7 @@
     tasks_from: deploy_compose_bundle.yml
   vars:
     compose_bundle_name: lxc200-docker-services
-    compose_stacks:
-      - immich
-      - owncloud
-      - paperless-ngx
-      - syncthing
+    compose_stacks: "{{ build_inventory.services.lxc200_docker_services | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
     docker_host_paths:
       - path: /mnt/appdata/docker_volumes/paperless-ngx
       - path: /mnt/appdata/docker_volumes/paperless-ngx/db
@@ -23,3 +19,4 @@
       - path: /mnt/appdata/syncthing_sync
         owner: "{{ docker_app_uid }}"
         group: "{{ docker_app_gid }}"
+  when: (build_inventory.services.lxc200_docker_services | dict2items | selectattr('value.enabled') | list | length) > 0

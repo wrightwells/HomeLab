@@ -6,6 +6,7 @@
     owner: root
     group: root
     mode: "0755"
+  when: build_inventory.services.vm210_ai_gpu.frigate.enabled | bool
 
 - name: Deploy managed Frigate config template
   ansible.builtin.template:
@@ -14,6 +15,7 @@
     owner: root
     group: root
     mode: "0640"
+  when: build_inventory.services.vm210_ai_gpu.frigate.enabled | bool
 
 - name: Deploy compose bundles for AI GPU VM
   ansible.builtin.include_role:
@@ -21,13 +23,7 @@
     tasks_from: deploy_compose_bundle.yml
   vars:
     compose_bundle_name: vm210-ai-gpu
-    compose_stacks:
-      - frigate
-      - home-assistant
-      - home-assistant-voice
-      - ai-models
-      - n8n
-      - openvscode-server
+    compose_stacks: "{{ build_inventory.services.vm210_ai_gpu | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
     docker_host_paths:
       - path: /mnt/appdata/docker_volumes/home-assistant-voice
       - path: /mnt/appdata/docker_volumes/home-assistant-voice/piper
@@ -43,3 +39,4 @@
       - path: /mnt/appdata/code
         owner: "{{ docker_app_uid }}"
         group: "{{ docker_app_gid }}"
+  when: (build_inventory.services.vm210_ai_gpu | dict2items | selectattr('value.enabled') | list | length) > 0

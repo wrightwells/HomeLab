@@ -1,4 +1,11 @@
 locals {
+  build_inventory_path = abspath(pathexpand(
+    startswith(var.build_inventory_file, "/")
+    ? var.build_inventory_file
+    : "${path.module}/${var.build_inventory_file}"
+  ))
+  build_inventory = yamldecode(file(local.build_inventory_path)).build_inventory
+
   resource_profiles = {
     balanced_32gb = {
       vm100_pfsense          = { cpu = 2, memory = 4096, started = true, on_boot = true }
@@ -63,6 +70,13 @@ locals {
   }
 
   profile = local.resource_profiles[var.resource_profile]
+  guest_enabled = merge(
+    { vm100_pfsense = true },
+    {
+      for guest_name, guest in local.build_inventory.guests :
+      guest_name => try(guest.enabled, false)
+    }
+  )
 
   inventory_hosts = {
     vm100_pfsense = {
@@ -137,6 +151,12 @@ locals {
       user   = "root"
     }
   }
+
+  enabled_inventory_hosts = {
+    for host_key, host in local.inventory_hosts :
+    host_key => host
+    if try(local.guest_enabled[host_key], false)
+  }
 }
 
 module "vm100_pfsense" {
@@ -153,6 +173,7 @@ module "vm100_pfsense" {
 }
 
 module "vm210_ai_gpu" {
+  count             = local.guest_enabled.vm210_ai_gpu ? 1 : 0
   source            = "./modules/vm210-ai-gpu"
   proxmox_node      = var.proxmox_node
   clone_vmid        = var.vm_template_vmid
@@ -168,6 +189,7 @@ module "vm210_ai_gpu" {
 }
 
 module "lxc066_docker_arr" {
+  count               = local.guest_enabled.lxc066_docker_arr ? 1 : 0
   source              = "./modules/lxc066-docker-arr"
   proxmox_node        = var.proxmox_node
   lxc_storage         = var.lxc_storage
@@ -181,6 +203,7 @@ module "lxc066_docker_arr" {
 }
 
 module "lxc200_docker_services" {
+  count               = local.guest_enabled.lxc200_docker_services ? 1 : 0
   source              = "./modules/lxc200-docker-services"
   proxmox_node        = var.proxmox_node
   lxc_storage         = var.lxc_storage
@@ -194,6 +217,7 @@ module "lxc200_docker_services" {
 }
 
 module "lxc220_docker_apps" {
+  count               = local.guest_enabled.lxc220_docker_apps ? 1 : 0
   source              = "./modules/lxc220-docker-apps"
   proxmox_node        = var.proxmox_node
   lxc_storage         = var.lxc_storage
@@ -207,6 +231,7 @@ module "lxc220_docker_apps" {
 }
 
 module "lxc230_docker_media" {
+  count               = local.guest_enabled.lxc230_docker_media ? 1 : 0
   source              = "./modules/lxc230-docker-media"
   proxmox_node        = var.proxmox_node
   lxc_storage         = var.lxc_storage
@@ -220,6 +245,7 @@ module "lxc230_docker_media" {
 }
 
 module "lxc240_docker_external" {
+  count               = local.guest_enabled.lxc240_docker_external ? 1 : 0
   source              = "./modules/lxc240-docker-external"
   proxmox_node        = var.proxmox_node
   lxc_storage         = var.lxc_storage
@@ -233,6 +259,7 @@ module "lxc240_docker_external" {
 }
 
 module "lxc250_infra" {
+  count               = local.guest_enabled.lxc250_infra ? 1 : 0
   source              = "./modules/lxc250-infra"
   proxmox_node        = var.proxmox_node
   lxc_storage         = var.lxc_storage

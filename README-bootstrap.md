@@ -218,6 +218,27 @@ Why these help:
 If the host kernel or core Proxmox packages change during the upgrade, reboot
 the Proxmox host before continuing.
 
+## 1. Choose The Build Shape
+
+Before running Terraform or Ansible, review
+[build_inventory.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/build_inventory.yml).
+
+This file lets you choose:
+
+- which guests are included in the build
+- which Docker bundles are enabled per guest
+- which logical storage mounts are expected
+- whether `appdata`, `media`, `ai_models`, or `ai_cache` use dedicated storage
+  or fall back to `host_os`
+
+Use this to describe reduced builds as well as the full target design.
+
+Example:
+
+- early lightweight build: `vm100_pfsense` plus only the guests you need
+- reduced disk build: keep `/mnt/appdata` enabled but let it fall back to `host_os`
+- later expansion: switch `appdata` or `ai_fast` to dedicated stores without changing guest names or service names
+
 Optional Community Scripts preflight:
 
 - Recommended: Proxmox VE Post Install

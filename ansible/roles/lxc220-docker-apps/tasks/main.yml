@@ -5,19 +5,7 @@
     tasks_from: deploy_compose_bundle.yml
   vars:
     compose_bundle_name: lxc220-docker-apps
-    compose_stacks:
-      - grafana
-      - influxdb
-      - node-red
-      - teslamate
-      - calibre
-      - calibre-web
-      - grist
-      - blinko
-      - finance
-      - eurgo
-      - homarr
-      - pairdrop
+    compose_stacks: "{{ build_inventory.services.lxc220_docker_apps | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
     docker_host_paths:
       - path: /mnt/appdata/docker_volumes/calibre
         owner: "{{ docker_app_uid }}"
@@ -25,3 +13,4 @@
       - path: /mnt/appdata/docker_volumes/calibre-web
         owner: "{{ docker_app_uid }}"
         group: "{{ docker_app_gid }}"
+  when: (build_inventory.services.lxc220_docker_apps | dict2items | selectattr('value.enabled') | list | length) > 0

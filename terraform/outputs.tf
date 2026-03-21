@@ -7,29 +7,29 @@ output "vm100_pfsense_id" {
 }
 
 output "vm210_ai_gpu_id" {
-  value = module.vm210_ai_gpu.vm_id
+  value = try(module.vm210_ai_gpu[0].vm_id, null)
 }
 
 output "lxc066_docker_arr_id" {
-  value = module.lxc066_docker_arr.vm_id
+  value = try(module.lxc066_docker_arr[0].vm_id, null)
 }
 
 output "lxc200_docker_services_id" {
-  value = module.lxc200_docker_services.vm_id
+  value = try(module.lxc200_docker_services[0].vm_id, null)
 }
 
 output "lxc220_docker_apps_id" {
-  value = module.lxc220_docker_apps.vm_id
+  value = try(module.lxc220_docker_apps[0].vm_id, null)
 }
 
 output "lxc230_docker_media_id" {
-  value = module.lxc230_docker_media.vm_id
+  value = try(module.lxc230_docker_media[0].vm_id, null)
 }
 
 output "lxc240_docker_external_id" {
-  value = module.lxc240_docker_external.vm_id
+  value = try(module.lxc240_docker_external[0].vm_id, null)
 }
 
 output "lxc250_infra_id" {
-  value = module.lxc250_infra.vm_id
+  value = try(module.lxc250_infra[0].vm_id, null)
 }

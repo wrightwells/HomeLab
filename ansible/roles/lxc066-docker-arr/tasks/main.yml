@@ -5,11 +5,7 @@
     tasks_from: deploy_compose_bundle.yml
   vars:
     compose_bundle_name: lxc066-docker-arr
-    compose_stacks:
-      - filebrowser
-      - jellyseerr
-      - aurral
-      - arr-stack
+    compose_stacks: "{{ build_inventory.services.lxc066_docker_arr | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
     docker_host_paths:
       - path: /mnt/appdata/docker_volumes/filebrowser/database
         owner: "{{ docker_app_uid }}"
@@ -46,3 +42,4 @@
       - path: /mnt/appdata/docker_volumes/readarr
         owner: "{{ docker_app_uid }}"
         group: "{{ docker_app_gid }}"
+  when: (build_inventory.services.lxc066_docker_arr | dict2items | selectattr('value.enabled') | list | length) > 0
