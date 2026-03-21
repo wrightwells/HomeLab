@@ -33,7 +33,7 @@ Notes:
 The repo now keeps the full homelab definition in place while letting you build
 only the pieces you want.
 
-Use [build_inventory.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/build_inventory.yml)
+Use [build_inventory.yml](ansible/inventories/production/build_inventory.yml)
 to control:
 
 - which guests are included in the generated build

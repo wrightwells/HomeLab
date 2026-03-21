@@ -4,7 +4,7 @@ This guide explains how to use the new build-inventory structure to keep the
 full homelab defined in the repo while deploying only the parts you want.
 
 The source of truth is
-[build_inventory.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/build_inventory.yml).
+[build_inventory.yml](ansible/inventories/production/build_inventory.yml).
 
 ## What The Structure Does
 
@@ -58,7 +58,7 @@ Ansible:
 ## Normal Workflow
 
 1. Edit
-   [build_inventory.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/build_inventory.yml)
+   [build_inventory.yml](ansible/inventories/production/build_inventory.yml)
 2. Set which guests you want in this build
 3. Set which bundles you want on each enabled guest
 4. Describe the storage stores and logical mount fallbacks for the actual host
@@ -241,5 +241,5 @@ Use the build inventory to answer two questions:
 - what storage does this machine actually have today?
 
 If those two answers are captured correctly in
-[build_inventory.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/build_inventory.yml),
+[build_inventory.yml](ansible/inventories/production/build_inventory.yml),
 the rest of the repo can stay unchanged.

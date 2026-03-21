@@ -6,7 +6,7 @@ This guide covers three things:
 - what has already been added to Ansible for pfSense
 - a reusable prompt/template for future pfSense playbook changes
 
-Use this guide alongside [README-bootstrap.md](/home/ww/HomeLab/HomeLab/README-bootstrap.md).
+Use this guide alongside [README-bootstrap.md](README-bootstrap.md).
 
 ## Manual Prerequisites
 

@@ -8,7 +8,7 @@ for your current host plan:
 - 64 GB RAM later
 - 128 GB RAM later
 
-Use [README-bootstrap.md](/home/ww/HomeLab/HomeLab/README-bootstrap.md) as the
+Use [README-bootstrap.md](README-bootstrap.md) as the
 main runbook. This file is the sizing sub-guide for choosing and changing
 resource profiles over time.
 
@@ -40,10 +40,10 @@ The build inventory controls:
 
 Relevant files:
 
-- [variables.tf](/home/ww/HomeLab/HomeLab/terraform/variables.tf)
-- [main.tf](/home/ww/HomeLab/HomeLab/terraform/main.tf)
-- [terraform.tfvars.example](/home/ww/HomeLab/HomeLab/terraform/terraform.tfvars.example)
-- [build_inventory.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/build_inventory.yml)
+- [variables.tf](terraform/variables.tf)
+- [main.tf](terraform/main.tf)
+- [terraform.tfvars.example](terraform/terraform.tfvars.example)
+- [build_inventory.yml](ansible/inventories/production/build_inventory.yml)
 
 ## Build Inventory Model
 
@@ -245,7 +245,7 @@ for heavy AI usage.
 
 Change only this in:
 
-- [terraform.tfvars](/home/ww/HomeLab/HomeLab/terraform/terraform.tfvars)
+- [terraform.tfvars](terraform/terraform.tfvars)
 
 Example:
 

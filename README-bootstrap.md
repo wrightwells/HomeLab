@@ -221,7 +221,7 @@ the Proxmox host before continuing.
 ## 1. Choose The Build Shape
 
 Before running Terraform or Ansible, review
-[build_inventory.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/build_inventory.yml).
+[build_inventory.yml](ansible/inventories/production/build_inventory.yml).
 
 This file lets you choose:
 

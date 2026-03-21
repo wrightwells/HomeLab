@@ -152,9 +152,9 @@ Open the host role task file and add the new component to `compose_stacks`.
 
 Examples:
 
-- [main.yml](/home/ww/HomeLab/HomeLab/ansible/roles/lxc220-docker-apps/tasks/main.yml)
-- [main.yml](/home/ww/HomeLab/HomeLab/ansible/roles/lxc240-docker-external/tasks/main.yml)
-- [main.yml](/home/ww/HomeLab/HomeLab/ansible/roles/vm210-ai-gpu/tasks/main.yml)
+- [main.yml](ansible/roles/lxc220-docker-apps/tasks/main.yml)
+- [main.yml](ansible/roles/lxc240-docker-external/tasks/main.yml)
+- [main.yml](ansible/roles/vm210-ai-gpu/tasks/main.yml)
 
 Example change:
 
@@ -199,9 +199,9 @@ Only do this for images that actually support the LinuxServer-style `PUID` /
 
 Review:
 
-- [all.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/group_vars/all.yml)
-- [docker_external.yml](/home/ww/HomeLab/HomeLab/ansible/group_vars/docker_external.yml)
-- [vault.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/group_vars/vault.yml)
+- [all.yml](ansible/inventories/production/group_vars/all.yml)
+- [docker_external.yml](ansible/group_vars/docker_external.yml)
+- [vault.yml](ansible/inventories/production/group_vars/vault.yml)
 
 Update these only if the new stack needs shared settings that are not already
 carried in `stack.env`.
@@ -215,7 +215,7 @@ General rule:
 
 The top-level playbook already targets each Docker host role:
 
-- [site.yml](/home/ww/HomeLab/HomeLab/ansible/playbooks/site.yml)
+- [site.yml](ansible/playbooks/site.yml)
 
 Usually you do not need to change the playbook when adding a component to an
 existing host bundle.
@@ -234,7 +234,7 @@ repo, update all of the following:
 2. The generated inventory source in Terraform
 3. The Ansible inventory if you are not regenerating it yet
 4. A new Ansible role under `ansible/roles/<host-role>/`
-5. [site.yml](/home/ww/HomeLab/HomeLab/ansible/playbooks/site.yml) to include that role
+5. [site.yml](ansible/playbooks/site.yml) to include that role
 
 For existing hosts, you do not need these extra steps.
 

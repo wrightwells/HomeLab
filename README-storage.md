@@ -5,7 +5,7 @@ disks Terraform creates for guests, and what happens when you rerun the build
 later.
 
 Use this guide only for the Proxmox host storage step during the first install.
-Your main runbook remains [README-bootstrap.md](/home/ww/HomeLab/HomeLab/README-bootstrap.md).
+Your main runbook remains [README-bootstrap.md](README-bootstrap.md).
 Once host storage is prepared, return to the bootstrap guide and continue there.
 
 ## Summary
@@ -31,7 +31,7 @@ you run the infrastructure build.
 Think of the storage in four layers.
 
 The file
-[build_inventory.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/build_inventory.yml)
+[build_inventory.yml](ansible/inventories/production/build_inventory.yml)
 describes the logical storage intent:
 
 - storage stores such as `host_os`, `appdata`, `media`, and `ai_fast`
@@ -85,8 +85,8 @@ Several LXC modules mount host paths directly into the container, such as:
 
 Example:
 
-- [main.tf](/home/ww/HomeLab/HomeLab/terraform/modules/lxc230-docker-media/main.tf)
-- [main.tf](/home/ww/HomeLab/HomeLab/terraform/modules/lxc066-docker-arr/main.tf)
+- [main.tf](terraform/modules/lxc230-docker-media/main.tf)
+- [main.tf](terraform/modules/lxc066-docker-arr/main.tf)
 
 These `mount_point` blocks assume those paths already exist on the Proxmox
 host. Terraform does not create the underlying filesystem for them.
@@ -111,7 +111,7 @@ Important:
 
 See:
 
-- [main.tf](/home/ww/HomeLab/HomeLab/terraform/modules/vm210-ai-gpu/main.tf)
+- [main.tf](terraform/modules/vm210-ai-gpu/main.tf)
 
 So today, the storage intent in the Docker Compose files is ahead of the actual
 VM disk model. The AI VM still needs a second pass if you want true separation
@@ -305,9 +305,9 @@ main Terraform apply path. It is better as a separate, explicit host-prep step.
 Implemented direction in this repo:
 
 1. A dedicated Ansible playbook for the Proxmox host:
-   - [proxmox-storage.yml](/home/ww/HomeLab/HomeLab/ansible/playbooks/proxmox-storage.yml)
+   - [proxmox-storage.yml](ansible/playbooks/proxmox-storage.yml)
 2. Inventory-backed storage variables for the Proxmox host:
-   - [proxmox.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/group_vars/proxmox.yml)
+   - [proxmox.yml](ansible/inventories/production/group_vars/proxmox.yml)
 3. A dedicated role that prepares:
    - NVMe `ext4`
    - appdata ZFS mirror
@@ -338,7 +338,7 @@ This gives you:
 ## Running The Storage Bootstrap
 
 1. Update the placeholder disk IDs in:
-   - [proxmox.yml](/home/ww/HomeLab/HomeLab/ansible/inventories/production/group_vars/proxmox.yml)
+   - [proxmox.yml](ansible/inventories/production/group_vars/proxmox.yml)
 2. For the first run only, set:
 
 ```yaml
