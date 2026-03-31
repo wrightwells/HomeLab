@@ -6,6 +6,10 @@ HomeLab repo locally.
 Do not commit the tar file back into git. This folder's `README.md` stays in
 the repo, but the archive itself is a local deployment artifact.
 
+Additional reference files can also live in this folder. They will be copied
+into the deployed stack's `docker-images/` directory during install alongside
+the `README.md` and any image archives.
+
 Expected image reference:
 
 ```text
@@ -29,4 +33,5 @@ docker images | grep grist-finance-connector
 ```
 
 At deploy time, Ansible copies this folder into the stack compose directory and
-loads any `.tar`, `.tar.gz`, or `.tgz` archives it finds.
+loads any `.tar`, `.tar.gz`, or `.tgz` archives it finds. Any other reference
+files in the folder are copied too.

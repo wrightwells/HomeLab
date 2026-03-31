@@ -30,11 +30,19 @@ Each stack image folder should include a committed `README.md` describing:
 - the expected image name and tag
 - any special release or verification steps
 
+You can also keep additional reference files in the same folder, for example:
+
+- sample documents
+- import templates
+- release notes
+- stack-specific helper files
+
 ## Supported archive files
 
 Ansible will automatically copy the whole folder into the deployed compose stack
-directory and load any of these file types it finds before `docker compose`
-starts:
+directory. That means the `README.md`, any additional reference files, and any
+image archives all move together as part of the install. It will then load any
+of these file types it finds before `docker compose` starts:
 
 - `*.tar`
 - `*.tar.gz`
@@ -83,7 +91,7 @@ ANSIBLE_VAULT_PASSWORD_FILE=~/.config/ansible/homelab-vault-pass.txt ansible-pla
 
 During deployment, Ansible will:
 
-1. copy the stack image folder, including `README.md`, into the target compose directory
+1. copy the stack image folder, including `README.md` and any additional reference files, into the target compose directory
 2. run `docker load -i ...`
 3. start the compose stack
 
@@ -107,6 +115,8 @@ So either:
 
 - This is intended for private or locally built images.
 - The repo should keep the folder and `README.md`, not the tarball itself.
+- Additional non-archive reference files may be kept in the folder and will be
+  copied to the target stack as part of deployment.
 - Public images should usually stay in `docker-compose.yml` as normal `image:`
   references.
 - If multiple archives are present in the stack folder, Ansible will load all
