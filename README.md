@@ -86,9 +86,11 @@ Note:
 ## Guides
 
 - [Bootstrap Guide](README-bootstrap.md)
+- [Networking Guide](README-networking.md)
 - [Storage Guide](README-storage.md)
 - [Sizing Guide](README-sizing.md)
 - [Build Inventory Guide](README-build-inventory.md)
+- [Private Docker Images](README-private-docker-images.md)
 - [Build Inventory](ansible/inventories/production/build_inventory.yml)
 - [Site Config](ansible/inventories/production/site_config.yml)
 - [Session Prompt](README-session-prompt.md)

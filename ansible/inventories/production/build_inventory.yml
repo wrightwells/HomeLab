@@ -140,6 +140,10 @@ build_inventory:
         enabled: true
         required_mounts:
           - appdata
+      grist-finance-connector:
+        enabled: true
+        required_mounts:
+          - appdata
       blinko:
         enabled: true
         required_mounts:

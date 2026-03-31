@@ -34,6 +34,44 @@
     mode: preserve
   loop: "{{ compose_stacks }}"
 
+- name: Ensure bundled image archive directories exist when present
+  ansible.builtin.file:
+    path: "{{ docker_compose_root }}/{{ item }}/{{ docker_image_archive_subdir }}"
+    state: directory
+    owner: "{{ docker_project_owner }}"
+    group: "{{ docker_project_group }}"
+    mode: "{{ docker_stack_root_mode }}"
+  loop: "{{ compose_stacks }}"
+  when: lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/docker-images/' ~ compose_bundle_name ~ '/' ~ item ~ '/*', wantlist=True) | length > 0
+
+- name: Copy bundled image archives when present
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../files/docker-images/{{ compose_bundle_name }}/{{ item }}/"
+    dest: "{{ docker_compose_root }}/{{ item }}/{{ docker_image_archive_subdir }}/"
+    owner: "{{ docker_project_owner }}"
+    group: "{{ docker_project_group }}"
+    mode: preserve
+  loop: "{{ compose_stacks }}"
+  when: lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/docker-images/' ~ compose_bundle_name ~ '/' ~ item ~ '/*', wantlist=True) | length > 0
+
+- name: Find bundled image archives
+  ansible.builtin.find:
+    paths: "{{ docker_compose_root }}/{{ item }}/{{ docker_image_archive_subdir }}"
+    file_type: file
+    patterns:
+      - "*.tar"
+      - "*.tar.gz"
+      - "*.tgz"
+  register: docker_image_archive_find_results
+  loop: "{{ compose_stacks }}"
+  when: lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/docker-images/' ~ compose_bundle_name ~ '/' ~ item ~ '/*', wantlist=True) | length > 0
+
+- name: Load bundled Docker image archives
+  ansible.builtin.command:
+    cmd: "docker load -i {{ item.path }}"
+  loop: "{{ docker_image_archive_find_results.results | default([]) | map(attribute='files') | flatten }}"
+  when: (docker_image_archive_find_results.results | default([]) | map(attribute='files') | flatten | length) > 0
+
 - name: Render docker-compose from template when present
   ansible.builtin.template:
     src: "{{ playbook_dir }}/../files/compose/{{ compose_bundle_name }}/{{ item }}/docker-compose.yml.j2"
