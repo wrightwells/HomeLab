@@ -204,7 +204,7 @@ Use this as a prompt template when you want to extend the pfSense automation in
 the future:
 
 ```text
-Update the pfSense Ansible automation in /home/ww/HomeLab/HomeLab.
+Update the pfSense Ansible automation in /home/ww/HomeLab.
 
 Constraints:
 - Keep pfSense in the dedicated inventory group pfsense_firewall.

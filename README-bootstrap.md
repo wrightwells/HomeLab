@@ -148,7 +148,7 @@ root@10.10.99.10
 6. Open the repo on the Proxmox host:
 
 ```text
-~/HomeLab/HomeLab
+~/HomeLab
 ```
 
 This lets you:
@@ -193,7 +193,7 @@ sudo apt update
 sudo apt install -y terraform
 
 git clone https://github.com/wrightwells/HomeLab.git ~/HomeLab
-cd ~/HomeLab/HomeLab
+cd ~/HomeLab
 ```
 
 Verify:
