@@ -14,13 +14,34 @@ Boot into the Z420 BIOS with `F10` and set:
 - Boot:
   - enable UEFI boot
   - disable legacy boot
-- CPU:
-  - `Intel VT-x -> Enable`
-  - `Intel VT-d -> Enable`
+- Security:
+  - `System Security -> Virtualization Technology (VTx) -> Enable`
+  - `System Security -> Intel VT-d` or `Virtualization Technology Directed I/O (VTd) -> Enable`
 - PCI:
   - `Above 4G decoding -> Enable` if the option exists
 
 Save the changes and reboot.
+
+Exact HP Z420 path for virtualization:
+
+```text
+F10 BIOS Setup -> Security -> System Security
+```
+
+Then set:
+
+- `Virtualization Technology (VTx) -> Enable`
+- `Intel VT-d` or `Virtualization Technology Directed I/O (VTd) -> Enable`
+
+Step-by-step:
+
+1. Reboot the Z420.
+2. Tap `F10` as it starts to enter BIOS Setup.
+3. Go to `Security`.
+4. Open `System Security`.
+5. Enable `Virtualization Technology (VTx)`.
+6. Then enable `Intel VT-d` if it appears. On HP workstations, enabling `VTx` can make the `VT-d` option appear in the same menu.
+7. Press `F10` to save and exit.
 
 Before continuing, also check whether the Z420 is already on a reasonably
 current BIOS version. Older workstation BIOS revisions can affect `VT-d`,
@@ -122,7 +143,50 @@ apt full-upgrade -y
 reboot
 ```
 
-### 0.5 Connect from Another Machine with VS Code
+### 0.5 Switch SSH from Password to Key Authentication
+
+Once you have one working password-based SSH session to the Proxmox host, set
+up key-based login from your client before you rely on VS Code Remote SSH.
+
+From the client machine, run:
+
+```bash
+~/HomeLab/scripts/setup-ssh-key-login.sh --host 10.10.99.10 --user root
+```
+
+The script:
+
+- creates an `ed25519` SSH key at `~/.ssh/id_ed25519` if needed
+- copies the public key to the server account's `~/.ssh/authorized_keys` using password authentication
+- prints the exact key-login test command to run next
+
+After the script finishes, verify key-based login works:
+
+```bash
+ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes root@10.10.99.10
+```
+
+Only after that succeeds, disable password-based SSH on the server by updating
+`/etc/ssh/sshd_config` and any active files under `/etc/ssh/sshd_config.d/`:
+
+```ssh-config
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+ChallengeResponseAuthentication no
+PermitRootLogin prohibit-password
+```
+
+Then validate and reload SSH:
+
+```bash
+sshd -t
+systemctl restart ssh
+```
+
+Keep your current server console or password-authenticated session open until
+you confirm the key-based login works from a fresh client terminal.
+
+### 0.6 Connect from Another Machine with VS Code
 
 After SSH access is working to the Proxmox host, you can connect from another
 machine with VS Code so you can run Terraform and Ansible from this repo more
@@ -165,7 +229,7 @@ This is especially useful on the first build when you may need to:
 - check Ansible syntax or task failures
 - compare the live host state with the repo configuration
 
-### 0.6 Identify the Disks
+### 0.7 Identify the Disks
 
 After reboot, confirm the disks before running any storage bootstrap:
 
@@ -290,7 +354,7 @@ their configuration.
 It assumes:
 
 - the onboard NIC is your Proxmox management connection
-- that management network is connected to a router at `10.10.99.1`
+- that management network is connected to a router at `10.10.1.1`
 - Proxmox itself should use a fixed management IP on that network
 - a separate NIC will later be used by pfSense for WAN/LAN duties
 
@@ -320,7 +384,9 @@ Terraform in this repo does not configure the Proxmox host networking or write
 manually first. Terraform only attaches VMs and LXCs to bridges that already
 exist in Proxmox.
 
-Use the onboard NIC as the fixed management interface.
+Use the onboard NIC as the fixed management interface, but put the host IP on a
+bridge so temporary installer VMs can share the only live network during the
+bootstrap phase.
 
 Example `/etc/network/interfaces` layout:
 
@@ -329,29 +395,31 @@ Example `/etc/network/interfaces` layout:
 auto lo
 iface lo inet loopback
 
-# Onboard NIC for Proxmox management
+# Physical NICs
 auto nic0
-iface nic0 inet static
-    address 10.10.99.10/24
-    gateway 10.10.99.1
-# Only for Proxmox host access, no VLANs, isolated from data traffic
+iface nic0 inet manual
 
-# X520 Port 1 - WAN
 auto nic1
 iface nic1 inet manual
-# Directly connected to ISP, used by pfSense VM
 
-# X520 Port 2 - LAN trunk to managed switch
 auto nic2
 iface nic2 inet manual
-# Carries all internal VLANs to switch, pfSense handles tagging/routing
 
-# WAN bridge for pfSense VM
+# Main bridge on the only live network.
+# Proxmox management IP lives here, and temporary build VMs can attach here too.
 auto vmbr0
-iface vmbr0 inet manual
-    bridge-ports nic1
+iface vmbr0 inet static
+    address 10.10.1.10/24
+    gateway 10.10.1.1
+    bridge-ports nic0
     bridge-stp off
     bridge-fd 0
+
+# X520 Port 1 - WAN
+# Left free for later pfSense WAN use
+
+# X520 Port 2 - LAN trunk to managed switch
+# Carries internal VLANs to the switch once pfSense is in place
 
 # VLAN-aware LAN bridge (trunk for pfSense to handle VLANs 10-60)
 auto vmbr1
@@ -383,8 +451,9 @@ ip -br addr
 - `ip -br link` shows the interface names and link state in a compact view.
 - `ip -br addr` helps identify which interface currently has the Proxmox management IP.
 - In this host example, the interface carrying the Proxmox management IP is `nic0`.
-- In this host example, the spare NIC used for pfSense WAN is `nic1`.
-- In this host example, the spare NIC used for pfSense LAN or the VLAN trunk is `nic2`.
+- In this host example, `nic0` is bridged into `vmbr0`, and the Proxmox management IP lives on `vmbr0`, not directly on `nic0`.
+- In this host example, the spare NIC reserved for later pfSense WAN use is `nic1`.
+- In this host example, the spare NIC reserved for the pfSense LAN or VLAN trunk is `nic2`.
 - If you need more hardware detail to tell two similar NICs apart, run:
 
 ```bash
@@ -393,9 +462,10 @@ networkctl status -a
 
 - `networkctl status -a` shows extra details such as link state, driver, and path information that can help map the motherboard port or PCIe NIC port to the Linux interface name.
 - Replace `10.10.1.10/24` with the fixed Proxmox management IP you want if your site uses a different management subnet.
-- `vmbr0` is intended for pfSense WAN.
-- `vmbr1` is intended for pfSense LAN/trunk and internal VM/LXC networking.
+- During bootstrap, `vmbr0` is the live management bridge on `nic0` and can also be used temporarily for installer VMs that need internet access.
+- `vmbr1` is intended for pfSense LAN/trunk and internal VM/LXC networking once the final network design is in place.
 - `vmbr2` is optional and can be used for isolated or experimental workloads.
+- After pfSense is ready, you can repurpose the spare NICs into the final WAN/LAN layout without changing the Terraform guest bridge names.
 - Guests on the internal network should use `bridge = "vmbr1"` with `vlan_id = 20`.
 - You do not need host-side bridge names like `vmbr1.20` for guest attachment in this repo.
 - `vmbr2` is treated as a separate DMZ-style segment, so guests there do not use `vlan_id = 66`.
@@ -503,8 +573,8 @@ Example on the Proxmox host:
 
 ```bash
 pveam update
-pveam available | grep debian-12
-pveam download local debian-12-standard_12.*_amd64.tar.zst
+TEMPLATE=$(pveam available | awk '/debian-12-standard/ {print $2; exit}')
+pveam download local "$TEMPLATE"
 ```
 
 In the Proxmox GUI:
@@ -550,33 +620,69 @@ vm_template_vmid = 9000
 
 For `vm050-mint`, prepare a separate Linux Mint Cinnamon desktop template.
 
-Distribution to download:
+Download source:
 
-- Linux Mint Cinnamon
+- Linux Mint Cinnamon from <https://linuxmint.com/download.php>
 
 Recommended flow:
 
-1. Download the Linux Mint Cinnamon ISO to the Proxmox host.
-2. Create a temporary VM and install Mint normally.
-3. Inside the VM, install:
-   - `openssh-server`
-   - `qemu-guest-agent`
-   - `cloud-init`
-4. Shut the VM down and convert it into a Proxmox template.
+1. On the Proxmox host, download the Linux Mint Cinnamon ISO.
+2. On the Proxmox host, create a temporary VM and attach the ISO.
+3. In the running Linux Mint installer and then inside the installed Mint VM, complete the OS install and add the packages this repo expects.
+4. Back on the Proxmox host, shut the VM down and convert it into a template.
 
-Example high-level flow:
+Commands to run on the Proxmox host:
 
 ```bash
-qm create 9050 --name linux-mint-cinnamon-template --memory 4096 --cores 4 --net0 virtio,bridge=vmbr1
-# attach the Linux Mint Cinnamon ISO, install Mint, then inside the VM:
+cd /var/lib/vz/template/iso
+wget https://mirror.server.net/linuxmint/iso/stable/22.3/linuxmint-22.3-cinnamon-64bit.iso
+
+qm create 9050 --name linux-mint-cinnamon-template --memory 4096 --cores 4 --net0 virtio,bridge=vmbr0
+qm set 9050 --scsihw virtio-scsi-pci --scsi0 local-lvm:64
+qm set 9050 --ide2 local:iso/linuxmint-22.3-cinnamon-64bit.iso,media=cdrom
+qm set 9050 --boot order=ide2
+qm set 9050 --agent enabled=1
+qm start 9050
+```
+
+Then use the Proxmox console to install Linux Mint normally inside VM `9050`.
+If that temporary install network has no DHCP service, set a temporary static
+IP inside Mint on the same subnet as the Proxmox host, for example
+`10.10.1.50/24` with gateway `10.10.1.1`.
+
+Commands to run inside the running Linux Mint VM after installation:
+
+```bash
 sudo apt update
 sudo apt install -y openssh-server qemu-guest-agent cloud-init
 sudo systemctl enable ssh qemu-guest-agent
+
+# Tailscale
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo systemctl enable tailscaled
+
+# RustDesk
+wget https://github.com/rustdesk/rustdesk/releases/download/1.4.1/rustdesk-1.4.1-x86_64.deb
+sudo apt install -y ./rustdesk-1.4.1-x86_64.deb
+
 sudo cloud-init clean --logs
-# back on Proxmox:
-qm shutdown 9050
+sudo shutdown now
+```
+
+After the VM has powered off, run these on the Proxmox host:
+
+```bash
+qm set 9050 --net0 virtio,bridge=vmbr1
+qm set 9050 --boot order=scsi0
 qm template 9050
 ```
+
+Why the boot order changes:
+
+- during the install phase, `qm set 9050 --boot order=ide2` tells Proxmox to boot from the attached Linux Mint ISO
+- after Mint is installed onto `scsi0`, switch the boot order back to `scsi0` so future boots use the installed disk instead of the installer ISO
+- during the template build phase, attaching the VM to `vmbr0` lets it share the only live host network for package installs
+- before converting to a template for this repo, switch the VM back to `vmbr1` so the template matches the intended internal network design
 
 Example Terraform variable:
 

@@ -67,19 +67,19 @@ variable "cloudinit_storage" {
 }
 
 variable "pfsense_wan_bridge" {
-  description = "Bridge used for the pfSense WAN interface"
+  description = "Bridge used for the pfSense WAN interface; defaults to the live upstream bridge that also carries Proxmox host management during bootstrap"
   type        = string
   default     = "vmbr0"
 }
 
 variable "pfsense_lan_bridge" {
-  description = "Bridge used for the pfSense LAN/trunk interface"
+  description = "Bridge used for the pfSense LAN/trunk interface for trusted internal VLAN-backed guests"
   type        = string
   default     = "vmbr1"
 }
 
 variable "pfsense_dmz_bridge" {
-  description = "Bridge used for the pfSense DMZ interface"
+  description = "Bridge used for the pfSense DMZ interface for isolated or public-facing workloads"
   type        = string
   default     = "vmbr2"
 }

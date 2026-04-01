@@ -17,8 +17,12 @@ vm050_mint_nvme_storage = "local-lvm"
 vm050_mint_media_storage = "local-lvm"
 lxc_storage         = "local-lvm"
 cloudinit_storage   = "local-lvm"
+# vmbr0 is the live upstream bridge during bootstrap and remains the default
+# pfSense WAN-side bridge unless you deliberately redesign the host networking.
 pfsense_wan_bridge  = "vmbr0"
+# vmbr1 is the trusted internal trunk for workstation and server VLANs.
 pfsense_lan_bridge  = "vmbr1"
+# vmbr2 is the DMZ-style bridge for isolated or public-facing workloads.
 pfsense_dmz_bridge  = "vmbr2"
 debian_lxc_template = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
 
