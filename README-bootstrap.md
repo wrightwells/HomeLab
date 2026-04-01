@@ -330,33 +330,33 @@ auto lo
 iface lo inet loopback
 
 # Onboard NIC for Proxmox management
-auto eno1
-iface eno1 inet static
+auto nic0
+iface nic0 inet static
     address 10.10.99.10/24
     gateway 10.10.99.1
 # Only for Proxmox host access, no VLANs, isolated from data traffic
 
 # X520 Port 1 - WAN
-auto enp2s0
-iface enp2s0 inet manual
+auto nic1
+iface nic1 inet manual
 # Directly connected to ISP, used by pfSense VM
 
 # X520 Port 2 - LAN trunk to managed switch
-auto enp2s1
-iface enp2s1 inet manual
+auto nic2
+iface nic2 inet manual
 # Carries all internal VLANs to switch, pfSense handles tagging/routing
 
 # WAN bridge for pfSense VM
 auto vmbr0
 iface vmbr0 inet manual
-    bridge-ports enp2s0
+    bridge-ports nic1
     bridge-stp off
     bridge-fd 0
 
 # VLAN-aware LAN bridge (trunk for pfSense to handle VLANs 10-60)
 auto vmbr1
 iface vmbr1 inet manual
-    bridge-ports enp2s1
+    bridge-ports nic2
     bridge-stp off
     bridge-fd 0
     bridge-vlan-aware yes
@@ -372,8 +372,27 @@ iface vmbr2 inet manual
 
 Notes:
 
-- Replace `eno1`, `enp2s0`, and `enp2s1` with the real NIC names on your host.
-- Replace `10.10.99.10/24` with the fixed Proxmox management IP you want.
+- This example uses the real interface names from the sample host output: `nic0`, `nic1`, and `nic2`.
+- Discover the real interface names before editing the file:
+
+```bash
+ip -br link
+ip -br addr
+```
+
+- `ip -br link` shows the interface names and link state in a compact view.
+- `ip -br addr` helps identify which interface currently has the Proxmox management IP.
+- In this host example, the interface carrying the Proxmox management IP is `nic0`.
+- In this host example, the spare NIC used for pfSense WAN is `nic1`.
+- In this host example, the spare NIC used for pfSense LAN or the VLAN trunk is `nic2`.
+- If you need more hardware detail to tell two similar NICs apart, run:
+
+```bash
+networkctl status -a
+```
+
+- `networkctl status -a` shows extra details such as link state, driver, and path information that can help map the motherboard port or PCIe NIC port to the Linux interface name.
+- Replace `10.10.1.10/24` with the fixed Proxmox management IP you want if your site uses a different management subnet.
 - `vmbr0` is intended for pfSense WAN.
 - `vmbr1` is intended for pfSense LAN/trunk and internal VM/LXC networking.
 - `vmbr2` is optional and can be used for isolated or experimental workloads.
@@ -386,15 +405,69 @@ Notes:
 
 Create an API token in Proxmox for Terraform.
 
+In the Proxmox web UI:
+
+```text
+Datacenter -> Permissions -> API Tokens
+```
+
+Create a service-style user first if you do not already have one:
+
+```text
+Datacenter -> Permissions -> Users -> Add
+```
+
+Recommended values:
+
+- Realm: `Proxmox VE authentication server`
+- User name: `terraform`
+- Password: set a strong password and store it safely
+
+Then create the API token:
+
+```text
+Datacenter -> Permissions -> API Tokens -> Add
+```
+
+Recommended token values:
+
+- User: `terraform@pve`
+- Token ID: `provider`
+- Privilege Separation: disabled for a simple first setup
+
+When you save the token, Proxmox shows the generated secret once. Copy it
+immediately and store it safely.
+
 You will need:
 
 - token ID, for example `terraform@pve!provider`
-- token secret
+- token secret, shown once when the token is created
+
+How the token ID is formed:
+
+- Proxmox combines the user and token name as `user@realm!tokenid`
+- If the user is `terraform@pve` and the token name is `provider`, the full
+  token ID becomes `terraform@pve!provider`
+
+For this repo:
+
+- `pm_api_token_id` should be the full token ID, for example `terraform@pve!provider`
+- `pm_api_token_secret` should be the secret string that Proxmox shows after token creation
+
+If Terraform later gets permission errors, confirm that the token user or its
+group has the Proxmox roles needed to read and manage the guests and storage
+used by this repo.
 
 Then update:
 
- - [terraform.tfvars.example](terraform/terraform.tfvars.example)
+- [terraform.tfvars.example](terraform/terraform.tfvars.example)
 - your local `terraform/terraform.tfvars`
+
+Create the local file from the example:
+
+```bash
+cp terraform/terraform.tfvars.example terraform/terraform.tfvars
+```
 
 The key values are:
 
@@ -618,7 +691,7 @@ ansible-playbook -i inventories/production/hosts.ini playbooks/proxmox-host.yml
 ```
 
 This gives you Tailscale access to the Proxmox host itself, including the
-management interface on `eno1`.
+management interface on `nic0`.
 
 ## 9. Configure Terraform variables
 
@@ -688,7 +761,7 @@ Important:
 
 These are UK defaults from `ansible/inventories/production/site_config.yml`:
 
-- Proxmox host management IP: `10.10.99.10/24` on `eno1`
+- Proxmox host management IP: `10.10.1.10/24` on `nic0`
 - `vm100_pfsense`: `10.10.99.1` on `vmbr0`
 - `vm050_mint`: `10.10.10.50` on `vmbr1` with VLAN tag `10`
 - `vm210_ai_gpu`: `10.10.20.210` on `vmbr1` with VLAN tag `20`
