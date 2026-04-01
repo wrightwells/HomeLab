@@ -27,6 +27,7 @@ Notes:
 - Do not commit the vault password file.
 - If you prefer an interactive prompt, use `ansible-playbook --ask-vault-pass`.
 - Terraform should be run first so it can render the Ansible inventory from the current build inventory.
+- The helper scripts under `scripts/` are intended to be run directly as `./scripts/<name>.sh`. If a clone on another client loses executable permissions, restore them with `chmod +x scripts/*.sh`.
 
 ## Build Inventory
 

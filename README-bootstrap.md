@@ -735,6 +735,13 @@ From the repo root:
 ./scripts/ansible-install.sh
 ```
 
+If a checkout ever loses executable bits on the helper scripts, restore them
+from the repo root with:
+
+```bash
+chmod +x scripts/*.sh
+```
+
 This installs the collections declared in:
 
 - [requirements.yml](ansible/requirements.yml)
@@ -752,6 +759,12 @@ Then run:
 cd ansible
 ansible-playbook -i inventories/production/hosts.ini playbooks/proxmox-storage.yml
 ```
+
+At this stage, `ansible/inventories/production/hosts.ini` is still the seed
+inventory checked into the repo, so the Proxmox host entry there must match the
+real bootstrap/uplink IP on `nic0`. For the current layout that should be:
+
+- `proxmox-host ansible_host=10.10.1.10 ansible_user=root`
 
 Before you run that playbook, replace the placeholder `/dev/disk/by-id/...`
 values in:
@@ -798,6 +811,9 @@ Run:
 cd ansible
 ansible-playbook -i inventories/production/hosts.ini playbooks/proxmox-host.yml
 ```
+
+That same pre-Terraform seed inventory should point `proxmox-host` at the real
+bootstrap/uplink IP on `nic0`.
 
 This gives you Tailscale access to the Proxmox host itself, including the
 management interface on `nic0`.
