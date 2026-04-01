@@ -46,10 +46,15 @@ Storage design:
 - Important mount points: [REPLACE_ME]
 
 Network design:
-- Proxmox management subnet: [REPLACE_ME]
+- Proxmox bootstrap/uplink subnet on nic0: [REPLACE_ME]
+- Proxmox bootstrap/uplink IP: [REPLACE_ME]
 - Internal trusted subnet/VLAN: [REPLACE_ME]
 - DMZ subnet/VLAN: [REPLACE_ME]
-- WAN/LAN/DMZ bridge mapping: [REPLACE_ME]
+- Bridge mapping:
+  - vmbr0 bootstrap/template install bridge on nic0: [REPLACE_ME]
+  - vmbr1 pfSense WAN on nic1: [REPLACE_ME]
+  - vmbr2 trusted LAN/trunk on nic2: [REPLACE_ME]
+  - vmbr3 DMZ/untrusted bridge: [REPLACE_ME]
 - pfSense role in the design: [REPLACE_ME]
 
 Terraform design:
@@ -59,6 +64,7 @@ Terraform design:
 - Site, domain suffix, and IP ranges are driven by ansible/inventories/production/site_config.yml
 - Guest inclusion is driven by ansible/inventories/production/build_inventory.yml
 - Terraform creates guests, not Proxmox host networking
+- Terraform rewrites ansible/inventories/production/hosts.ini from the current site config and enabled guests
 
 Ansible design:
 - Site-specific hostnames, wallpaper, and network-derived values are driven by ansible/inventories/production/site_config.yml
@@ -67,6 +73,8 @@ Ansible design:
 - Writable host bind mounts should be pre-created by Ansible
 - stack.env.vault is decrypted by Ansible at deploy time
 - pfSense is managed separately from Linux hosts
+- Before the first Terraform run, ansible/inventories/production/hosts.ini acts as the seed inventory for Proxmox bootstrap playbooks
+- The seed proxmox-host entry must point at the real bootstrap/uplink IP on nic0
 
 Placement rules:
 - Put public-facing services on [REPLACE_ME]
@@ -172,18 +180,20 @@ Shared host directories created during storage bootstrap include:
 
 - Site config default: `UK`
 - Site-driven second octet: `10` for UK, `20` for France
-- Proxmox management IP: `10.10.1.10/24`
-- Proxmox management NIC: `nic0`
-- Proxmox management gateway: `10.10.1.1`
+- Proxmox bootstrap/uplink subnet on `nic0`: `10.10.1.0/24`
+- Proxmox bootstrap/uplink IP: `10.10.1.10/24`
+- Proxmox bootstrap/uplink gateway: `10.10.1.1`
 - Bootstrap/template bridge: `vmbr0`
-- pfSense WAN bridge: `vmbr1`
-- Internal trusted bridge: `vmbr2`
+- `vmbr0` is mainly for template installs and one-off bootstrap guests; it can remain unused in the end state
+- pfSense WAN bridge on `nic1`: `vmbr1`
+- Internal trusted bridge on `nic2`: `vmbr2`
 - Workstation VLAN on trusted bridge: `10`
 - Internal trusted VLAN: `20`
 - Internal trusted desktop subnet: `10.10.10.0/24`
 - Internal trusted subnet: `10.10.20.0/24`
 - DMZ-style bridge: `vmbr3`
 - DMZ subnet: `10.10.66.0/24`
+- pfSense management VLAN remains internal on the LAN side behind pfSense: `10.10.99.0/24` on `vmbr2`
 
 ### Terraform / Ansible Design Rules
 
@@ -195,10 +205,12 @@ Shared host directories created during storage bootstrap include:
 - Terraform sizing and start behavior are profile-driven
 - Site, domain suffix, and host IP ranges are driven by `ansible/inventories/production/site_config.yml`
 - Guest inclusion is driven by `ansible/inventories/production/build_inventory.yml`
+- Terraform rewrites `ansible/inventories/production/hosts.ini`
 - Ansible deploys Docker compose bundles from `ansible/files/compose`
 - Docker bundle inclusion is driven by `ansible/inventories/production/build_inventory.yml`
 - Ansible pre-creates important writable bind-mount directories
 - pfSense lives in its own Ansible inventory group and playbook
+- Before the first Terraform run, `ansible/inventories/production/hosts.ini` is the seed inventory for Proxmox bootstrap playbooks and should point `proxmox-host` at `10.10.1.10`
 
 ### Build Inventory Snapshot
 
@@ -217,6 +229,7 @@ Shared host directories created during storage bootstrap include:
 
 | Host | IP | Purpose |
 | --- | --- | --- |
+| `proxmox-host` | `10.10.1.10` | Proxmox host on the bootstrap/uplink network; seed Ansible target before Terraform rewrites inventory |
 | `vm050-mint` | `10.10.10.50` | Linux Mint Cinnamon desktop VM, Tailscale client, repo tools, UK/France themed wallpaper |
 | `vm210-ai-gpu` | `10.10.20.210` | AI services, Frigate, Home Assistant, automation, coding tools |
 | `lxc066-docker-arr` | `10.10.66.66` | ARR stack, downloads, request tools |
@@ -241,7 +254,7 @@ Shared host directories created during storage bootstrap include:
 - `lxc066-docker-arr`:
   - download and media acquisition stack
   - request and file-browser helpers
-  - DMZ-style isolation
+  - DMZ-style isolation on `vmbr3`
 - `lxc200-docker-services`:
   - sync, file, and photo/data services
 - `lxc220-docker-apps`:
@@ -250,7 +263,7 @@ Shared host directories created during storage bootstrap include:
   - Jellyfin, Plex, media-serving workloads
 - `lxc240-docker-external`:
   - reverse proxy and public or semi-public services
-  - DMZ placement matters here
+  - DMZ placement on `vmbr3` matters here
 - `lxc250-infra`:
   - MQTT
   - Homebridge
