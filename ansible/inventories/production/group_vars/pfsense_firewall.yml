@@ -104,7 +104,7 @@ pfsense_aliases:
     descr: Goue
   - name: proxmox_host
     type: host
-    address: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.management_vlan }}.{{ homelab_site.proxmox.management_host_id }}"
+    address: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.proxmox.bootstrap_subnet }}.{{ homelab_site.proxmox.management_host_id }}"
     detail: "Proxmox host"
     descr: proxmox_host
   - name: ai_vm

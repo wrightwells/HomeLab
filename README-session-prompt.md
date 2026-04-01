@@ -172,16 +172,17 @@ Shared host directories created during storage bootstrap include:
 
 - Site config default: `UK`
 - Site-driven second octet: `10` for UK, `20` for France
-- Proxmox management IP: `10.10.99.10/24`
-- Proxmox management NIC: `eno1`
-- Proxmox management gateway: `10.10.99.1`
-- pfSense WAN bridge: `vmbr0`
-- Internal trusted bridge: `vmbr1`
+- Proxmox management IP: `10.10.1.10/24`
+- Proxmox management NIC: `nic0`
+- Proxmox management gateway: `10.10.1.1`
+- Bootstrap/template bridge: `vmbr0`
+- pfSense WAN bridge: `vmbr1`
+- Internal trusted bridge: `vmbr2`
 - Workstation VLAN on trusted bridge: `10`
 - Internal trusted VLAN: `20`
 - Internal trusted desktop subnet: `10.10.10.0/24`
 - Internal trusted subnet: `10.10.20.0/24`
-- DMZ-style bridge: `vmbr2`
+- DMZ-style bridge: `vmbr3`
 - DMZ subnet: `10.10.66.0/24`
 
 ### Terraform / Ansible Design Rules

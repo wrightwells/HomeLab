@@ -86,9 +86,9 @@ Boot from the USB installer and use these baseline choices:
 
 Recommended installer network values for this repo:
 
-- UK default IP: `10.10.99.10`
-- UK default gateway: `10.10.99.1`
-- UK default DNS: `10.10.99.1`
+- UK default IP: `10.10.1.10`
+- UK default gateway: `10.10.1.1`
+- UK default DNS: `10.10.1.1`
 
 Site-aware rule:
 
@@ -98,7 +98,7 @@ Site-aware rule:
 
 After install, the Proxmox web UI should be reachable at:
 
-- `https://10.10.99.10:8006`
+- `https://10.10.1.10:8006`
 
 Recommended Proxmox hostname pattern:
 
@@ -129,7 +129,7 @@ this build, because the repo's storage plan uses:
 SSH to the new Proxmox host:
 
 ```bash
-ssh root@10.10.99.10
+ssh root@10.10.1.10
 ```
 
 If you are not using a Proxmox subscription, disable the enterprise repo and
@@ -151,7 +151,7 @@ up key-based login from your client before you rely on VS Code Remote SSH.
 From the client machine, run:
 
 ```bash
-~/HomeLab/scripts/setup-ssh-key-login.sh --host 10.10.99.10 --user root
+~/HomeLab/scripts/setup-ssh-key-login.sh --host 10.10.1.10 --user root
 ```
 
 The script:
@@ -163,7 +163,7 @@ The script:
 After the script finishes, verify key-based login works:
 
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes root@10.10.99.10
+ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes root@10.10.1.10
 ```
 
 Only after that succeeds, disable password-based SSH on the server by updating
@@ -199,14 +199,14 @@ Recommended workflow:
 3. Verify SSH access from your workstation:
 
 ```bash
-ssh root@10.10.99.10
+ssh root@10.10.1.10
 ```
 
 4. In VS Code, run `Remote-SSH: Connect to Host...`
 5. Connect to:
 
 ```text
-root@10.10.99.10
+root@10.10.1.10
 ```
 
 6. Open the repo on the Proxmox host:
@@ -384,9 +384,9 @@ Terraform in this repo does not configure the Proxmox host networking or write
 manually first. Terraform only attaches VMs and LXCs to bridges that already
 exist in Proxmox.
 
-Use the onboard NIC as the fixed management interface, but put the host IP on a
-bridge so temporary installer VMs can share the only live network during the
-bootstrap phase.
+Use `nic0` for the Proxmox host uplink and keep a bridge on that same physical
+port so temporary installer VMs can share internet access during the bootstrap
+phase. In the steady state, that bootstrap bridge can remain unused.
 
 Example `/etc/network/interfaces` layout:
 
@@ -405,8 +405,8 @@ iface nic1 inet manual
 auto nic2
 iface nic2 inet manual
 
-# Main bridge on the only live network.
-# Proxmox management IP lives here, and temporary build VMs can attach here too.
+# Bootstrap / template install bridge on the Proxmox uplink NIC.
+# Proxmox host IP lives here during bring-up, and temporary build VMs can attach here too.
 auto vmbr0
 iface vmbr0 inet static
     address 10.10.1.10/24
@@ -415,24 +415,26 @@ iface vmbr0 inet static
     bridge-stp off
     bridge-fd 0
 
-# X520 Port 1 - WAN
-# Left free for later pfSense WAN use
-
-# X520 Port 2 - LAN trunk to managed switch
-# Carries internal VLANs to the switch once pfSense is in place
-
-# VLAN-aware LAN bridge (trunk for pfSense to handle VLANs 10-60)
+# pfSense WAN bridge on nic1
 auto vmbr1
 iface vmbr1 inet manual
+    bridge-ports nic1
+    bridge-stp off
+    bridge-fd 0
+
+# pfSense LAN trunk on nic2
+# Carries internal VLANs once pfSense is in place
+auto vmbr2
+iface vmbr2 inet manual
     bridge-ports nic2
     bridge-stp off
     bridge-fd 0
     bridge-vlan-aware yes
     bridge-vids 2-4094
 
-# Optional untrusted bridge for AI VM / experimental LXCs
-auto vmbr2
-iface vmbr2 inet manual
+# Optional DMZ / untrusted bridge
+auto vmbr3
+iface vmbr3 inet manual
     bridge-ports none
     bridge-stp off
     bridge-fd 0
@@ -452,8 +454,8 @@ ip -br addr
 - `ip -br addr` helps identify which interface currently has the Proxmox management IP.
 - In this host example, the interface carrying the Proxmox management IP is `nic0`.
 - In this host example, `nic0` is bridged into `vmbr0`, and the Proxmox management IP lives on `vmbr0`, not directly on `nic0`.
-- In this host example, the spare NIC reserved for later pfSense WAN use is `nic1`.
-- In this host example, the spare NIC reserved for the pfSense LAN or VLAN trunk is `nic2`.
+- In this host example, `nic1` is dedicated to the pfSense WAN bridge `vmbr1`.
+- In this host example, `nic2` is dedicated to the pfSense LAN trunk bridge `vmbr2`.
 - If you need more hardware detail to tell two similar NICs apart, run:
 
 ```bash
@@ -461,14 +463,15 @@ networkctl status -a
 ```
 
 - `networkctl status -a` shows extra details such as link state, driver, and path information that can help map the motherboard port or PCIe NIC port to the Linux interface name.
-- Replace `10.10.1.10/24` with the fixed Proxmox management IP you want if your site uses a different management subnet.
-- During bootstrap, `vmbr0` is the live management bridge on `nic0` and can also be used temporarily for installer VMs that need internet access.
-- `vmbr1` is intended for pfSense LAN/trunk and internal VM/LXC networking once the final network design is in place.
-- `vmbr2` is optional and can be used for isolated or experimental workloads.
-- After pfSense is ready, you can repurpose the spare NICs into the final WAN/LAN layout without changing the Terraform guest bridge names.
-- Guests on the internal network should use `bridge = "vmbr1"` with `vlan_id = 20`.
-- You do not need host-side bridge names like `vmbr1.20` for guest attachment in this repo.
-- `vmbr2` is treated as a separate DMZ-style segment, so guests there do not use `vlan_id = 66`.
+- Replace `10.10.1.10/24` with the fixed Proxmox uplink IP you want if your site uses a different bootstrap subnet.
+- During bootstrap, `vmbr0` is the live Proxmox uplink bridge on `nic0` and can also be used temporarily for installer VMs that need internet access.
+- `vmbr1` is the dedicated pfSense WAN bridge.
+- `vmbr2` is the pfSense LAN/trunk bridge for internal VM/LXC networking once the final network design is in place.
+- `vmbr3` is the separate DMZ or untrusted segment.
+- After templates are built, `vmbr0` can remain present but otherwise unused.
+- Guests on the internal network should use `bridge = "vmbr2"` with `vlan_id = 20`.
+- You do not need host-side bridge names like `vmbr2.20` for guest attachment in this repo.
+- Guests on `vmbr3` use a plain DMZ bridge and do not need VLAN tag `66` on the Proxmox side.
 - Apply network changes carefully, especially on a remote host.
 
 ## 3. Create the Proxmox API token
@@ -672,7 +675,7 @@ sudo shutdown now
 After the VM has powered off, run these on the Proxmox host:
 
 ```bash
-qm set 9050 --net0 virtio,bridge=vmbr1
+qm set 9050 --net0 virtio,bridge=vmbr2
 qm set 9050 --boot order=scsi0
 qm template 9050
 ```
@@ -681,8 +684,8 @@ Why the boot order changes:
 
 - during the install phase, `qm set 9050 --boot order=ide2` tells Proxmox to boot from the attached Linux Mint ISO
 - after Mint is installed onto `scsi0`, switch the boot order back to `scsi0` so future boots use the installed disk instead of the installer ISO
-- during the template build phase, attaching the VM to `vmbr0` lets it share the only live host network for package installs
-- before converting to a template for this repo, switch the VM back to `vmbr1` so the template matches the intended internal network design
+- during the template build phase, attaching the VM to `vmbr0` lets it share the Proxmox uplink for package installs
+- before converting to a template for this repo, switch the VM back to `vmbr2` so the template matches the intended trusted internal network design
 
 Example Terraform variable:
 
@@ -867,26 +870,29 @@ Important:
 
 These are UK defaults from `ansible/inventories/production/site_config.yml`:
 
-- Proxmox host management IP: `10.10.1.10/24` on `nic0`
-- `vm100_pfsense`: `10.10.99.1` on `vmbr0`
-- `vm050_mint`: `10.10.10.50` on `vmbr1` with VLAN tag `10`
-- `vm210_ai_gpu`: `10.10.20.210` on `vmbr1` with VLAN tag `20`
-- `lxc066_docker_arr`: `10.10.66.66` on `vmbr2` with VLAN tag `66`
-- `lxc200_docker_services`: `10.10.20.200` on `vmbr1` with VLAN tag `20`
-- `lxc220_docker_apps`: `10.10.20.220` on `vmbr1` with VLAN tag `20`
-- `lxc230_docker_media`: `10.10.20.230` on `vmbr1` with VLAN tag `20`
-- `lxc240_docker_external`: `10.10.66.240` on `vmbr2` with VLAN tag `66`
-- `lxc250_infra`: `10.10.20.250` on `vmbr1` with VLAN tag `20`
+- Proxmox host uplink IP: `10.10.1.10/24` on `nic0` via `vmbr0`
+- `vm100_pfsense`: `10.10.99.1` on the management VLAN carried over `vmbr2`
+- `vm050_mint`: `10.10.10.50` on `vmbr2` with VLAN tag `10`
+- `vm210_ai_gpu`: `10.10.20.210` on `vmbr2` with VLAN tag `20`
+- `lxc066_docker_arr`: `10.10.66.66` on `vmbr3`
+- `lxc200_docker_services`: `10.10.20.200` on `vmbr2` with VLAN tag `20`
+- `lxc220_docker_apps`: `10.10.20.220` on `vmbr2` with VLAN tag `20`
+- `lxc230_docker_media`: `10.10.20.230` on `vmbr2` with VLAN tag `20`
+- `lxc240_docker_external`: `10.10.66.240` on `vmbr3`
+- `lxc250_infra`: `10.10.20.250` on `vmbr2` with VLAN tag `20`
 
 ## Network intent
 
-- `vmbr1` is the trusted internal trunk.
+- `vmbr0` is the temporary bootstrap/install bridge on the Proxmox uplink.
+- `vmbr1` is the pfSense WAN bridge.
+- `vmbr2` is the trusted internal trunk.
 - The current workstation workload uses VLAN `10` on the `10.10.10.0/24` segment.
 - The current server workloads use VLAN `20` on the `10.10.20.0/24` segment.
-- `vmbr2` is the DMZ-style network for isolated or public-facing workloads on the `10.10.66.0/24` segment.
-- `lxc066_docker_arr` stays on `vmbr2` and should not have broad access back into the trusted internal network.
-- `lxc240_docker_external` stays on `vmbr2` because it serves public-facing workloads.
-- `lxc250_infra` stays on `vmbr1` so the reverse proxy can reach trusted internal services directly.
+- VLAN `99` remains the internal management subnet on the trusted LAN side behind pfSense.
+- `vmbr3` is the DMZ-style network for isolated or public-facing workloads on the `10.10.66.0/24` segment.
+- `lxc066_docker_arr` stays on `vmbr3` and should not have broad access back into the trusted internal network.
+- `lxc240_docker_external` stays on `vmbr3` because it serves public-facing workloads.
+- `lxc250_infra` stays on `vmbr2` so the reverse proxy can reach trusted internal services directly.
 - pfSense needs separate WAN, LAN/trunk, and DMZ interfaces for this design.
 - External exposure and NAT are expected to be handled in pfSense, not Terraform.
 

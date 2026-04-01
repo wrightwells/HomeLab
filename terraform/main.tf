@@ -12,6 +12,7 @@ locals {
   ))
   homelab_site = yamldecode(file(local.site_config_path)).homelab_site
   site_networks = {
+    bootstrap   = { vlan = local.homelab_site.proxmox.bootstrap_subnet, bridge = local.homelab_site.bridges.bootstrap }
     management  = { vlan = local.homelab_site.addressing.management_vlan, bridge = local.homelab_site.bridges.management }
     workstation = { vlan = local.homelab_site.addressing.workstation_vlan, bridge = local.homelab_site.bridges.trusted }
     servers     = { vlan = local.homelab_site.addressing.server_vlan, bridge = local.homelab_site.bridges.trusted }
@@ -100,7 +101,7 @@ locals {
     proxmox_host = {
       name    = "proxmox-host"
       type    = "host"
-      network = "management"
+      network = "bootstrap"
       vmid    = null
       host_id = local.homelab_site.proxmox.management_host_id
       groups  = ["proxmox"]
