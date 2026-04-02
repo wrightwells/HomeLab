@@ -44,15 +44,15 @@ to control:
 
 Example use cases:
 
-- full build with every guest and service enabled
-- lightweight build with only `vm100_pfsense`, `lxc230_docker_media`, and a few core services
+- full build with every guest and service enabled, using the `balanced_128gb` profile
+- lightweight build with only `vm100_pfsense`, `lxc230_docker_media`, and a few core services, using the `balanced_32gb` profile
 - reduced storage build where `/mnt/appdata` still exists but falls back to `host_os` instead of a separate appdata disk
 
 Use [site_config.yml](ansible/inventories/production/site_config.yml) to control:
 
 - whether the build is UK or France
 - the second IP octet, for example `10.10.x.x` for UK or `10.20.x.x` for France
-- the domain suffix such as `uk.linux` or `fr.linux`
+- the domain suffix such as `uk.wrightwells.com` or `fr.wrightwells.com`
 - VLAN-backed subnet ranges used by Terraform and generated inventory
 
 ## Hosts

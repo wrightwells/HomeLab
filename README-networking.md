@@ -52,7 +52,7 @@ state, `vmbr0` can be left unused apart from occasional template builds.
 | Role | Hostname | Type | Network | Bridge | IP address |
 | --- | --- | --- | --- | --- | --- |
 | Proxmox host | `pve01` | Physical host | Bootstrap / host uplink | `vmbr0` | `10.10.1.10` |
-| pfSense | `pfsense` | VM | Management VLAN | `vmbr2` | `10.10.99.1` |
+| pfSense | `pfsense` | VM | Bootstrap / control | `vmbr0` | `10.10.1.110` |
 | Mint desktop | `vm050-mint` | VM | Workstations | `vmbr2` | `10.10.10.50` |
 | AI GPU | `ai-gpu` | VM | Servers | `vmbr2` | `10.10.20.210` |
 | Docker ARR | `docker-arr` | LXC | DMZ | `vmbr3` | `10.10.66.66` |

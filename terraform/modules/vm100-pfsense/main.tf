@@ -31,6 +31,11 @@ resource "proxmox_virtual_environment_vm" "this" {
   }
 
   network_device {
+    bridge = var.bootstrap_bridge
+    model  = "virtio"
+  }
+
+  network_device {
     bridge = var.wan_bridge
     model  = "virtio"
   }
@@ -53,5 +58,5 @@ resource "proxmox_virtual_environment_vm" "this" {
     enabled = false
   }
 
-  description = "Starter pfSense VM with separate WAN, LAN/trunk, and DMZ interfaces. Attach ISO and finish install in Proxmox console."
+  description = "Starter pfSense VM with bootstrap, WAN, LAN/trunk, and DMZ interfaces. Attach ISO and finish install in Proxmox console."
 }

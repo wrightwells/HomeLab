@@ -1,7 +1,7 @@
 ---
 proxmox_storage_allow_destructive_create: false
 
-proxmox_nvme_device: /dev/disk/by-id/REPLACE_ME_NVME
+proxmox_nvme_device: /dev/disk/by-id/nvme-WD_BLACK_SN770_1TB_22271Z800430
 proxmox_nvme_fstype: ext4
 proxmox_nvme_mount_root: /mnt/ai_nvme
 proxmox_ai_models_subdir: ai_models
@@ -11,12 +11,12 @@ proxmox_ai_cache_mount: /mnt/ai_cache
 
 proxmox_appdata_zpool_name: appdata
 proxmox_appdata_zfs_disks:
-  - /dev/disk/by-id/REPLACE_ME_APPDATA01
-  - /dev/disk/by-id/REPLACE_ME_APPDATA02
+  - /dev/disk/by-id/ata-ST4000VN008-2DR166_ZGY9RMJS
+  - /dev/disk/by-id/ata-ST4000VN008-2DR166_ZGY9RN7L
 proxmox_appdata_mountpoint: /mnt/appdata
 
 proxmox_media_disks:
-  - /dev/disk/by-id/REPLACE_ME_MEDIA01
+  - /dev/disk/by-id/ata-ST12000NM000J-2TY103_WR6047TA
 proxmox_media_disk_fstype: xfs
 proxmox_media_branch_root: /mnt
 proxmox_media_branch_prefix: media_disk

@@ -307,7 +307,7 @@ This file lets you choose:
 The site config file controls:
 
 - UK vs France build selection
-- the domain suffix such as `uk.linux` or `fr.linux`
+- the domain suffix such as `uk.wrightwells.com` or `fr.wrightwells.com`
 - the second IP octet, for example `10.10.x.x` vs `10.20.x.x`
 - VLAN-backed subnet ranges used by Terraform, pfSense, and generated inventory
 
@@ -476,60 +476,11 @@ networkctl status -a
 
 ## 3. Create the Proxmox API token
 
-Create an API token in Proxmox for Terraform.
+Run these on the Proxmox host:
 
-In the Proxmox web UI:
-
-```text
-Datacenter -> Permissions -> API Tokens
+```bash
+pveum user token add root@pam provider --privsep 0
 ```
-
-Create a service-style user first if you do not already have one:
-
-```text
-Datacenter -> Permissions -> Users -> Add
-```
-
-Recommended values:
-
-- Realm: `Proxmox VE authentication server`
-- User name: `terraform`
-- Password: set a strong password and store it safely
-
-Then create the API token:
-
-```text
-Datacenter -> Permissions -> API Tokens -> Add
-```
-
-Recommended token values:
-
-- User: `terraform@pve`
-- Token ID: `provider`
-- Privilege Separation: disabled for a simple first setup
-
-When you save the token, Proxmox shows the generated secret once. Copy it
-immediately and store it safely.
-
-You will need:
-
-- token ID, for example `terraform@pve!provider`
-- token secret, shown once when the token is created
-
-How the token ID is formed:
-
-- Proxmox combines the user and token name as `user@realm!tokenid`
-- If the user is `terraform@pve` and the token name is `provider`, the full
-  token ID becomes `terraform@pve!provider`
-
-For this repo:
-
-- `pm_api_token_id` should be the full token ID, for example `terraform@pve!provider`
-- `pm_api_token_secret` should be the secret string that Proxmox shows after token creation
-
-If Terraform later gets permission errors, confirm that the token user or its
-group has the Proxmox roles needed to read and manage the guests and storage
-used by this repo.
 
 Then update:
 
@@ -546,9 +497,23 @@ The key values are:
 
 ```hcl
 pm_api_url          = "https://YOUR-PROXMOX-IP:8006/api2/json"
-pm_api_token_id     = "terraform@pve!provider"
-pm_api_token_secret = "REPLACE_ME"
+pm_api_token_id     = "root@pam!provider"
+pm_api_token_secret = "PASTE_NEW_SECRET_HERE"
 pm_tls_insecure     = true
+```
+
+Then run:
+
+```bash
+terraform -chdir=terraform plan
+terraform -chdir=terraform apply
+```
+
+If Terraform creates the LXCs but cannot apply Proxmox root-only LXC options
+such as bind mounts or `keyctl`, run this on the Proxmox host after the apply:
+
+```bash
+./scripts/proxmox-apply-lxc-postcreate.sh
 ```
 
 ## 4. Prepare Proxmox templates and storage
@@ -565,6 +530,82 @@ Recommended storage names for this repo:
 - `vm_storage = "local-lvm"`
 - `lxc_storage = "local-lvm"`
 - `cloudinit_storage = "local-lvm"`
+
+### pfSense install media
+
+`vm100-pfsense` is not a clone template in this repo. Terraform creates the
+shell VM with the right VMID, bridges, CPU, memory, and root disk, then you
+attach the pfSense ISO and complete the install manually in the Proxmox
+console.
+
+Download source:
+
+- pfSense CE ISO:
+  <https://shop.netgate.com/a/downloads/-/288d1bf44c98f1a8/10ea4be97213dd88>
+
+This ISO is not fetched automatically by the repo. Add it manually to the
+Proxmox ISO storage first. In the working setup here, the ISO filename is:
+
+- `netgate-installer-v1.1.1-RELEASE-amd64.iso`
+
+After Terraform creates VM `100`, use the ISO only for the initial install
+boot:
+
+```bash
+# 1. Attach the installer ISO as the virtual CD-ROM.
+qm set 100 --ide2 local:iso/netgate-installer-v1.1.1-RELEASE-amd64.iso,media=cdrom
+
+# 2. Tell Proxmox to boot from the CD-ROM for the first startup.
+qm set 100 --boot order=ide2
+
+# 3. Start the VM and complete the install from the Proxmox console.
+qm start 100
+```
+
+Then finish the pfSense install in the Proxmox console for VM `100`.
+
+For this pfSense VM, use `UFS` during the pfSense installer unless you have a
+specific reason to choose guest-side `ZFS`. The intended storage layering in
+this repo is a normal pfSense VM disk inside the guest, with Proxmox handling
+the host-side storage concerns underneath it.
+
+If the pfSense installer reports `missing or size mismatch`, the simplest fix
+is usually to recreate the pfSense VM disk cleanly on the Proxmox host and
+retry the install. Check the current disk name first:
+
+```bash
+qm config 100
+qm stop 100
+qm unlink 100 --idlist sata0
+qm set 100 --sata0 local-lvm:32
+qm set 100 --boot order=ide2
+qm start 100
+```
+
+Then retry the install, choose the fresh target disk, use the whole disk, and
+select `UFS`.
+
+After the install completes, pfSense has written itself to the VM disk, which
+in the current build is `sata0`, and the first installed boot succeeds, detach
+the ISO and restore normal boot order:
+
+```bash
+# Confirm the installed disk name if needed.
+qm config 100
+
+# 4. Switch normal boot back to the VM disk.
+qm set 100 --boot order=sata0
+
+# 5. Remove the virtual CD-ROM after install.
+qm set 100 --delete ide2
+```
+
+At that point continue with:
+
+- interface assignment
+- WAN, LAN, and DMZ checks
+- the manual pfSense GUI prerequisites in [README-pfsense.md](README-pfsense.md)
+- the Ansible pfSense playbook later in this guide
 
 ### LXC template
 
@@ -609,6 +650,27 @@ qm set 9000 --boot c --bootdisk scsi0
 qm set 9000 --serial0 socket --vga serial0
 qm template 9000
 ```
+
+If you want the source VM template itself to already contain the `ansible`
+account and your SSH key instead of relying only on clone-time cloud-init,
+boot the source VM once before converting it into a template and run these
+inside the guest:
+
+```bash
+sudo useradd -m -s /bin/bash ansible || true
+sudo install -d -m 700 -o ansible -g ansible /home/ansible/.ssh
+printf '%s\n' 'ssh-ed25519 AAAA...' | sudo tee /home/ansible/.ssh/authorized_keys >/dev/null
+sudo chown ansible:ansible /home/ansible/.ssh/authorized_keys
+sudo chmod 600 /home/ansible/.ssh/authorized_keys
+sudo usermod -aG sudo ansible
+printf 'ansible ALL=(ALL) NOPASSWD:ALL\n' | sudo tee /etc/sudoers.d/90-ansible >/dev/null
+sudo chmod 440 /etc/sudoers.d/90-ansible
+```
+
+This is optional for the Ubuntu cloud image flow because Terraform already
+passes `ansible_user` and `ssh_public_key` to Proxmox cloud-init during clone
+creation. It is still useful as a fallback when you want the template itself to
+be immediately accessible with the `ansible` account.
 
 The AI VM in this repo is clone-only, so you must provide a valid Ubuntu Server
 24.04 LTS template VMID.
@@ -660,6 +722,16 @@ sudo apt update
 sudo apt install -y openssh-server qemu-guest-agent cloud-init
 sudo systemctl enable ssh qemu-guest-agent
 
+# Create the shared automation account used by Terraform and Ansible
+sudo useradd -m -s /bin/bash ansible || true
+sudo install -d -m 700 -o ansible -g ansible /home/ansible/.ssh
+printf '%s\n' 'ssh-ed25519 AAAA...' | sudo tee /home/ansible/.ssh/authorized_keys >/dev/null
+sudo chown ansible:ansible /home/ansible/.ssh/authorized_keys
+sudo chmod 600 /home/ansible/.ssh/authorized_keys
+sudo usermod -aG sudo ansible
+printf 'ansible ALL=(ALL) NOPASSWD:ALL\n' | sudo tee /etc/sudoers.d/90-ansible >/dev/null
+sudo chmod 440 /etc/sudoers.d/90-ansible
+
 # Tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
 sudo systemctl enable tailscaled
@@ -670,6 +742,13 @@ sudo apt install -y ./rustdesk-1.4.1-x86_64.deb
 
 sudo cloud-init clean --logs
 sudo shutdown now
+```
+
+Before converting the Mint VM into a template, confirm the account is present:
+
+```bash
+id ansible
+sudo -l -U ansible
 ```
 
 After the VM has powered off, run these on the Proxmox host:
@@ -846,6 +925,29 @@ Set at least:
 - `ansible_user`
 - `ssh_public_key`
 
+Recommended profile choices:
+
+- minimal VM/LXC build: `resource_profile = "balanced_32gb"`
+- full build on the upgraded host: `resource_profile = "balanced_128gb"`
+
+To obtain `ssh_public_key` on the machine where you run Terraform:
+
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
+
+If you do not already have an Ed25519 key, create one with:
+
+```bash
+ssh-keygen -t ed25519 -C "$(whoami)@$(hostname)" -f ~/.ssh/id_ed25519
+```
+
+Then copy the full public key line into `terraform/terraform.tfvars`:
+
+```hcl
+ssh_public_key = "ssh-ed25519 AAAA..."
+```
+
 ## 10. Prepare GPU passthrough on Proxmox if required
 
 Do this after the Proxmox host exists and the RTX 3060 is physically installed,
@@ -861,10 +963,33 @@ On the Proxmox host:
 2. Load the VFIO modules.
 3. Bind the RTX 3060 and its audio function to `vfio-pci`.
 4. Reboot the host.
-5. Confirm the device address with:
+5. Discover the GPU PCI address with:
 
 ```bash
 lspci -nn | grep -iE 'vga|3d|audio'
+```
+
+Typical output will look something like:
+
+```text
+01:00.0 VGA compatible controller [0300]: NVIDIA Corporation ...
+01:00.1 Audio device [0403]: NVIDIA Corporation ...
+```
+
+Use the GPU function address, not the audio function. In the example above:
+
+- GPU address: `01:00.0`
+- GPU audio address: `01:00.1`
+
+For this repo, record the GPU function in full Proxmox PCI form by adding the
+`0000:` domain prefix and dropping the final `.0` function suffix:
+
+- `01:00.0` becomes `0000:01:00`
+
+You can confirm what Proxmox expects for an already attached PCI device with:
+
+```bash
+qm config 210 | grep -i hostpci
 ```
 
 Then update your local `terraform/terraform.tfvars`:
@@ -876,6 +1001,9 @@ vm210_gpu_pci_address = "0000:02:00"
 Important:
 
 - Leave `vm210_gpu_pci_address` blank until you know the real PCI address.
+- Run `lspci -nn` on the Proxmox host itself, not inside a guest.
+- Use the NVIDIA VGA or 3D controller address, not the NVIDIA audio function.
+- If `lspci` shows `01:00.0`, set `vm210_gpu_pci_address = "0000:01:00"`.
 - The exact Terraform PCI device block depends on the installed `bpg/proxmox`
   provider version and the final host hardware layout.
 - This repo intentionally does not guess that block before the host exists.
@@ -887,7 +1015,7 @@ Important:
 These are UK defaults from `ansible/inventories/production/site_config.yml`:
 
 - Proxmox host uplink IP: `10.10.1.10/24` on `nic0` via `vmbr0`
-- `vm100_pfsense`: `10.10.99.1` on the management VLAN carried over `vmbr2`
+- `vm100_pfsense`: `10.10.1.110` on `vmbr0`, with additional pfSense-side interfaces on `vmbr1`, `vmbr2`, and `vmbr3`
 - `vm050_mint`: `10.10.10.50` on `vmbr2` with VLAN tag `10`
 - `vm210_ai_gpu`: `10.10.20.210` on `vmbr2` with VLAN tag `20`
 - `lxc066_docker_arr`: `10.10.66.66` on `vmbr3`
@@ -914,7 +1042,22 @@ These are UK defaults from `ansible/inventories/production/site_config.yml`:
 
 ## 11. Initialize and validate Terraform
 
-Run:
+Use a two-pass Terraform flow for the full stack.
+
+Phase 1 creates pfSense only so you can finish the router/firewall install and
+bring the intended networks online before the rest of the guests depend on
+them.
+
+Phase 2 creates the remaining VMs and LXCs after pfSense is installed and the
+bridge/network design is behaving the way you want.
+
+If you want a guided flow with explicit stop points, run:
+
+```bash
+./scripts/bootstrap-from-proxmox.sh
+```
+
+If you want to run the phases manually, start with:
 
 ```bash
 ./scripts/terraform-init.sh
@@ -924,18 +1067,53 @@ terraform -chdir=terraform validate
 
 Review the plan before applying.
 
-## 12. Apply Terraform
+## 12. Apply Terraform In Two Passes
+
+### Phase 1: Build pfSense first
 
 Run:
 
 ```bash
-./scripts/terraform-apply.sh
+terraform -chdir=terraform apply -target=module.vm100_pfsense
+```
+
+Then stop and do the manual pfSense work:
+
+- attach `local:iso/netgate-installer-v1.1.1-RELEASE-amd64.iso` to VM `100`
+- set boot order to `ide2` and boot from the ISO for the initial install
+- install pfSense in the Proxmox console
+- after the first installed boot succeeds, set boot order back to `sata0`
+- remove `ide2` so the VM no longer boots from the ISO
+- complete the manual steps in [README-pfsense.md](README-pfsense.md)
+- make sure the bridges and pfSense-controlled networks are in the state you want
+
+### Phase 2: Build the remaining stack
+
+After pfSense is installed and the network layout is ready, run:
+
+```bash
+terraform -chdir=terraform apply
 ```
 
 Terraform will:
 
 - create the declared Proxmox VMs and LXCs
 - render the Ansible inventory file used by the playbooks
+
+If Terraform creates the LXCs successfully, apply the Proxmox root-only
+post-create settings on the host:
+
+```bash
+./scripts/proxmox-apply-lxc-postcreate.sh
+```
+
+This second step applies:
+
+- `nesting=1,keyctl=1`
+- bind mounts for `/mnt/appdata`
+- bind mounts for `/mnt/media_pool`
+
+If any LXCs were already running, reboot them after that script finishes.
 
 ## 13. Verify Ansible can see the hosts
 

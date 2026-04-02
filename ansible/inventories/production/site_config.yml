@@ -2,7 +2,7 @@
 homelab_site:
   site_code: uk
   site_name: United Kingdom
-  domain_suffix: uk.linux
+  domain_suffix: uk.wrightwells.com
   timezone: Europe/London
 
   addressing:
@@ -38,9 +38,9 @@ homelab_site:
       bridge: vmbr2
     vm100_pfsense:
       hostname: pfsense
-      host_id: 1
-      network: management
-      bridge: vmbr2
+      host_id: 110
+      network: bootstrap
+      bridge: vmbr0
     vm210_ai_gpu:
       hostname: ai-gpu
       host_id: 210

@@ -1,4 +1,5 @@
 ---
 proxmox_tailscale_enabled: true
 proxmox_tailscale_hostname: proxmox-host
+proxmox_tailscale_authkey: ""
 proxmox_tailscale_authkey_file: "{{ playbook_dir }}/../files/compose/lxc240-docker-external/tailscale-peer-relay/stack.env.vault"

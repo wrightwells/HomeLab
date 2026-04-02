@@ -35,23 +35,44 @@
   changed_when: false
   failed_when: false
 
-- name: Refuse to overwrite unexpected NVMe filesystem
-  ansible.builtin.assert:
-    that:
-      - proxmox_nvme_fs.stdout == "" or proxmox_nvme_fs.stdout == proxmox_nvme_fstype
-    fail_msg: "NVMe device already has filesystem {{ proxmox_nvme_fs.stdout }} but {{ proxmox_nvme_fstype }} is configured."
+- name: Check NVMe partition table type
+  ansible.builtin.command:
+    cmd: "blkid -o value -s PTTYPE {{ proxmox_nvme_device }}"
+  register: proxmox_nvme_pttype
+  changed_when: false
+  failed_when: false
 
-- name: Require explicit confirmation before formatting the NVMe
+- name: Validate NVMe bootstrap state
   ansible.builtin.assert:
     that:
-      - proxmox_storage_allow_destructive_create
-    fail_msg: "Set proxmox_storage_allow_destructive_create=true for the first run that formats disks."
-  when: proxmox_nvme_fs.stdout == ""
+      - >
+        (proxmox_nvme_fs.stdout == proxmox_nvme_fstype and proxmox_nvme_pttype.stdout == "")
+        or
+        (
+          (proxmox_storage_allow_destructive_create | bool)
+          and
+          (proxmox_nvme_fs.stdout != proxmox_nvme_fstype or proxmox_nvme_pttype.stdout != "")
+        )
+        or
+        (proxmox_nvme_fs.stdout == "" and proxmox_nvme_pttype.stdout == "" and (proxmox_storage_allow_destructive_create | bool))
+    fail_msg: >-
+      NVMe device {{ proxmox_nvme_device }} has filesystem='{{ proxmox_nvme_fs.stdout | default('') }}'
+      partition_table='{{ proxmox_nvme_pttype.stdout | default('') }}'.
+      Set proxmox_storage_allow_destructive_create=true for the first run that wipes and formats this disk.
+
+- name: Wipe old NVMe signatures before first bootstrap
+  ansible.builtin.command:
+    cmd: "wipefs -a -f {{ proxmox_nvme_device }}"
+  when: >
+    (proxmox_storage_allow_destructive_create | bool) and
+    (proxmox_nvme_fs.stdout != proxmox_nvme_fstype or proxmox_nvme_pttype.stdout != "")
 
 - name: Format the NVMe with ext4 on first bootstrap
   ansible.builtin.command:
     cmd: "mkfs.ext4 -F {{ proxmox_nvme_device }}"
-  when: proxmox_nvme_fs.stdout == ""
+  when: >
+    (proxmox_storage_allow_destructive_create | bool) and
+    (proxmox_nvme_fs.stdout != proxmox_nvme_fstype or proxmox_nvme_pttype.stdout != "")
 
 - name: Mount the NVMe root
   ansible.posix.mount:
@@ -98,8 +119,14 @@
 - name: Require explicit confirmation before creating the ZFS mirror
   ansible.builtin.assert:
     that:
-      - proxmox_storage_allow_destructive_create
+      - proxmox_storage_allow_destructive_create | bool
     fail_msg: "Set proxmox_storage_allow_destructive_create=true for the first run that creates the ZFS mirror."
+  when: proxmox_appdata_zpool.rc != 0
+
+- name: Wipe old signatures from ZFS mirror disks before first bootstrap
+  ansible.builtin.command:
+    cmd: "wipefs -a -f {{ item }}"
+  loop: "{{ proxmox_appdata_zfs_disks }}"
   when: proxmox_appdata_zpool.rc != 0
 
 - name: Create the appdata ZFS mirror on first bootstrap
@@ -135,25 +162,54 @@
   changed_when: false
   failed_when: false
 
-- name: Refuse to overwrite unexpected media disk filesystems
-  ansible.builtin.assert:
-    that:
-      - item.stdout == "" or item.stdout == proxmox_media_disk_fstype
-    fail_msg: "Media device {{ item.item.device }} already has filesystem {{ item.stdout }} but {{ proxmox_media_disk_fstype }} is configured."
-  loop: "{{ proxmox_media_fs.results }}"
+- name: Check media disk partition table types
+  ansible.builtin.command:
+    cmd: "blkid -o value -s PTTYPE {{ item.device }}"
+  loop: "{{ proxmox_media_mounts }}"
+  register: proxmox_media_pttype
+  changed_when: false
+  failed_when: false
 
-- name: Require explicit confirmation before formatting media disks
+- name: Validate media disk bootstrap state
   ansible.builtin.assert:
     that:
-      - proxmox_storage_allow_destructive_create
-    fail_msg: "Set proxmox_storage_allow_destructive_create=true for the first run that formats media disks."
-  when: (proxmox_media_fs.results | selectattr('stdout', 'equalto', '') | list | length) > 0
+      - >
+        (
+          proxmox_media_fs.results
+          | zip(proxmox_media_pttype.results)
+          | map('first')
+          | list
+          | length
+        ) == (proxmox_media_mounts | length)
+      - >
+        (
+          proxmox_media_fs.results
+          | zip(proxmox_media_pttype.results)
+          | selectattr('0.stdout', 'equalto', proxmox_media_disk_fstype)
+          | selectattr('1.stdout', 'equalto', '')
+          | list
+          | length
+        ) == (proxmox_media_mounts | length)
+        or (proxmox_storage_allow_destructive_create | bool)
+    fail_msg: >-
+      One or more media disks still contain old filesystem or partition metadata.
+      Set proxmox_storage_allow_destructive_create=true for the first run that wipes and formats them.
+
+- name: Wipe old media disk signatures before first bootstrap
+  ansible.builtin.command:
+    cmd: "wipefs -a -f {{ item.0.item.device }}"
+  loop: "{{ proxmox_media_fs.results | zip(proxmox_media_pttype.results) | list }}"
+  when: >
+    (proxmox_storage_allow_destructive_create | bool) and
+    (item.0.stdout != proxmox_media_disk_fstype or item.1.stdout != "")
 
 - name: Format media disks with xfs on first bootstrap
   ansible.builtin.command:
-    cmd: "mkfs.xfs -f {{ item.item.device }}"
-  loop: "{{ proxmox_media_fs.results }}"
-  when: item.stdout == ""
+    cmd: "mkfs.xfs -f {{ item.0.item.device }}"
+  loop: "{{ proxmox_media_fs.results | zip(proxmox_media_pttype.results) | list }}"
+  when: >
+    (proxmox_storage_allow_destructive_create | bool) and
+    (item.0.stdout != proxmox_media_disk_fstype or item.1.stdout != "")
 
 - name: Ensure media branch mountpoints exist
   ansible.builtin.file:

@@ -79,27 +79,38 @@ The current profiles are:
 - `balanced_128gb`
 - `ai_focus_128gb`
 
-The current default is:
+The Terraform variable default is:
 
 - `balanced_128gb`
 
-## Current Default Plan
+The example `terraform.tfvars` in this repo is set to:
 
-The repo is currently set up to start from:
+- `balanced_32gb`
+
+## Recommended Starting Points
+
+For a minimal VM/LXC build on current hardware, start from:
+
+```hcl
+resource_profile = "balanced_32gb"
+```
+
+For the full build on the upgraded host, use:
 
 ```hcl
 resource_profile = "balanced_128gb"
 ```
 
-That profile is now the default starting point in the repo for a host that has
-already been upgraded to 128 GB RAM.
+Keep the CPU assignments from the existing profiles as they are. The main
+decision point here is host-memory tier:
 
-If you are still on a smaller host, choose one of the lower-memory profiles
-explicitly in your `terraform.tfvars`.
+- minimal build: `balanced_32gb`
+- full build: `balanced_128gb`
+- optional intermediate step after a RAM upgrade: `balanced_64gb`
 
 ### `balanced_128gb`
 
-- `vm100_pfsense`: 2 cores, 4 GB, starts automatically
+- `vm100_pfsense`: 2 cores, 8 GB, starts automatically
 - `vm050_mint`: 4 cores, 8 GB, starts automatically
 - `vm210_ai_gpu`: 12 cores, 48 GB, starts automatically
 - `lxc066_docker_arr`: 2 cores, 4 GB, starts automatically
@@ -109,7 +120,7 @@ explicitly in your `terraform.tfvars`.
 - `lxc240_docker_external`: 2 cores, 4 GB, starts automatically
 - `lxc250_infra`: 2 cores, 4 GB, starts automatically
 
-Why this is the default:
+Why this remains the Terraform variable default:
 
 - it assumes the long-term target host memory
 - it gives the AI VM enough headroom to be useful without switching profiles immediately
@@ -121,7 +132,7 @@ Use these when the host has not yet reached the 128 GB target.
 
 ### `balanced_32gb`
 
-- `vm100_pfsense`: 2 cores, 4 GB, starts automatically
+- `vm100_pfsense`: 2 cores, 8 GB, starts automatically
 - `vm050_mint`: 2 cores, 4 GB, stays off by default
 - `vm210_ai_gpu`: 4 cores, 12 GB, stays off by default
 - `lxc066_docker_arr`: 2 cores, 4 GB, starts automatically
@@ -133,6 +144,7 @@ Use these when the host has not yet reached the 128 GB target.
 
 Important:
 
+- this is the recommended profile for the minimal VM/LXC build
 - this is still a fairly full 32 GB host
 - the AI VM is intentionally not set to auto-start in this profile
 
@@ -151,7 +163,7 @@ available memory for that stage of the host.
 
 ### `ai_focus_32gb`
 
-- `vm100_pfsense`: 2 cores, 4 GB, starts automatically
+- `vm100_pfsense`: 2 cores, 8 GB, starts automatically
 - `vm050_mint`: 2 cores, 4 GB, stays off by default
 - `vm210_ai_gpu`: 8 cores, 24 GB, starts automatically
 - all LXCs: configured but not started and not set to auto-start
@@ -160,7 +172,7 @@ This is the “AI mode” for the current 32 GB host.
 
 ### `ai_focus_64gb`
 
-- `vm100_pfsense`: 2 cores, 4 GB, starts automatically
+- `vm100_pfsense`: 2 cores, 8 GB, starts automatically
 - `vm050_mint`: 2 cores, 4 GB, stays off by default
 - `vm210_ai_gpu`: 12 cores, 52 GB, starts automatically
 - all LXCs: configured but not started and not set to auto-start
@@ -189,7 +201,7 @@ upgraded.
 - `lxc240_docker_external`: 2 cores, 4 GB
 - `lxc250_infra`: 2 cores, 2 GB
 
-This is the recommended next step once the host reaches 64 GB.
+This is the recommended intermediate step once the host reaches 64 GB.
 
 ### `balanced_128gb`
 
@@ -207,7 +219,7 @@ This is the comfortable “everything can breathe” profile.
 
 ## Recommended Use Over Time
 
-### Right now on 32 GB
+### Minimal build on 32 GB
 
 Use:
 
@@ -217,7 +229,7 @@ resource_profile = "balanced_32gb"
 
 Use `ai_focus_32gb` only when you want the host acting primarily as the AI box.
 
-### After upgrading to 64 GB
+### Intermediate build on 64 GB
 
 Use:
 
@@ -233,7 +245,7 @@ resource_profile = "ai_focus_64gb"
 
 if you want to temporarily prioritize the AI VM.
 
-### After upgrading to 128 GB
+### Full build on 128 GB
 
 Use:
 
@@ -258,7 +270,7 @@ Change only this in:
 Example:
 
 ```hcl
-resource_profile = "balanced_64gb"
+resource_profile = "balanced_32gb"
 ```
 
 Then run your usual Terraform plan/apply flow.

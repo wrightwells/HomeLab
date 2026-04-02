@@ -21,7 +21,7 @@ locals {
 
   resource_profiles = {
     balanced_32gb = {
-      vm100_pfsense          = { cpu = 2, memory = 4096, started = true, on_boot = true }
+      vm100_pfsense          = { cpu = 2, memory = 8192, started = true, on_boot = true }
       vm050_mint             = { cpu = 2, memory = 4096, started = false, on_boot = false }
       vm210_ai_gpu           = { cpu = 4, memory = 12288, started = false, on_boot = false }
       lxc066_docker_arr      = { cpu = 2, memory = 4096, swap = 512, started = true, start_on_boot = true }
@@ -32,7 +32,7 @@ locals {
       lxc250_infra           = { cpu = 1, memory = 2048, swap = 512, started = true, start_on_boot = true }
     }
     ai_focus_32gb = {
-      vm100_pfsense          = { cpu = 2, memory = 4096, started = true, on_boot = true }
+      vm100_pfsense          = { cpu = 2, memory = 8192, started = true, on_boot = true }
       vm050_mint             = { cpu = 2, memory = 4096, started = false, on_boot = false }
       vm210_ai_gpu           = { cpu = 8, memory = 24576, started = true, on_boot = true }
       lxc066_docker_arr      = { cpu = 2, memory = 4096, swap = 512, started = false, start_on_boot = false }
@@ -65,7 +65,7 @@ locals {
       lxc250_infra           = { cpu = 2, memory = 2048, swap = 512, started = false, start_on_boot = false }
     }
     balanced_128gb = {
-      vm100_pfsense          = { cpu = 2, memory = 4096, started = true, on_boot = true }
+      vm100_pfsense          = { cpu = 2, memory = 8192, started = true, on_boot = true }
       vm050_mint             = { cpu = 4, memory = 8192, started = true, on_boot = true }
       vm210_ai_gpu           = { cpu = 12, memory = 49152, started = true, on_boot = true }
       lxc066_docker_arr      = { cpu = 2, memory = 4096, swap = 512, started = true, start_on_boot = true }
@@ -76,7 +76,7 @@ locals {
       lxc250_infra           = { cpu = 2, memory = 4096, swap = 512, started = true, start_on_boot = true }
     }
     ai_focus_128gb = {
-      vm100_pfsense          = { cpu = 2, memory = 4096, started = true, on_boot = true }
+      vm100_pfsense          = { cpu = 2, memory = 8192, started = true, on_boot = true }
       vm050_mint             = { cpu = 2, memory = 4096, started = false, on_boot = false }
       vm210_ai_gpu           = { cpu = 16, memory = 114688, started = true, on_boot = true }
       lxc066_docker_arr      = { cpu = 2, memory = 4096, swap = 512, started = false, start_on_boot = false }
@@ -122,7 +122,7 @@ locals {
       name    = local.homelab_site.guests.vm050_mint.hostname
       type    = "vm"
       network = local.homelab_site.guests.vm050_mint.network
-      vmid    = 50
+      vmid    = 150
       host_id = local.homelab_site.guests.vm050_mint.host_id
       groups  = ["mint_desktop"]
       user    = var.ansible_user
@@ -218,6 +218,7 @@ module "vm100_pfsense" {
   source       = "./modules/vm100-pfsense"
   proxmox_node = var.proxmox_node
   vm_storage   = var.vm_storage
+  bootstrap_bridge = local.homelab_site.bridges.bootstrap
   wan_bridge   = var.pfsense_wan_bridge
   lan_bridge   = var.pfsense_lan_bridge
   dmz_bridge   = var.pfsense_dmz_bridge
@@ -231,7 +232,7 @@ module "vm050_mint" {
   count              = local.guest_enabled.vm050_mint ? 1 : 0
   source             = "./modules/vm050-mint"
   name               = local.inventory_hosts.vm050_mint.name
-  vm_id              = 50
+  vm_id              = 150
   proxmox_node       = var.proxmox_node
   clone_vmid         = var.vm050_mint_template_vmid
   vm_storage         = var.vm_storage

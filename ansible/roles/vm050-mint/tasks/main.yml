@@ -39,6 +39,45 @@
     state: present
     update_cache: true
 
+- name: Detect active Linux Mint ethernet device
+  ansible.builtin.shell: "nmcli -t -f DEVICE,TYPE,STATE device status | awk -F: '$2 == \"ethernet\" && $3 == \"connected\" {print $1; exit}'"
+  args:
+    executable: /bin/bash
+  register: vm050_mint_active_ethernet_device
+  changed_when: false
+  when: vm050_mint_network_dhcp_enabled
+
+- name: Read NetworkManager connection bound to active ethernet device
+  ansible.builtin.command:
+    cmd: "nmcli -g GENERAL.CONNECTION device show {{ vm050_mint_active_ethernet_device.stdout }}"
+  register: vm050_mint_active_connection
+  changed_when: false
+  when:
+    - vm050_mint_network_dhcp_enabled
+    - vm050_mint_active_ethernet_device.stdout | trim != ""
+
+- name: Switch Linux Mint workstation to DHCP on the active wired connection
+  ansible.builtin.command:
+    cmd: >-
+      nmcli connection modify {{ vm050_mint_active_connection.stdout | trim | quote }}
+      ipv4.method auto
+      ipv4.addresses ""
+      ipv4.gateway ""
+      ipv4.dns ""
+      ipv4.routes ""
+      ipv6.method auto
+      connection.autoconnect yes
+  when:
+    - vm050_mint_network_dhcp_enabled
+    - vm050_mint_active_connection.stdout | trim != ""
+
+- name: Bring the DHCP-configured Linux Mint connection back up
+  ansible.builtin.command:
+    cmd: "nmcli connection up {{ vm050_mint_active_connection.stdout | trim | quote }}"
+  when:
+    - vm050_mint_network_dhcp_enabled
+    - vm050_mint_active_connection.stdout | trim != ""
+
 - name: Ensure workstation mount points exist
   ansible.builtin.file:
     path: "{{ item }}"

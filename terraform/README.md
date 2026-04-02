@@ -8,8 +8,8 @@ Basic flow:
 cp terraform.tfvars.example terraform.tfvars
 terraform init
 terraform validate
-terraform plan
-terraform apply
+terraform -chdir=terraform plan
+terraform -chdir=terraform apply
 ```
 
 Notes:
@@ -21,3 +21,32 @@ Notes:
 - LXCs assume a Debian 12 standard template exists in Proxmox
 - LXCs bind-mount host storage into /mnt/appdata and /mnt/media_pool where required
 - Terraform renders the Ansible inventory automatically
+
+To obtain `vm210_gpu_pci_address`, run this on the Proxmox host after the GPU
+is installed:
+
+```bash
+lspci -nn | grep -iE 'vga|3d|audio'
+```
+
+Use the NVIDIA VGA or 3D controller line, not the GPU audio function. If the
+GPU appears as `01:00.0`, set:
+
+```hcl
+vm210_gpu_pci_address = "0000:01:00"
+```
+
+The full walkthrough lives in [README-bootstrap.md](../README-bootstrap.md).
+
+To obtain `ssh_public_key`, run this on the machine where you will run
+Terraform:
+
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
+
+Then copy the full line into `terraform.tfvars`:
+
+```hcl
+ssh_public_key = "ssh-ed25519 AAAA..."
+```

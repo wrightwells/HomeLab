@@ -8,79 +8,79 @@ pfsense_manual_services:
   - OpenVPN client configuration for PIA_VPN
 
 pfsense_vlans:
-  - interface: vtnet1
+  - interface: vtnet2
     vlan_id: 99
     descr: Management
-  - interface: vtnet1
+  - interface: vtnet2
     vlan_id: 10
     descr: Workstations
-  - interface: vtnet1
+  - interface: vtnet2
     vlan_id: 20
     descr: Servers
-  - interface: vtnet1
+  - interface: vtnet2
     vlan_id: 30
     descr: Media
-  - interface: vtnet1
+  - interface: vtnet2
     vlan_id: 40
     descr: IOT
-  - interface: vtnet1
+  - interface: vtnet2
     vlan_id: 50
     descr: CCTV
-  - interface: vtnet1
+  - interface: vtnet2
     vlan_id: 60
     descr: Guest
 
 pfsense_interfaces:
   - descr: LAN
-    interface: vtnet1
+    interface: vtnet2
     enable: true
     ipv4_type: static
     ipv4_address: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.1.1"
     ipv4_prefixlen: 24
   - descr: vETH
-    interface: vtnet2
+    interface: vtnet3
     enable: true
     ipv4_type: static
     ipv4_address: "{{ dmz_gateway_ip }}"
     ipv4_prefixlen: 24
   - descr: Management
-    interface: vtnet1.99
+    interface: vtnet2.99
     enable: true
     ipv4_type: static
     ipv4_address: "{{ management_gateway_ip }}"
     ipv4_prefixlen: 24
   - descr: Workstations
-    interface: vtnet1.10
+    interface: vtnet2.10
     enable: true
     ipv4_type: static
     ipv4_address: "{{ workstation_gateway_ip }}"
     ipv4_prefixlen: 24
   - descr: Servers
-    interface: vtnet1.20
+    interface: vtnet2.20
     enable: true
     ipv4_type: static
     ipv4_address: "{{ server_gateway_ip }}"
     ipv4_prefixlen: 24
   - descr: Media
-    interface: vtnet1.30
+    interface: vtnet2.30
     enable: true
     ipv4_type: static
     ipv4_address: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.media_vlan }}.{{ homelab_site.addressing.gateway_host }}"
     ipv4_prefixlen: 24
   - descr: IOT
-    interface: vtnet1.40
+    interface: vtnet2.40
     enable: true
     ipv4_type: static
     ipv4_address: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.iot_vlan }}.{{ homelab_site.addressing.gateway_host }}"
     ipv4_prefixlen: 24
   - descr: CCTV
-    interface: vtnet1.50
+    interface: vtnet2.50
     enable: true
     ipv4_type: static
     ipv4_address: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.cctv_vlan }}.{{ homelab_site.addressing.gateway_host }}"
     ipv4_prefixlen: 24
   - descr: Guest
-    interface: vtnet1.60
+    interface: vtnet2.60
     enable: true
     ipv4_type: static
     ipv4_address: "{{ homelab_site.addressing.first_octet }}.{{ homelab_site.addressing.second_octet }}.{{ homelab_site.addressing.guest_vlan }}.{{ homelab_site.addressing.gateway_host }}"

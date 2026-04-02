@@ -54,19 +54,5 @@ resource "proxmox_virtual_environment_container" "this" {
     vlan_id = var.vlan_id
   }
 
-  features {
-    nesting = true
-    keyctl  = true
-  }
-
-  mount_point {
-    volume = "/mnt/appdata"
-    path   = "/mnt/appdata"
-  }
-  mount_point {
-    volume = "/mnt/media_pool"
-    path   = "/mnt/media_pool"
-  }
-
   description = "Starter LXC for docker-media"
 }

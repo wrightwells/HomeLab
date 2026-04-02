@@ -25,6 +25,7 @@ vm050_mint_tools:
 vm050_mint_tailscale_enabled: true
 vm050_mint_tailscale_hostname: "{{ vm050_mint_hostname_short }}-{{ homelab_site.site_code }}"
 vm050_mint_tailscale_authkey_file: "{{ playbook_dir }}/../files/compose/lxc240-docker-external/tailscale-peer-relay/stack.env.vault"
+vm050_mint_network_dhcp_enabled: true
 vm050_mint_nvme_device: "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1"
 vm050_mint_media_device: "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi2"
 vm050_mint_nvme_label: MINT_NVME

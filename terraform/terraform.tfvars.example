@@ -1,10 +1,10 @@
 pm_api_url          = "https://pve.example.com:8006/api2/json"
-pm_api_token_id     = "terraform@pve!provider"
-pm_api_token_secret = "replace-me"
+pm_api_token_id     = "root@pam!provider"
+pm_api_token_secret = "PASTE_NEW_SECRET_HERE"
 pm_tls_insecure     = true
 
 proxmox_node        = "littledown"
-resource_profile    = "balanced_128gb"
+resource_profile    = "balanced_32gb"
 build_inventory_file = "../ansible/inventories/production/build_inventory.yml"
 site_config_file    = "../ansible/inventories/production/site_config.yml"
 vm_template_vmid    = 9000
@@ -23,7 +23,7 @@ pfsense_wan_bridge  = "vmbr1"
 pfsense_lan_bridge  = "vmbr2"
 # vmbr3 is the DMZ/untrusted bridge for isolated or public-facing workloads.
 pfsense_dmz_bridge  = "vmbr3"
-debian_lxc_template = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
+debian_lxc_template = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
 
 ansible_user   = "ansible"
 ssh_public_key = "ssh-ed25519 AAAA_REPLACE_ME"
