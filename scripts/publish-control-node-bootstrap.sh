@@ -9,6 +9,7 @@ TARGET_BOOTSTRAP_SCRIPT="${TARGET_BIN}/bootstrap-control-node.sh"
 TARGET_APT_FIX_SCRIPT="${TARGET_BIN}/fix-mint-apt-repos.sh"
 TARGET_DPKG_FIX_SCRIPT="${TARGET_BIN}/fix-mint-dpkg.sh"
 TARGET_UPDATE_SCRIPT="${TARGET_BIN}/update-control-node.sh"
+TARGET_USER_BOOTSTRAP_SCRIPT="${TARGET_BIN}/bootstrap-user-control-node.sh"
 TARGET_NOTE="${TARGET_ROOT}/README-bootstrap.txt"
 
 mkdir -p "$TARGET_BIN"
@@ -16,6 +17,7 @@ install -m 0755 "${ROOT_DIR}/scripts/bootstrap-control-node.sh" "$TARGET_BOOTSTR
 install -m 0755 "${ROOT_DIR}/scripts/fix-mint-apt-repos.sh" "$TARGET_APT_FIX_SCRIPT"
 install -m 0755 "${ROOT_DIR}/scripts/fix-mint-dpkg.sh" "$TARGET_DPKG_FIX_SCRIPT"
 install -m 0755 "${ROOT_DIR}/scripts/update-control-node.sh" "$TARGET_UPDATE_SCRIPT"
+install -m 0755 "${ROOT_DIR}/scripts/bootstrap-user-control-node.sh" "$TARGET_USER_BOOTSTRAP_SCRIPT"
 
 cat >"$TARGET_NOTE" <<'EOF'
 Shared HomeLab control-node bootstrap
@@ -36,6 +38,11 @@ To pull the latest HomeLab repo updates into shared appdata and run Ansible:
 
   /mnt/appdata/homelab-control/bin/update-control-node.sh
 
+To build the control node the same way Mint and the future infra server will
+run it, cloning the repo into ~/HomeLab and then running Ansible:
+
+  /mnt/appdata/homelab-control/bin/bootstrap-user-control-node.sh
+
 The bootstrap script installs git and ansible, clones or updates the HomeLab
 repo under /mnt/appdata/homelab-control/HomeLab, and installs the Ansible
 collections.
@@ -48,3 +55,4 @@ echo "Published control-node bootstrap to ${TARGET_BOOTSTRAP_SCRIPT}"
 echo "Published Linux Mint APT repair helper to ${TARGET_APT_FIX_SCRIPT}"
 echo "Published Linux Mint dpkg repair helper to ${TARGET_DPKG_FIX_SCRIPT}"
 echo "Published control-node update helper to ${TARGET_UPDATE_SCRIPT}"
+echo "Published user-home control-node bootstrap to ${TARGET_USER_BOOTSTRAP_SCRIPT}"
