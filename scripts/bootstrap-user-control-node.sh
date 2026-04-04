@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-REPO_URL="${REPO_URL:-git@github.com:wrightwells/HomeLab.git}"
+REPO_URL="${REPO_URL:-https://github.com/wrightwells/HomeLab.git}"
 REPO_DEST="${REPO_DEST:-$HOME/HomeLab}"
 BRANCH="${BRANCH:-main}"
 SSH_KEY_FILE="${SSH_KEY_FILE:-$HOME/.ssh/id_ed25519}"
@@ -66,6 +66,7 @@ if [ ! -d "$REPO_DEST/.git" ]; then
   git clone "$REPO_URL" "$REPO_DEST"
 else
   echo "Updating HomeLab in ${REPO_DEST}"
+  git -C "$REPO_DEST" remote set-url origin "$REPO_URL"
   git -C "$REPO_DEST" fetch origin
   git -C "$REPO_DEST" checkout "$BRANCH"
   git -C "$REPO_DEST" pull --ff-only origin "$BRANCH"
