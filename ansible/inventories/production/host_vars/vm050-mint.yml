@@ -1,0 +1,4 @@
+---
+# When the control node is the Mint VM itself, run this host locally instead of
+# trying to SSH back into its Terraform-rendered address.
+ansible_connection: local
