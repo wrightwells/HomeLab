@@ -7,6 +7,8 @@ REPO_DEST="${REPO_DEST:-$HOME/HomeLab}"
 BRANCH="${BRANCH:-main}"
 SSH_KEY_FILE="${SSH_KEY_FILE:-$HOME/.ssh/id_ed25519}"
 SSH_KEY_COMMENT="${SSH_KEY_COMMENT:-$(id -un)@$(hostname -s)}"
+SHARED_KEY_FILE="${SHARED_KEY_FILE:-/mnt/appdata/homelab-control/bin/github-deploy-key}"
+SHARED_PUB_KEY_FILE="${SHARED_PUB_KEY_FILE:-${SHARED_KEY_FILE}.pub}"
 
 if command -v sudo >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then
   SUDO="sudo"
@@ -17,6 +19,14 @@ fi
 ensure_ssh_key() {
   mkdir -p "$(dirname "$SSH_KEY_FILE")"
   chmod 700 "$(dirname "$SSH_KEY_FILE")"
+
+  if [ -f "$SHARED_KEY_FILE" ] && [ ! -f "$SSH_KEY_FILE" ]; then
+    echo "Installing shared GitHub deploy key into ${SSH_KEY_FILE}"
+    cp "$SHARED_KEY_FILE" "$SSH_KEY_FILE"
+    if [ -f "$SHARED_PUB_KEY_FILE" ]; then
+      cp "$SHARED_PUB_KEY_FILE" "${SSH_KEY_FILE}.pub"
+    fi
+  fi
 
   if [ ! -f "$SSH_KEY_FILE" ]; then
     echo "Creating SSH key at ${SSH_KEY_FILE}"
