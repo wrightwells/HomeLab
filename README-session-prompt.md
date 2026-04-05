@@ -230,7 +230,7 @@ Shared host directories created during storage bootstrap include:
 | Host | IP | Purpose |
 | --- | --- | --- |
 | `proxmox-host` | `10.10.1.10` | Proxmox host on the bootstrap/uplink network; seed Ansible target before Terraform rewrites inventory |
-| `vm050-mint` | `10.10.10.50` | Linux Mint Cinnamon desktop VM, Tailscale client, repo tools, UK/France themed wallpaper |
+| `vm050-mint` (VMID `150`) | `10.10.10.50` | Linux Mint Cinnamon desktop VM, Tailscale client, repo tools, UK/France themed wallpaper |
 | `vm210-ai-gpu` | `10.10.20.210` | AI services, Frigate, Home Assistant, automation, coding tools |
 | `lxc066-docker-arr` | `10.10.66.66` | ARR stack, downloads, request tools |
 | `lxc200-docker-services` | `10.10.20.200` | data and sync services |
@@ -246,7 +246,7 @@ Shared host directories created during storage bootstrap include:
   - Frigate
   - Home Assistant
   - local automation and coding support
-- `vm050-mint`:
+- `vm050-mint` (VMID `150`):
   - Linux Mint Cinnamon desktop workstation
   - HomeLab repo checkout and local tooling
   - Tailscale-connected admin workstation

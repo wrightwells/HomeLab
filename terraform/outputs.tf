@@ -1,9 +1,9 @@
 output "ansible_inventory_file" {
-  value = local_file.ansible_inventory.filename
+  value = try(local_file.ansible_inventory[0].filename, null)
 }
 
 output "vm100_pfsense_id" {
-  value = module.vm100_pfsense.vm_id
+  value = try(module.vm100_pfsense[0].vm_id, null)
 }
 
 output "vm050_mint_id" {

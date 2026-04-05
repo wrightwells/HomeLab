@@ -13,6 +13,10 @@ resource "proxmox_virtual_environment_container" "this" {
   start_on_boot = var.start_on_boot
   unprivileged  = true
 
+  features {
+    nesting = true
+  }
+
   initialization {
     hostname = var.hostname
 

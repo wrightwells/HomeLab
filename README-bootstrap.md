@@ -502,26 +502,31 @@ pm_api_token_secret = "PASTE_NEW_SECRET_HERE"
 pm_tls_insecure     = true
 ```
 
-Then run:
+This repo now uses staged Terraform environments:
 
-```bash
-terraform -chdir=terraform plan
-terraform -chdir=terraform apply
-```
+- `terraform/environments/pfsense` provisions both the pfSense VM and the Linux Mint desktop VM on VMID `150`. This ensures you have a trusted VM to access the pfSense UI immediately after install.
+- `terraform/environments/production` owns the remaining workloads and the generated Ansible inventory.
+- `terraform/environments/pfsense` uses its own stage-specific build inventory so phase 1 creates only pfSense plus Mint, not the rest of the lab.
 
-If Terraform creates the LXCs but cannot apply Proxmox root-only LXC options
-such as bind mounts or `keyctl`, run this on the Proxmox host after the apply:
+If you already have an older single-state checkout under `terraform/terraform.tfstate`,
+migrate that state deliberately before adopting the staged roots.
 
-```bash
-./scripts/proxmox-apply-lxc-postcreate.sh
-```
+Do not run the staged Terraform applies yet. First finish the remaining host
+prep in sections 4 through 10, then use the ordered Terraform flow in sections
+11 and 12:
+
+- phase 1: build pfSense and Mint
+- stop for the manual pfSense install and first-boot checks
+- phase 2: build the remaining VMs and LXCs
+- after the production apply, run `./scripts/proxmox-apply-lxc-postcreate.sh`
+  on the Proxmox host if the LXC root-only settings still need to be applied
 
 ## 4. Prepare Proxmox templates and storage
 
 Before applying Terraform, make sure Proxmox already has:
 
 - the Debian LXC template referenced by `debian_lxc_template`
-- a prepared Linux Mint Cinnamon VM template for `vm050-mint`
+- a prepared Linux Mint Cinnamon VM template for the Linux Mint desktop VM on VMID `150`
 - a prepared VM template for the AI VM clone source
 - the required storage targets such as `local-lvm`
 
@@ -530,82 +535,6 @@ Recommended storage names for this repo:
 - `vm_storage = "local-lvm"`
 - `lxc_storage = "local-lvm"`
 - `cloudinit_storage = "local-lvm"`
-
-### pfSense install media
-
-`vm100-pfsense` is not a clone template in this repo. Terraform creates the
-shell VM with the right VMID, bridges, CPU, memory, and root disk, then you
-attach the pfSense ISO and complete the install manually in the Proxmox
-console.
-
-Download source:
-
-- pfSense CE ISO:
-  <https://shop.netgate.com/a/downloads/-/288d1bf44c98f1a8/10ea4be97213dd88>
-
-This ISO is not fetched automatically by the repo. Add it manually to the
-Proxmox ISO storage first. In the working setup here, the ISO filename is:
-
-- `netgate-installer-v1.1.1-RELEASE-amd64.iso`
-
-After Terraform creates VM `100`, use the ISO only for the initial install
-boot:
-
-```bash
-# 1. Attach the installer ISO as the virtual CD-ROM.
-qm set 100 --ide2 local:iso/netgate-installer-v1.1.1-RELEASE-amd64.iso,media=cdrom
-
-# 2. Tell Proxmox to boot from the CD-ROM for the first startup.
-qm set 100 --boot order=ide2
-
-# 3. Start the VM and complete the install from the Proxmox console.
-qm start 100
-```
-
-Then finish the pfSense install in the Proxmox console for VM `100`.
-
-For this pfSense VM, use `UFS` during the pfSense installer unless you have a
-specific reason to choose guest-side `ZFS`. The intended storage layering in
-this repo is a normal pfSense VM disk inside the guest, with Proxmox handling
-the host-side storage concerns underneath it.
-
-If the pfSense installer reports `missing or size mismatch`, the simplest fix
-is usually to recreate the pfSense VM disk cleanly on the Proxmox host and
-retry the install. Check the current disk name first:
-
-```bash
-qm config 100
-qm stop 100
-qm unlink 100 --idlist sata0
-qm set 100 --sata0 local-lvm:32
-qm set 100 --boot order=ide2
-qm start 100
-```
-
-Then retry the install, choose the fresh target disk, use the whole disk, and
-select `UFS`.
-
-After the install completes, pfSense has written itself to the VM disk, which
-in the current build is `sata0`, and the first installed boot succeeds, detach
-the ISO and restore normal boot order:
-
-```bash
-# Confirm the installed disk name if needed.
-qm config 100
-
-# 4. Switch normal boot back to the VM disk.
-qm set 100 --boot order=sata0
-
-# 5. Remove the virtual CD-ROM after install.
-qm set 100 --delete ide2
-```
-
-At that point continue with:
-
-- interface assignment
-- WAN, LAN, and DMZ checks
-- the manual pfSense GUI prerequisites in [README-pfsense.md](README-pfsense.md)
-- the Ansible pfSense playbook later in this guide
 
 ### LXC template
 
@@ -683,7 +612,7 @@ vm_template_vmid = 9000
 
 ### Linux Mint Cinnamon template
 
-For `vm050-mint`, prepare a separate Linux Mint Cinnamon desktop template.
+For the Linux Mint desktop VM on VMID `150`, prepare a separate Linux Mint Cinnamon desktop template.
 
 Download source:
 
@@ -771,6 +700,116 @@ Example Terraform variable:
 ```hcl
 vm050_mint_template_vmid = 9050
 ```
+
+This template is used in the first staged Terraform apply, so finish the Mint
+template before you move on to the pfSense and Mint build steps in sections 11
+and 12.
+
+### pfSense install media
+
+`vm100-pfsense` is not a clone template in this repo. Terraform creates the
+shell VM with the right VMID, bridges, CPU, memory, and root disk, then you
+attach the pfSense ISO and complete the install manually in the Proxmox
+console.
+
+Download source:
+
+- pfSense CE ISO:
+  <https://shop.netgate.com/a/downloads/-/288d1bf44c98f1a8/10ea4be97213dd88>
+
+This ISO is not fetched automatically by the repo. Add it manually to the
+Proxmox ISO storage first. In the working setup here, the ISO filename is:
+
+- `netgate-installer-v1.1.1-RELEASE-amd64.iso`
+
+After Terraform creates VM `100` (pfSense) and VM `150` (Mint), use the ISO
+only for the initial pfSense install. The Mint VM can be used to access the
+pfSense UI for setup and verification.
+
+```bash
+# 1. Attach the installer ISO as the virtual CD-ROM.
+qm set 100 --ide2 local:iso/netgate-installer-v1.1.1-RELEASE-amd64.iso,media=cdrom
+
+# 2. Tell Proxmox to boot from the CD-ROM for the first startup.
+qm set 100 --boot order=ide2
+
+# 3. Start the VM and complete the install from the Proxmox console.
+qm start 100
+```
+
+Then finish the pfSense install in the Proxmox console for VM `100`.
+
+For this pfSense VM, use `UFS` during the pfSense installer unless you have a
+specific reason to choose guest-side `ZFS`. The intended storage layering in
+this repo is a normal pfSense VM disk inside the guest, with Proxmox handling
+the host-side storage concerns underneath it.
+
+If the pfSense installer reports `missing or size mismatch`, the simplest fix
+is usually to recreate the pfSense VM disk cleanly on the Proxmox host and
+retry the install. Check the current disk name first:
+
+```bash
+qm config 100
+qm stop 100
+qm unlink 100 --idlist scsi0
+qm set 100 --scsi0 local-lvm:32
+qm set 100 --boot order=ide2
+qm start 100
+```
+
+Then retry the install, choose the fresh target disk, use the whole disk, and
+select `UFS`.
+
+After the install completes, pfSense has written itself to the VM disk, which
+in the current build is `scsi0`, and the first installed boot succeeds, detach
+the ISO and restore normal boot order:
+
+```bash
+# Confirm the installed disk name if needed.
+qm config 100
+
+# 4. Switch normal boot back to the VM disk.
+qm set 100 --boot order=scsi0
+
+# 5. Remove the virtual CD-ROM after install.
+qm set 100 --delete ide2
+```
+
+At that point continue with:
+
+- interface assignment
+- WAN, LAN, and DMZ checks
+- the manual pfSense GUI prerequisites in [README-pfsense.md](README-pfsense.md)
+- the Ansible pfSense playbook later in this guide
+
+That pfSense walkthrough is intentionally here as reference for the manual
+install step in phase 1. It is not the next step in the checklist yet.
+
+From here, keep following the bootstrap guide in order:
+
+- continue with sections 5 through 9 to finish the remaining local Ansible,
+  storage, host, and Terraform-variable preparation
+- then run section 10 and section 11 for the staged Terraform applies
+- in section 11, phase 1 builds pfSense and Mint, then you return to the
+  manual pfSense install steps above
+- after pfSense is installed and validated, continue with section 11 phase 2
+  to build the remaining Terraform-managed VMs and LXCs
+- once the production guests exist, use section 12 if you want GPU passthrough
+  ready for VM `210`
+- only after that do you continue to the Ansible verification and deployment
+  steps in sections 13 onward
+
+Choose your path before continuing:
+
+- guided path: run `./scripts/bootstrap-from-proxmox.sh` after you finish
+  sections 5 through 9; the script then performs the staged Terraform flow and
+  pause points for you
+- manual path: keep following the README sections directly, starting with
+  section 5 now and then sections 10 through 15 later
+
+Do not wait until after the manual pfSense install to decide whether to use the
+guided script. The script is intended to be started before the staged Terraform
+applies, not after those manual checkpoints are already complete.
 
 If you want the host storage prepared by Ansible, run the dedicated Proxmox host
 storage playbook before Terraform:
@@ -948,12 +987,119 @@ Then copy the full public key line into `terraform/terraform.tfvars`:
 ssh_public_key = "ssh-ed25519 AAAA..."
 ```
 
-## 10. Prepare GPU passthrough on Proxmox if required
+## Current guest IP layout
 
-Do this after the Proxmox host exists and the RTX 3060 is physically installed,
-but before you expect the AI VM to use the GPU.
+These are UK defaults from `ansible/inventories/production/site_config.yml`:
 
-This is a Proxmox host preparation step, not a post-Terraform application step.
+- Proxmox host uplink IP: `10.10.1.10/24` on `nic0` via `vmbr0`
+- `vm100_pfsense`: `10.10.1.110` on `vmbr0`, with additional pfSense-side interfaces on `vmbr1`, `vmbr2`, and `vmbr3`
+- Linux Mint desktop VM (`vm050_mint`, VMID `150`): `10.10.10.50` on `vmbr2` with VLAN tag `10`
+- `vm210_ai_gpu`: `10.10.20.210` on `vmbr2` with VLAN tag `20`
+- `lxc066_docker_arr`: `10.10.66.66` on `vmbr3`
+- `lxc200_docker_services`: `10.10.20.200` on `vmbr2` with VLAN tag `20`
+- `lxc220_docker_apps`: `10.10.20.220` on `vmbr2` with VLAN tag `20`
+- `lxc230_docker_media`: `10.10.20.230` on `vmbr2` with VLAN tag `20`
+- `lxc240_docker_external`: `10.10.66.240` on `vmbr3`
+- `lxc250_infra`: `10.10.20.250` on `vmbr2` with VLAN tag `20`
+
+## Network intent
+
+- `vmbr0` is the temporary bootstrap/install bridge on the Proxmox uplink.
+- `vmbr1` is the pfSense WAN bridge.
+- `vmbr2` is the trusted internal trunk.
+- The current workstation workload uses VLAN `10` on the `10.10.10.0/24` segment.
+- The current server workloads use VLAN `20` on the `10.10.20.0/24` segment.
+- VLAN `99` remains the internal management subnet on the trusted LAN side behind pfSense.
+- `vmbr3` is the DMZ-style network for isolated or public-facing workloads on the `10.10.66.0/24` segment.
+- `lxc066_docker_arr` stays on `vmbr3` and should not have broad access back into the trusted internal network.
+- `lxc240_docker_external` stays on `vmbr3` because it serves public-facing workloads.
+- `lxc250_infra` stays on `vmbr2` so the reverse proxy can reach trusted internal services directly.
+- pfSense needs separate WAN, LAN/trunk, and DMZ interfaces for this design.
+- External exposure and NAT are expected to be handled in pfSense, not Terraform.
+
+## 10. Initialize and validate Terraform
+
+Use a two-pass Terraform flow for the full stack.
+
+Phase 1 creates pfSense plus the Linux Mint access VM so you can finish the
+router/firewall install and bring the intended networks online before the rest
+of the guests depend on them.
+
+Phase 2 creates the remaining VMs and LXCs after pfSense is installed and the
+bridge/network design is behaving the way you want.
+
+If you are following the manual path, start with:
+
+```bash
+./scripts/terraform-init.sh pfsense
+terraform -chdir=terraform/environments/pfsense validate
+./scripts/terraform-plan.sh pfsense
+./scripts/terraform-apply.sh pfsense
+```
+
+Review the plan before applying. The pfSense-stage apply creates both the
+pfSense VM and the Linux Mint desktop VM used to access the pfSense UI from
+inside the trusted network.
+
+## 11. Apply Terraform In Two Passes
+
+This section describes the manual path. If you already ran
+`./scripts/bootstrap-from-proxmox.sh`, the script performs these same staged
+Terraform applies and pause points for you.
+
+### Phase 1: Build pfSense and Mint first
+
+Run:
+
+```bash
+./scripts/terraform-apply.sh pfsense
+```
+
+Then stop and do the manual pfSense work:
+
+- attach `local:iso/netgate-installer-v1.1.1-RELEASE-amd64.iso` to VM `100`
+- set boot order to `ide2` and boot from the ISO for the initial install
+- install pfSense in the Proxmox console
+- after the first installed boot succeeds, set boot order back to `scsi0`
+- remove `ide2` so the VM no longer boots from the ISO
+- complete the manual steps in [README-pfsense.md](README-pfsense.md)
+- make sure the bridges and pfSense-controlled networks are in the state you want
+
+### Phase 2: Build the remaining stack
+
+After pfSense is installed and the network layout is ready, run:
+
+```bash
+./scripts/terraform-init.sh production
+terraform -chdir=terraform/environments/production validate
+./scripts/terraform-plan.sh production
+./scripts/terraform-apply.sh production
+```
+
+Terraform will:
+
+- create the declared Proxmox VMs and LXCs
+- render the Ansible inventory file used by the playbooks
+
+If Terraform creates the LXCs successfully, apply the Proxmox root-only
+post-create settings on the host:
+
+```bash
+./scripts/proxmox-apply-lxc-postcreate.sh
+```
+
+This second step applies:
+
+- `nesting=1,keyctl=1`
+- bind mounts for `/mnt/appdata`
+- bind mounts for `/mnt/media_pool`
+
+## 12. Prepare GPU passthrough on Proxmox if required
+
+Do this after the `production` Terraform apply has created VM `210`, and before
+you expect the AI VM to use the GPU.
+
+This is a Proxmox host preparation step, not a guest configuration step.
 Terraform can create the AI VM without the GPU attached, but passthrough itself
 depends on the host being configured first.
 
@@ -986,7 +1132,8 @@ For this repo, record the GPU function in full Proxmox PCI form by adding the
 
 - `01:00.0` becomes `0000:01:00`
 
-You can confirm what Proxmox expects for an already attached PCI device with:
+If VM `210` exists after the `production` Terraform apply, you can confirm what
+Proxmox expects for an attached PCI device with:
 
 ```bash
 qm config 210 | grep -i hostpci
@@ -1004,116 +1151,13 @@ Important:
 - Run `lspci -nn` on the Proxmox host itself, not inside a guest.
 - Use the NVIDIA VGA or 3D controller address, not the NVIDIA audio function.
 - If `lspci` shows `01:00.0`, set `vm210_gpu_pci_address = "0000:01:00"`.
+- VM `210` and the other production guests are created by section 11 phase 2,
+  not by the initial pfSense and Mint stage.
 - The exact Terraform PCI device block depends on the installed `bpg/proxmox`
   provider version and the final host hardware layout.
 - This repo intentionally does not guess that block before the host exists.
 - When the host is ready, update the `vm210-ai-gpu` module to attach the PCI
   device at that recorded address.
-
-## Current guest IP layout
-
-These are UK defaults from `ansible/inventories/production/site_config.yml`:
-
-- Proxmox host uplink IP: `10.10.1.10/24` on `nic0` via `vmbr0`
-- `vm100_pfsense`: `10.10.1.110` on `vmbr0`, with additional pfSense-side interfaces on `vmbr1`, `vmbr2`, and `vmbr3`
-- `vm050_mint`: `10.10.10.50` on `vmbr2` with VLAN tag `10`
-- `vm210_ai_gpu`: `10.10.20.210` on `vmbr2` with VLAN tag `20`
-- `lxc066_docker_arr`: `10.10.66.66` on `vmbr3`
-- `lxc200_docker_services`: `10.10.20.200` on `vmbr2` with VLAN tag `20`
-- `lxc220_docker_apps`: `10.10.20.220` on `vmbr2` with VLAN tag `20`
-- `lxc230_docker_media`: `10.10.20.230` on `vmbr2` with VLAN tag `20`
-- `lxc240_docker_external`: `10.10.66.240` on `vmbr3`
-- `lxc250_infra`: `10.10.20.250` on `vmbr2` with VLAN tag `20`
-
-## Network intent
-
-- `vmbr0` is the temporary bootstrap/install bridge on the Proxmox uplink.
-- `vmbr1` is the pfSense WAN bridge.
-- `vmbr2` is the trusted internal trunk.
-- The current workstation workload uses VLAN `10` on the `10.10.10.0/24` segment.
-- The current server workloads use VLAN `20` on the `10.10.20.0/24` segment.
-- VLAN `99` remains the internal management subnet on the trusted LAN side behind pfSense.
-- `vmbr3` is the DMZ-style network for isolated or public-facing workloads on the `10.10.66.0/24` segment.
-- `lxc066_docker_arr` stays on `vmbr3` and should not have broad access back into the trusted internal network.
-- `lxc240_docker_external` stays on `vmbr3` because it serves public-facing workloads.
-- `lxc250_infra` stays on `vmbr2` so the reverse proxy can reach trusted internal services directly.
-- pfSense needs separate WAN, LAN/trunk, and DMZ interfaces for this design.
-- External exposure and NAT are expected to be handled in pfSense, not Terraform.
-
-## 11. Initialize and validate Terraform
-
-Use a two-pass Terraform flow for the full stack.
-
-Phase 1 creates pfSense only so you can finish the router/firewall install and
-bring the intended networks online before the rest of the guests depend on
-them.
-
-Phase 2 creates the remaining VMs and LXCs after pfSense is installed and the
-bridge/network design is behaving the way you want.
-
-If you want a guided flow with explicit stop points, run:
-
-```bash
-./scripts/bootstrap-from-proxmox.sh
-```
-
-If you want to run the phases manually, start with:
-
-```bash
-./scripts/terraform-init.sh
-terraform -chdir=terraform validate
-./scripts/terraform-plan.sh
-```
-
-Review the plan before applying.
-
-## 12. Apply Terraform In Two Passes
-
-### Phase 1: Build pfSense first
-
-Run:
-
-```bash
-terraform -chdir=terraform apply -target=module.vm100_pfsense
-```
-
-Then stop and do the manual pfSense work:
-
-- attach `local:iso/netgate-installer-v1.1.1-RELEASE-amd64.iso` to VM `100`
-- set boot order to `ide2` and boot from the ISO for the initial install
-- install pfSense in the Proxmox console
-- after the first installed boot succeeds, set boot order back to `sata0`
-- remove `ide2` so the VM no longer boots from the ISO
-- complete the manual steps in [README-pfsense.md](README-pfsense.md)
-- make sure the bridges and pfSense-controlled networks are in the state you want
-
-### Phase 2: Build the remaining stack
-
-After pfSense is installed and the network layout is ready, run:
-
-```bash
-terraform -chdir=terraform apply
-```
-
-Terraform will:
-
-- create the declared Proxmox VMs and LXCs
-- render the Ansible inventory file used by the playbooks
-
-If Terraform creates the LXCs successfully, apply the Proxmox root-only
-post-create settings on the host:
-
-```bash
-./scripts/proxmox-apply-lxc-postcreate.sh
-```
-
-This second step applies:
-
-- `nesting=1,keyctl=1`
-- bind mounts for `/mnt/appdata`
-- bind mounts for `/mnt/media_pool`
-
-If any LXCs were already running, reboot them after that script finishes.
 
 ## 13. Verify Ansible can see the hosts
 
@@ -1131,7 +1175,91 @@ If this fails, check:
 - the configured `ansible_user`
 - that your vault password file is available
 
-## 14. Run the full deployment
+If the Proxmox host itself is still only reachable from the separate bootstrap
+or uplink network, this check can fail even though the guests were created
+correctly. In that case, run the Ansible control steps from inside the trusted
+network instead, typically from the Linux Mint VM on VMID `150` first and later
+from `lxc250_infra` once it is configured.
+
+### 13.1 Prepare Linux Mint as the first internal control node
+
+The Proxmox host can publish the helper scripts into shared appdata:
+
+```bash
+./scripts/publish-control-node-bootstrap.sh
+```
+
+Inside the Linux Mint VM, use the shared helper path:
+
+```bash
+bash /mnt/appdata/homelab-control/bin/fix-mint-apt-repos.sh
+bash /mnt/appdata/homelab-control/bin/bootstrap-control-node.sh
+```
+
+Use the Mint APT repair helper if `apt update` fails with stale Ubuntu release
+entries such as `zena`, `zena-security`, `zena-updates`, or
+`zena-backports`. The helper now:
+
+- ensures the shared `virtiofs` mounts exist and persist across reboot
+- repairs both `.list` and `.sources` APT definitions
+- rewrites stale Ubuntu suites to `noble`, `noble-security`,
+  `noble-updates`, and `noble-backports`
+- logs full diagnostics to `/tmp/fix-mint-apt-repos.log`
+
+After those helpers succeed, continue from inside Mint:
+
+```bash
+cd /mnt/appdata/homelab-control/HomeLab
+./scripts/ansible-ping.sh
+```
+
+That same shared appdata location can later be reused by `lxc250_infra` as the
+long-term Ansible and Semaphore control point.
+
+## 14. First Login For LXCs
+
+The Terraform LXC modules currently create the container root account with the
+default password `change-me-now` and also inject your SSH public key.
+
+Change the root password on each LXC after first access from the Proxmox host:
+
+```bash
+pct enter <CTID>
+passwd
+```
+
+Example:
+
+```bash
+pct enter 200
+passwd
+```
+
+Current LXC IDs in this repo:
+
+- `166`
+- `200`
+- `220`
+- `230`
+- `240`
+- `250`
+
+To rotate them all in one pass with Ansible:
+
+```bash
+cd ansible
+ansible-playbook -i inventories/production/hosts.ini playbooks/lxc-root-password.yml
+```
+
+The example input file is:
+
+- [lxc_root_passwords.yml.example](/root/HomeLab/ansible/inventories/production/group_vars/lxc_root_passwords.yml.example)
+
+The real vaulted file used by the playbook is:
+
+- [lxc_root_passwords.vault.yml](/root/HomeLab/ansible/inventories/production/group_vars/lxc_root_passwords.vault.yml)
+
+## 15. Run the full deployment
 
 Run:
 
@@ -1149,7 +1277,7 @@ This will:
 - ping all hosts
 - run the Ansible site playbook
 
-## 15. Apply pfSense configuration
+## 16. Apply pfSense configuration
 
 After Terraform has built the lab and the Linux hosts have been configured, run
 the dedicated pfSense playbook:
@@ -1163,7 +1291,7 @@ Before running it, complete the manual pfSense GUI prerequisites in:
 
 - [README-pfsense.md](README-pfsense.md)
 
-## 16. Pull the initial Ollama models
+## 17. Pull the initial Ollama models
 
 After the AI VM stack is up, log into the AI VM and run these commands in the
 AI VM terminal to load the initial Ollama models:
@@ -1199,7 +1327,7 @@ Frigate storage layout in this repo is intended to be:
 - `/media/frigate/exports` -> persistent storage under `/mnt/ai_cache/frigate`
 - `/dev/shm` -> left as container shared memory, sized with `shm_size`
 
-## 17. Configure the Continue API front door
+## 18. Configure the Continue API front door
 
 If you want one consistent API front door and plan to add more providers later,
 point Continue at Open WebUI instead of talking directly to Ollama.
@@ -1266,7 +1394,7 @@ Notes:
 - this keeps Continue pointed at one OpenAI-compatible endpoint even if you add
   more local or remote providers later
 
-## 18. Add encrypted stack environment files
+## 19. Add encrypted stack environment files
 
 When a Docker stack needs secrets:
 
@@ -1284,7 +1412,7 @@ ansible-vault encrypt ansible/files/compose/lxc220-docker-apps/my-service/stack.
 At deploy time, Ansible decrypts `stack.env.vault` and writes `stack.env` onto
 the target host.
 
-## 19. Information you may still need to fill in manually
+## 20. Information you may still need to fill in manually
 
 Depending on the environment, you may still need to provide:
 

@@ -1,1 +1,16 @@
 ---
+lxc250_infra_control_packages:
+  - git
+  - ansible
+  - openssh-client
+  - rsync
+  - python3
+  - python3-pip
+  - curl
+  - wget
+  - vim
+  - jq
+lxc250_infra_repo_url: "https://github.com/wrightwells/HomeLab.git"
+lxc250_infra_control_root: "/mnt/appdata/homelab-control"
+lxc250_infra_repo_dest: "{{ lxc250_infra_control_root }}/HomeLab"
+lxc250_infra_collections_path: "/root/.ansible/collections"

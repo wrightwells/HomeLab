@@ -50,8 +50,8 @@ disk cleanly on the Proxmox host and retry. Check the current disk name first:
 ```bash
 qm config 100
 qm stop 100
-qm unlink 100 --idlist sata0
-qm set 100 --sata0 local-lvm:32
+qm unlink 100 --idlist scsi0
+qm set 100 --scsi0 local-lvm:32
 qm set 100 --boot order=ide2
 qm start 100
 ```
@@ -60,7 +60,7 @@ Then rerun the install, select the fresh target disk, use the whole disk, and
 choose `UFS`.
 
 After the installer has finished, pfSense has written itself to the VM disk,
-which in the current build is `sata0`, and
+which in the current build is `scsi0`, and
 the first installed boot succeeds, remove the install media so later boots use
 the VM disk instead of the ISO:
 
@@ -69,7 +69,7 @@ the VM disk instead of the ISO:
 qm config 100
 
 # 4. Switch normal boot back to the VM disk.
-qm set 100 --boot order=sata0
+qm set 100 --boot order=scsi0
 
 # 5. Remove the virtual CD-ROM now that install is complete.
 qm set 100 --delete ide2

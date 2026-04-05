@@ -215,21 +215,22 @@ locals {
 }
 
 module "vm100_pfsense" {
-  source       = "./modules/vm100-pfsense"
-  proxmox_node = var.proxmox_node
-  vm_storage   = var.vm_storage
+  count            = var.create_pfsense ? 1 : 0
+  source           = "./modules/vm100-pfsense"
+  proxmox_node     = var.proxmox_node
+  vm_storage       = var.vm_storage
   bootstrap_bridge = local.homelab_site.bridges.bootstrap
-  wan_bridge   = var.pfsense_wan_bridge
-  lan_bridge   = var.pfsense_lan_bridge
-  dmz_bridge   = var.pfsense_dmz_bridge
-  cpu_cores    = local.profile.vm100_pfsense.cpu
-  memory_mb    = local.profile.vm100_pfsense.memory
-  started      = local.profile.vm100_pfsense.started
-  on_boot      = local.profile.vm100_pfsense.on_boot
+  wan_bridge       = var.pfsense_wan_bridge
+  lan_bridge       = var.pfsense_lan_bridge
+  dmz_bridge       = var.pfsense_dmz_bridge
+  cpu_cores        = local.profile.vm100_pfsense.cpu
+  memory_mb        = local.profile.vm100_pfsense.memory
+  started          = local.profile.vm100_pfsense.started
+  on_boot          = local.profile.vm100_pfsense.on_boot
 }
 
 module "vm050_mint" {
-  count              = local.guest_enabled.vm050_mint ? 1 : 0
+  count              = var.create_mint && local.guest_enabled.vm050_mint ? 1 : 0
   source             = "./modules/vm050-mint"
   name               = local.inventory_hosts.vm050_mint.name
   vm_id              = 150
@@ -255,7 +256,7 @@ module "vm050_mint" {
 }
 
 module "vm210_ai_gpu" {
-  count             = local.guest_enabled.vm210_ai_gpu ? 1 : 0
+  count             = var.create_workloads && local.guest_enabled.vm210_ai_gpu ? 1 : 0
   source            = "./modules/vm210-ai-gpu"
   name              = local.inventory_hosts.vm210_ai_gpu.name
   vm_id             = 210
@@ -277,7 +278,7 @@ module "vm210_ai_gpu" {
 }
 
 module "lxc066_docker_arr" {
-  count               = local.guest_enabled.lxc066_docker_arr ? 1 : 0
+  count               = var.create_workloads && local.guest_enabled.lxc066_docker_arr ? 1 : 0
   source              = "./modules/lxc066-docker-arr"
   proxmox_node        = var.proxmox_node
   vm_id               = 166
@@ -293,11 +294,11 @@ module "lxc066_docker_arr" {
   ipv4_address        = "${local.all_inventory_hosts.lxc066_docker_arr.ip}/24"
   ipv4_gateway        = local.all_inventory_hosts.lxc066_docker_arr.gateway
   bridge              = local.site_networks[local.inventory_hosts.lxc066_docker_arr.network].bridge
-  vlan_id             = local.site_networks[local.inventory_hosts.lxc066_docker_arr.network].vlan
+  vlan_id             = local.inventory_hosts.lxc066_docker_arr.network == "dmz" ? null : local.site_networks[local.inventory_hosts.lxc066_docker_arr.network].vlan
 }
 
 module "lxc200_docker_services" {
-  count               = local.guest_enabled.lxc200_docker_services ? 1 : 0
+  count               = var.create_workloads && local.guest_enabled.lxc200_docker_services ? 1 : 0
   source              = "./modules/lxc200-docker-services"
   proxmox_node        = var.proxmox_node
   vm_id               = 200
@@ -317,7 +318,7 @@ module "lxc200_docker_services" {
 }
 
 module "lxc220_docker_apps" {
-  count               = local.guest_enabled.lxc220_docker_apps ? 1 : 0
+  count               = var.create_workloads && local.guest_enabled.lxc220_docker_apps ? 1 : 0
   source              = "./modules/lxc220-docker-apps"
   proxmox_node        = var.proxmox_node
   vm_id               = 220
@@ -337,7 +338,7 @@ module "lxc220_docker_apps" {
 }
 
 module "lxc230_docker_media" {
-  count               = local.guest_enabled.lxc230_docker_media ? 1 : 0
+  count               = var.create_workloads && local.guest_enabled.lxc230_docker_media ? 1 : 0
   source              = "./modules/lxc230-docker-media"
   proxmox_node        = var.proxmox_node
   vm_id               = 230
@@ -357,7 +358,7 @@ module "lxc230_docker_media" {
 }
 
 module "lxc240_docker_external" {
-  count               = local.guest_enabled.lxc240_docker_external ? 1 : 0
+  count               = var.create_workloads && local.guest_enabled.lxc240_docker_external ? 1 : 0
   source              = "./modules/lxc240-docker-external"
   proxmox_node        = var.proxmox_node
   vm_id               = 240
@@ -373,11 +374,11 @@ module "lxc240_docker_external" {
   ipv4_address        = "${local.all_inventory_hosts.lxc240_docker_external.ip}/24"
   ipv4_gateway        = local.all_inventory_hosts.lxc240_docker_external.gateway
   bridge              = local.site_networks[local.inventory_hosts.lxc240_docker_external.network].bridge
-  vlan_id             = local.site_networks[local.inventory_hosts.lxc240_docker_external.network].vlan
+  vlan_id             = local.inventory_hosts.lxc240_docker_external.network == "dmz" ? null : local.site_networks[local.inventory_hosts.lxc240_docker_external.network].vlan
 }
 
 module "lxc250_infra" {
-  count               = local.guest_enabled.lxc250_infra ? 1 : 0
+  count               = var.create_workloads && local.guest_enabled.lxc250_infra ? 1 : 0
   source              = "./modules/lxc250-infra"
   proxmox_node        = var.proxmox_node
   vm_id               = 250
@@ -394,4 +395,9 @@ module "lxc250_infra" {
   ipv4_gateway        = local.all_inventory_hosts.lxc250_infra.gateway
   bridge              = local.site_networks[local.inventory_hosts.lxc250_infra.network].bridge
   vlan_id             = local.site_networks[local.inventory_hosts.lxc250_infra.network].vlan
+}
+
+moved {
+  from = module.vm100_pfsense
+  to   = module.vm100_pfsense[0]
 }

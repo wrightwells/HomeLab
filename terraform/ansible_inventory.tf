@@ -19,6 +19,8 @@ locals {
 }
 
 resource "local_file" "ansible_inventory" {
+  count = var.render_ansible_inventory ? 1 : 0
+
   filename = local.ansible_inventory_path_resolved
   content = templatefile("${path.module}/templates/ansible_inventory.tftpl", {
     groups               = local.generated_inventory_groups
@@ -27,6 +29,6 @@ resource "local_file" "ansible_inventory" {
 }
 
 output "ansible_inventory_generated_path" {
-  value       = local_file.ansible_inventory.filename
+  value       = try(local_file.ansible_inventory[0].filename, null)
   description = "Path to the generated Ansible inventory file"
 }

@@ -16,7 +16,7 @@ Notes:
 
 | Host | IP | Purpose |
 | --- | --- | --- |
-| `vm050-mint` | `10.10.10.50` | Linux Mint Cinnamon desktop VM with Tailscale and HomeLab tools |
+| `vm050-mint` (VMID `150`) | `10.10.10.50` | Linux Mint Cinnamon desktop VM with Tailscale and HomeLab tools |
 | `vm210-ai-gpu` | `10.10.20.210` | AI services, Frigate, Home Assistant, coding tools |
 | `lxc066-docker-arr` | `10.10.66.66` | ARR stack, downloads, media request tools |
 | `lxc200-docker-services` | `10.10.20.200` | Core data services and sync tools |

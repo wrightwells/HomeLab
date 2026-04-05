@@ -26,17 +26,13 @@ module "homelab" {
   vm050_mint_media_disk_size_gb = var.vm050_mint_media_disk_size_gb
   vm210_gpu_pci_address         = var.vm210_gpu_pci_address
   debian_lxc_template           = var.debian_lxc_template
-  build_inventory_file          = var.build_inventory_file
+  build_inventory_file          = "environments/pfsense/build_inventory.yml"
   site_config_file              = var.site_config_file
 
-  create_pfsense           = false
+  create_pfsense           = true
   create_workloads         = true
-  create_mint              = false
-  render_ansible_inventory = true
-}
-
-output "ansible_inventory_file" {
-  value = module.homelab.ansible_inventory_file
+  create_mint              = true
+  render_ansible_inventory = false
 }
 
 output "vm100_pfsense_id" {

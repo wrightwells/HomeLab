@@ -4,11 +4,11 @@ set -euo pipefail
 
 source "$(dirname "$0")/_common.sh"
 
-cd "$TERRAFORM_DIR"
+cd "$(terraform_env_dir production)"
 terraform init -input=false
 
 set +e
-terraform plan -input=false -no-color -detailed-exitcode
+terraform plan -input=false -no-color -detailed-exitcode -var-file="$DEFAULT_TERRAFORM_VARS_FILE"
 rc=$?
 set -e
 

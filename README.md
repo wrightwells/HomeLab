@@ -58,7 +58,7 @@ Use [site_config.yml](ansible/inventories/production/site_config.yml) to control
 ## Hosts
 
 - VM100 pfSense
-- VM050 Mint desktop
+- VM150 Mint desktop
 - VM210 AI-GPU
 - LXC066 docker-arr
 - LXC200 docker-services

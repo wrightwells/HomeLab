@@ -119,7 +119,7 @@ between fast model storage and persistent appdata storage inside that VM.
 
 ## 5. Paths inside the Linux Mint workstation VM
 
-The Linux Mint desktop VM (`vm050-mint`) models host-style extra storage with
+The Linux Mint desktop VM on VMID `150` (`vm050-mint`) models host-style extra storage with
 additional virtual disks intended for:
 
 - `/mnt/ai_models`
@@ -199,7 +199,7 @@ Terraform does not currently:
 - add extra virtual disks to the AI VM for `/mnt/ai_models` or `/mnt/appdata`
 - format guest data disks inside the AI VM
 
-For `vm050-mint`, the repo does currently:
+For the Linux Mint desktop VM on VMID `150` (`vm050-mint`), the repo does currently:
 
 - attach extra VM-backed disks for NVMe-style and media-style storage
 - format those disks inside the guest if needed

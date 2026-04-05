@@ -3,7 +3,12 @@ vm050_mint_hostname_short: "{{ homelab_site.guests.vm050_mint.hostname }}"
 vm050_mint_hostname_fqdn: "{{ vm050_mint_hostname_short }}.{{ homelab_site.domain_suffix }}"
 vm050_mint_user_home: "/home/{{ ansible_user }}"
 vm050_mint_repo_url: "https://github.com/wrightwells/HomeLab.git"
-vm050_mint_repo_dest: "{{ vm050_mint_user_home }}/HomeLab"
+vm050_mint_repo_dest: "{{ appdata_root }}/homelab-control/HomeLab"
+vm050_mint_mount_host_appdata: true
+vm050_mint_mount_host_media: true
+vm050_mint_appdata_mount_tag: "homelab-appdata"
+vm050_mint_media_mount_tag: "homelab-media-pool"
+vm050_mint_media_local_root: "/mnt/media_local"
 vm050_mint_tools:
   - git
   - curl

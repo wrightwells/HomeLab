@@ -1,0 +1,22 @@
+---
+build_inventory:
+  guests:
+    vm100_pfsense:
+      enabled: true
+      notes: "Always required."
+    vm050_mint:
+      enabled: true
+    vm210_ai_gpu:
+      enabled: false
+    lxc066_docker_arr:
+      enabled: false
+    lxc200_docker_services:
+      enabled: false
+    lxc220_docker_apps:
+      enabled: false
+    lxc230_docker_media:
+      enabled: false
+    lxc240_docker_external:
+      enabled: false
+    lxc250_infra:
+      enabled: false

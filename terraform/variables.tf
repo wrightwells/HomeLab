@@ -173,3 +173,27 @@ variable "debian_lxc_template" {
   type        = string
   default     = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
 }
+
+variable "create_pfsense" {
+  description = "Whether this Terraform state should manage the pfSense VM"
+  type        = bool
+  default     = true
+}
+
+variable "create_workloads" {
+  description = "Whether this Terraform state should manage the non-pfSense workloads"
+  type        = bool
+  default     = true
+}
+
+variable "create_mint" {
+  description = "Whether this Terraform state should manage the Linux Mint desktop VM"
+  type        = bool
+  default     = true
+}
+
+variable "render_ansible_inventory" {
+  description = "Whether this Terraform state should render the generated Ansible inventory file"
+  type        = bool
+  default     = true
+}

@@ -86,9 +86,20 @@
     group: root
     mode: "0755"
   loop:
+    - "{{ appdata_root }}"
     - "{{ ai_models_root }}"
     - "{{ ai_cache_root }}"
     - "{{ media_root }}"
+    - "{{ vm050_mint_media_local_root }}"
+
+- name: Mount shared appdata into Linux Mint via virtiofs
+  ansible.posix.mount:
+    path: "{{ appdata_root }}"
+    src: "{{ vm050_mint_appdata_mount_tag }}"
+    fstype: virtiofs
+    opts: rw,relatime
+    state: mounted
+  when: vm050_mint_mount_host_appdata
 
 - name: Check Linux Mint workstation data disks for filesystems
   ansible.builtin.command:
@@ -130,13 +141,22 @@
     opts: bind
     state: mounted
 
-- name: Mount Linux Mint media-style disk
+- name: Mount Linux Mint media-style disk on local scratch path
   ansible.posix.mount:
-    path: "{{ media_root }}"
+    path: "{{ vm050_mint_media_local_root }}"
     src: "LABEL={{ vm050_mint_media_label }}"
     fstype: ext4
     opts: defaults
     state: mounted
+
+- name: Mount shared media pool into Linux Mint via virtiofs
+  ansible.posix.mount:
+    path: "{{ media_root }}"
+    src: "{{ vm050_mint_media_mount_tag }}"
+    fstype: virtiofs
+    opts: rw,relatime
+    state: mounted
+  when: vm050_mint_mount_host_media
 
 - name: Ensure user wallpaper directory exists
   ansible.builtin.file:
@@ -264,7 +284,7 @@
 
 - name: Ensure HomeLab checkout parent exists
   ansible.builtin.file:
-    path: "{{ vm050_mint_user_home }}"
+    path: "{{ vm050_mint_repo_dest | dirname }}"
     state: directory
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"

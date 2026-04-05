@@ -59,4 +59,8 @@ resource "proxmox_virtual_environment_vm" "this" {
   }
 
   description = "Starter pfSense VM with bootstrap, WAN, LAN/trunk, and DMZ interfaces. Attach ISO and finish install in Proxmox console."
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
