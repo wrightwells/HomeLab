@@ -12,6 +12,7 @@ TARGET_UPDATE_SCRIPT="${TARGET_BIN}/update-control-node.sh"
 TARGET_USER_BOOTSTRAP_SCRIPT="${TARGET_BIN}/bootstrap-user-control-node.sh"
 TARGET_GITHUB_KEY="${TARGET_BIN}/github-deploy-key"
 TARGET_GITHUB_PUB_KEY="${TARGET_GITHUB_KEY}.pub"
+TARGET_VAULT_PASS="${TARGET_BIN}/homelab-vault-pass.txt"
 TARGET_NOTE="${TARGET_ROOT}/README-bootstrap.txt"
 
 # This script publishes the SSH bootstrap bundle to /mnt/appdata/homelab-control/bin/.
@@ -33,6 +34,14 @@ install -m 0755 "${ROOT_DIR}/scripts/update-control-node.sh" "$TARGET_UPDATE_SCR
 install -m 0755 "${ROOT_DIR}/scripts/bootstrap-user-control-node.sh" "$TARGET_USER_BOOTSTRAP_SCRIPT"
 install -m 0600 "/root/.ssh/id_ed25519" "$TARGET_GITHUB_KEY"
 install -m 0644 "/root/.ssh/id_ed25519.pub" "$TARGET_GITHUB_PUB_KEY"
+
+if [[ -f "${HOME}/.config/ansible/homelab-vault-pass.txt" ]]; then
+  install -m 0600 "${HOME}/.config/ansible/homelab-vault-pass.txt" "$TARGET_VAULT_PASS"
+  echo "Published vault password to ${TARGET_VAULT_PASS}"
+else
+  echo "WARNING: vault password file not found at ${HOME}/.config/ansible/homelab-vault-pass.txt"
+  echo "Run setup-lxc-root-password.sh first, then re-publish."
+fi
 
 cat >"$TARGET_NOTE" <<'EOF'
 Shared HomeLab control-node bootstrap
@@ -57,6 +66,9 @@ To pull the latest HomeLab repo updates into shared appdata and run Ansible:
 
 The bootstrap scripts use the shared GitHub deploy key from:
   /mnt/appdata/homelab-control/bin/github-deploy-key
+
+The Ansible vault password is published from the Proxmox host to:
+  /mnt/appdata/homelab-control/bin/homelab-vault-pass.txt
 
 Access model:
   - root is used on all LXCs (required for nesting, bind-mounts, Docker)
