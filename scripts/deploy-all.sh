@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
-# deploy-all.sh -- Full staged deploy following the approved 11-step bootstrap flow.
+# deploy-all.sh -- Full staged deploy following the approved 10-step bootstrap flow.
 #
 # This script runs:
 #   Step 5:  Terraform pfSense only
 #   (pause for manual pfSense install -- step 6)
 #   Step 8:  Terraform remaining VMs and LXCs including Mint
-#   (pause for manual bootstrap script on each machine -- step 9)
-#   (pause for manual network move from vmbr0 to vmbr2 -- step 10)
-#   Step 11: Ansible site playbook
+#   (pause for manual network move from vmbr0 to vmbr2 -- step 9)
+#   Step 10: Ansible site playbook
 #
 # For a guided flow with explicit stop points, use:
 #   ./scripts/bootstrap-from-proxmox.sh
@@ -47,26 +46,15 @@ echo "=== LXC post-create settings ==="
 "$ROOT_DIR/scripts/proxmox-apply-lxc-postcreate.sh"
 
 echo ""
-echo "=== PAUSE: Step 9 -- Run bootstrap script on each machine ==="
-echo "All VMs and LXCs have been created."
-echo "You must now:"
-echo "  1. SSH into each LXC as root (using the vault password)"
-echo "  2. Run: /mnt/appdata/homelab-control/bin/bootstrap-control-node.sh"
-echo "  3. For VMs, run: /mnt/appdata/homelab-control/bin/bootstrap-user-control-node.sh"
-echo ""
-echo "Press Enter when all machines have been bootstrapped..."
-read -r
-
-echo ""
-echo "=== PAUSE: Step 10 -- Move Proxmox host IP from vmbr0 to vmbr2 ==="
+echo "=== PAUSE: Step 9 -- Move Proxmox host IP from vmbr0 to vmbr2 ==="
 echo "Update /etc/network/interfaces to move the host management IP."
-echo "See README-bootstrap.md step 10 for the target configuration."
+echo "See README-bootstrap.md step 9 for the target configuration."
 echo ""
 echo "Press Enter when the network move is complete..."
 read -r
 
 echo ""
-echo "=== Step 11: Ansible site deploy ==="
+echo "=== Step 10: Ansible site deploy ==="
 "$ROOT_DIR/scripts/ansible-install.sh"
 (cd "$ANSIBLE_DIR" && ansible-playbook -i inventories/production/hosts.ini playbooks/site.yml --syntax-check)
 "$ROOT_DIR/scripts/ansible-ping.sh"
@@ -76,4 +64,4 @@ echo ""
 echo "=== Deploy complete ==="
 echo "Next steps:"
 echo "  - Apply pfSense config: cd ansible && ansible-playbook -i inventories/production/hosts.ini playbooks/pfsense.yml"
-echo "  - Pull initial Ollama models (see README-bootstrap.md step 11.4)"
+echo "  - Pull initial Ollama models (see README-bootstrap.md step 10.4)"

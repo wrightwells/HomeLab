@@ -20,7 +20,7 @@ run_step() {
 cat <<'EOF'
 Guided HomeLab bootstrap from the Proxmox host.
 
-This script follows the approved 11-step bootstrap flow with manual checkpoints:
+This script follows the approved 10-step bootstrap flow with manual checkpoints:
 
   1. Proxmox install and base host preparation        [done before this script]
   2. /etc/network/interfaces on vmbr0                  [done before this script]
@@ -30,9 +30,8 @@ This script follows the approved 11-step bootstrap flow with manual checkpoints:
   6. Install and configure pfSense manually            [pause for manual work]
   7. Create SSH keypair, publish bootstrap to /mnt/appdata [done before this script]
   8. Terraform remaining VMs/LXCs (including Mint)     [automated below]
-  9. Run SSH bootstrap on each created machine         [pause for manual work]
- 10. Move Proxmox host IP from vmbr0 to vmbr2          [pause for manual work]
- 11. Run Ansible to build/configure VMs and LXCs       [automated below]
+  9. Move Proxmox host IP from vmbr0 to vmbr2          [pause for manual work]
+ 10. Run Ansible to build/configure VMs and LXCs       [automated below]
 
 Do not run the same staged Terraform commands from the README unless you
 are intentionally re-running a specific step.
@@ -89,14 +88,8 @@ pause "Terraform has created all guests. Apply the Proxmox root-only LXC options
 
 run_step "Apply LXC post-create settings" "$ROOT_DIR/scripts/proxmox-apply-lxc-postcreate.sh"
 
-pause "Step 9: Run the SSH bootstrap script on each created machine.
-For LXCs: log in as root (vault password) then run:
-  /mnt/appdata/homelab-control/bin/bootstrap-control-node.sh
-For VMs (Mint, AI GPU):
-  /mnt/appdata/homelab-control/bin/bootstrap-user-control-node.sh"
-
-pause "Step 10: Move the Proxmox host management IP from vmbr0 to vmbr2.
-Update /etc/network/interfaces. See README-bootstrap.md step 10."
+pause "Step 9: Move the Proxmox host management IP from vmbr0 to vmbr2.
+Update /etc/network/interfaces. See README-bootstrap.md step 9."
 
 run_step "Ansible ping" "$ROOT_DIR/scripts/ansible-ping.sh"
 

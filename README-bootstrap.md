@@ -1,6 +1,6 @@
 # Bootstrap Guide
 
-This guide follows the approved 11-step operational flow for building this HomeLab from bare metal to fully configured services.
+This guide follows the approved 10-step operational flow for building this HomeLab from bare metal to fully configured services.
 
 **Read the full flow first.** Steps are numbered in execution order. Each step is tagged `[MANUAL]` or `[TERRAFORM]` / `[ANSIBLE]` so you can see exactly what is automated and what requires human action.
 
@@ -18,9 +18,12 @@ This guide follows the approved 11-step operational flow for building this HomeL
 | 6 | Install and configure pfSense manually | [MANUAL] |
 | 7 | Create deployment SSH keypair, publish bootstrap script to `/mnt/appdata` | [MANUAL] |
 | 8 | Terraform remaining VMs and LXCs (including Mint) | [TERRAFORM] |
-| 9 | Run published SSH bootstrap script on each created machine | [MANUAL] |
-| 10 | Move Proxmox host IP from `vmbr0` to `vmbr2` | [MANUAL] |
-| 11 | Run Ansible to build/configure VMs and LXCs | [ANSIBLE] |
+| 9 | Move Proxmox host IP from `vmbr0` to `vmbr2` | [MANUAL] |
+| 10 | Run Ansible to build/configure VMs and LXCs | [ANSIBLE] |
+
+---
+
+Note on step 7: the bootstrap scripts published to `/mnt/appdata/homelab-control/bin/` are **not run during the initial build**. Ansible runs from the Proxmox host (step 10), so machines only need to be reachable over SSH. The published scripts are reserved for future use if a machine like infra-250 is promoted to a dedicated Ansible control node.
 
 ---
 
@@ -409,7 +412,7 @@ This same public key is passed to all VMs and LXCs via Terraform `ssh_public_key
 
 ### 7.2 Publish the SSH bootstrap script
 
-The bootstrap script is published to `/mnt/appdata/homelab-control/bin/` so it can be run manually on each created machine.
+The bootstrap scripts are published to `/mnt/appdata/homelab-control/bin/`. These are **not run during the initial build** -- Ansible runs from the Proxmox host (step 10). The published scripts are reserved for future use if a machine is promoted to a dedicated Ansible control node.
 
 ```bash
 ./scripts/publish-control-node-bootstrap.sh
@@ -417,30 +420,21 @@ The bootstrap script is published to `/mnt/appdata/homelab-control/bin/` so it c
 
 This copies:
 
-- `bootstrap-control-node.sh` -- clones the repo, installs packages, runs Ansible
-- `bootstrap-user-control-node.sh` -- bootstrap from a user home directory
+- `bootstrap-control-node.sh` -- clones the repo, installs packages, runs Ansible (for future control node use)
+- `bootstrap-user-control-node.sh` -- bootstrap from a user home directory (for future control node use)
 - `fix-mint-apt-repos.sh` -- repairs stale Mint APT sources
 - `fix-mint-dpkg.sh` -- repairs interrupted dpkg
 - `update-control-node.sh` -- pulls latest repo and re-runs Ansible
 - `github-deploy-key` and `github-deploy-key.pub` -- the deployment SSH keypair
 
-### 7.3 What the bootstrap script does on each machine
+### 7.3 Purpose of the published bootstrap scripts
 
-**For Linux VMs (Mint, AI GPU):**
+The scripts published to `/mnt/appdata/homelab-control/bin/` are **not run during the initial build**. Ansible runs from the Proxmox host (step 10), so each machine only needs to be reachable over SSH:
 
-- the VM already has cloud-init SSH key injection from Terraform
-- the bootstrap script is available at `/mnt/appdata/homelab-control/bin/bootstrap-control-node.sh` (mounted via the shared storage)
-- running it installs the `ansible` user account, clones the repo, installs Ansible collections, and runs the site playbook
-- the `root` user remains accessible via the injected SSH key
-- the `ansible` user is created with passwordless sudo for ongoing Ansible use
+- **VMs**: cloud-init injects the SSH key and creates the `ansible` user with passwordless sudo.
+- **LXCs**: the root password is set via `lxc_root_password` in tfvars, and verified by the `apply-lxc-root-password.sh` playbook.
 
-**For LXCs:**
-
-- LXCs are created with the root password set to the **same plain-text secret as the Ansible vault password value** (see LXC root password section below)
-- after creation, the operator logs in as `root` using that password
-- the operator then runs `/mnt/appdata/homelab-control/bin/bootstrap-control-node.sh` (or the user-home variant) to prepare the `ansible` user, clone the repo, and install dependencies
-- `root` access is required for initial LXC setup and for Docker-in-LXC operations (nesting)
-- the `ansible` user is created by the bootstrap script for ongoing Ansible runs
+The published bootstrap scripts are reserved for future use if a machine like infra-250 is promoted to a dedicated Ansible control node. They are not needed for the initial build.
 
 **Access model summary:**
 
@@ -537,27 +531,7 @@ If any LXCs were already running, reboot them after that script finishes.
 
 ---
 
-## Step 9 -- Run SSH bootstrap script on each created machine `[MANUAL]`
-
-On each newly created VM and LXC, run the published bootstrap script:
-
-```bash
-/mnt/appdata/homelab-control/bin/bootstrap-control-node.sh
-```
-
-Or for user-home bootstrap on VMs:
-
-```bash
-/mnt/appdata/homelab-control/bin/bootstrap-user-control-node.sh
-```
-
-This installs packages, clones the repo, sets up the `ansible` user, installs Ansible collections, and runs the site playbook.
-
-For LXCs, log in as `root` first (using the vault-password from step 7.4), then run the bootstrap script.
-
----
-
-## Step 10 -- Move Proxmox host IP from `vmbr0` to `vmbr2` `[MANUAL]`
+## Step 9 -- Move Proxmox host IP from `vmbr0` to `vmbr2` `[MANUAL]`
 
 After all VMs and LXCs are created and configured, move the Proxmox management IP from the bootstrap bridge (`vmbr0`) to the trusted internal trunk (`vmbr2`).
 
@@ -629,15 +603,15 @@ Notes:
 
 ---
 
-## Step 11 -- Run Ansible to build/configure VMs and LXCs `[ANSIBLE]`
+## Step 10 -- Run Ansible to build/configure VMs and LXCs `[ANSIBLE]`
 
-### 11.1 Verify Ansible can see the hosts
+### 10.1 Verify Ansible can see the hosts
 
 ```bash
 ./scripts/ansible-ping.sh
 ```
 
-### 11.2 Run the full deployment
+### 10.2 Run the full deployment
 
 ```bash
 ./scripts/deploy-all.sh
@@ -651,14 +625,14 @@ cd ansible
 ansible-playbook -i inventories/production/hosts.ini playbooks/site.yml
 ```
 
-### 11.3 Apply pfSense configuration
+### 10.3 Apply pfSense configuration
 
 ```bash
 cd ansible
 ansible-playbook -i inventories/production/hosts.ini playbooks/pfsense.yml
 ```
 
-### 11.4 Pull the initial Ollama models
+### 10.4 Pull the initial Ollama models
 
 After the AI VM stack is up:
 
