@@ -456,19 +456,33 @@ This copies:
 
 **Tradeoff:** This simplifies the operator flow -- the vault password you type for `ansible-vault` is also the initial root password for every LXC. The downside is that compromising the vault password also gives you LXC root access, and rotating the vault password requires manually updating the LXC root passwords to match. This is accepted for this lab because the vault password file is kept private and the lab is not multi-tenant.
 
-To set the LXC root password, use the helper script:
+To set the LXC root password, run this script **before Terraform** creates the LXCs:
 
 ```bash
 ./scripts/setup-lxc-root-password.sh
 ```
 
 This script prompts for the vault password, generates the SHA-512 hash,
-and writes the encrypted vault file. You will then need to:
+writes the encrypted vault file, and updates `terraform/terraform.tfvars`.
 
-1. Set `lxc_root_password` in `terraform/terraform.tfvars` to the same plain-text value you entered in the script.
-2. Save the vault password to `~/.config/ansible/homelab-vault-pass.txt` for Ansible use.
+After Terraform and `proxmox-apply-lxc-postcreate.sh` have run (which reboots
+the LXCs), apply the password to the freshly rebooted LXCs:
 
-**Manual alternative:** if you prefer not to use the script:
+```bash
+./scripts/apply-lxc-root-password.sh
+```
+
+The full order is:
+
+1. `setup-lxc-root-password.sh` -- generates vault file, writes tfvars, saves vault-pass file
+2. Terraform creates LXCs (cloud-init sets the password from tfvars)
+3. `proxmox-apply-lxc-postcreate.sh` (applies features/mounts, reboots LXCs)
+4. `apply-lxc-root-password.sh` (playbook runs on freshly rebooted LXCs)
+
+Step 4 is a verification pass on a fresh build, and actually sets the correct
+password on existing LXCs that were created before the setup script ran.
+
+**Manual alternative:** if you prefer not to use the scripts:
 
 1. Decide on the Ansible vault password (e.g. `MyVaultSecret123`)
 2. Generate a SHA-512 password hash from that same secret:

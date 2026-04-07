@@ -2,15 +2,17 @@
 
 # setup-lxc-root-password.sh
 #
-# Generates the LXC root password vault file for step 7.4 of the bootstrap guide.
+# Run this BEFORE Terraform creates your LXCs (bootstrap step 7.4).
 #
 # This script:
 #   1. Prompts for the Ansible vault password (the plain-text secret used for
 #      all Ansible Vault operations in this repo).
 #   2. Derives a SHA-512 hash from that same secret.
 #   3. Writes the hash encrypted with Ansible Vault to the LXC root passwords
-#      file, so the lxc-root-password.yml playbook can set it on all LXCs.
-#   4. Reminds you to set lxc_root_password in terraform.tfvars to match.
+#      file.
+#   4. Sets lxc_root_password in terraform/terraform.tfvars so Terraform creates
+#      LXCs with the correct initial password.
+#   5. Saves the vault password to ~/.config/ansible/homelab-vault-pass.txt.
 #
 # Usage:
 #   ./scripts/setup-lxc-root-password.sh
@@ -32,7 +34,7 @@ The LXC root password uses the same plain-text secret as the Ansible vault
 password. This means:
   - The password you enter here is the initial root password for all LXCs.
   - The same password is used for Ansible Vault operations.
-  - Set lxc_root_password in terraform.tfvars to this same value.
+  - Terraform will use this value to create LXCs with the correct password.
 
 EOF
 
@@ -67,7 +69,6 @@ fi
 echo "Hash generated successfully."
 
 # Write the vault file using ansible-vault encrypt_string
-# The output format is: lxc_root_password_hash: !vault | ...
 echo "Encrypting and writing vault file to: ${VAULT_FILE#${REPO_ROOT}/}"
 
 mkdir -p "$(dirname "$VAULT_FILE")"
@@ -82,11 +83,9 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-echo
 echo "Vault file written successfully."
-echo
 
-# Step 1: Set lxc_root_password in terraform/terraform.tfvars
+# Set lxc_root_password in terraform/terraform.tfvars
 TFVARS="${REPO_ROOT}/terraform/terraform.tfvars"
 if [[ -f "$TFVARS" ]]; then
   if grep -q '^lxc_root_password' "$TFVARS" 2>/dev/null; then
@@ -102,44 +101,17 @@ else
   echo "  lxc_root_password = \"${vault_password}\""
 fi
 
-# Step 2 (informational): the vault password is the LXC root password
-echo "The LXC root password for all containers will be the value you entered above."
-
-# Step 3: Offer to run the LXC root password playbook now
-echo
-read -r -p "Run the LXC root password playbook on existing LXCs now? [y/N] " run_playbook
-if [[ "$run_playbook" =~ ^[Yy]$ ]]; then
-  # Ensure vault password file has the correct password before running the playbook
-  VAULT_PASS_FILE="${HOME}/.config/ansible/homelab-vault-pass.txt"
-  mkdir -p "$(dirname "$VAULT_PASS_FILE")"
-  printf '%s\n' "$vault_password" > "$VAULT_PASS_FILE"
-  chmod 600 "$VAULT_PASS_FILE"
-  echo "Vault password file written to ${VAULT_PASS_FILE}."
-  echo "Running lxc-root-password.yml playbook..."
-  cd "${REPO_ROOT}/ansible"
-  ANSIBLE_VAULT_PASSWORD_FILE="$VAULT_PASS_FILE" \
-    ansible-playbook \
-    -i inventories/production/hosts.ini \
-    playbooks/lxc-root-password.yml
-  echo "Playbook finished."
-else
-  echo "Skipping playbook. Run it later with:"
-  echo "  cd ~/HomeLab/ansible"
-  echo "  ANSIBLE_VAULT_PASSWORD_FILE=~/.config/ansible/homelab-vault-pass.txt \\"
-  echo "    ansible-playbook -i inventories/production/hosts.ini playbooks/lxc-root-password.yml"
-fi
-
-# Step 4: Ensure vault password file exists (may have been created in step 3)
+# Save vault password file
 VAULT_PASS_FILE="${HOME}/.config/ansible/homelab-vault-pass.txt"
-if [[ -f "$VAULT_PASS_FILE" ]]; then
-  # File was created in step 3, so it already has the correct password
-  echo "Vault password file already in place at ${VAULT_PASS_FILE}."
-else
-  mkdir -p "$(dirname "$VAULT_PASS_FILE")"
-  printf '%s\n' "$vault_password" > "$VAULT_PASS_FILE"
-  chmod 600 "$VAULT_PASS_FILE"
-  echo "Vault password file saved to ${VAULT_PASS_FILE}."
-fi
+mkdir -p "$(dirname "$VAULT_PASS_FILE")"
+printf '%s\n' "$vault_password" > "$VAULT_PASS_FILE"
+chmod 600 "$VAULT_PASS_FILE"
+echo "Vault password file saved to ${VAULT_PASS_FILE}."
 
 echo
 echo "Step 7.4 complete."
+echo
+echo "After Terraform and proxmox-apply-lxc-postcreate.sh have run, apply"
+echo "the password to the rebooted LXCs with:"
+echo
+echo "  ./scripts/apply-lxc-root-password.sh"
