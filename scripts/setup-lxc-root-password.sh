@@ -77,25 +77,69 @@ echo "$hash" | \
   > "$VAULT_FILE" \
   <<< "$vault_password"
 
-if [[ $? -eq 0 ]]; then
-  echo
-  echo "Vault file written successfully."
-  echo
-  echo "Next steps:"
-  echo "  1. Set lxc_root_password in terraform/terraform.tfvars to the"
-  echo "     same plain-text vault password you entered above."
-  echo "  2. After creating LXCs via Terraform, the initial root password"
-  echo "     for all LXC containers is the vault password you entered."
-  echo "  3. To apply the password to existing LXCs, run (from the HomeLab repo root):"
-  echo "       cd ~/HomeLab/ansible"
-  echo "       ANSIBLE_VAULT_PASSWORD_FILE=~/.config/ansible/homelab-vault-pass.txt \\"
-  echo "         ansible-playbook -i inventories/production/hosts.ini playbooks/lxc-root-password.yml"
-  echo
-  echo "  4. Also save the vault password to ~/.config/ansible/homelab-vault-pass.txt:"
-  echo "       mkdir -p ~/.config/ansible"
-  echo "       printf '%s\n' '<your-password>' > ~/.config/ansible/homelab-vault-pass.txt"
-  echo "       chmod 600 ~/.config/ansible/homelab-vault-pass.txt"
-else
+if [[ $? -ne 0 ]]; then
   echo "Error: failed to encrypt vault file." >&2
   exit 1
 fi
+
+echo
+echo "Vault file written successfully."
+echo
+
+# Step 1: Set lxc_root_password in terraform/terraform.tfvars
+TFVARS="${REPO_ROOT}/terraform/terraform.tfvars"
+if [[ -f "$TFVARS" ]]; then
+  if grep -q '^lxc_root_password' "$TFVARS" 2>/dev/null; then
+    sed -i "s|^lxc_root_password.*|lxc_root_password = \"${vault_password}\"|" "$TFVARS"
+    echo "Updated lxc_root_password in terraform/terraform.tfvars."
+  else
+    echo "" >> "$TFVARS"
+    echo "lxc_root_password = \"${vault_password}\"" >> "$TFVARS"
+    echo "Appended lxc_root_password to terraform/terraform.tfvars."
+  fi
+else
+  echo "WARNING: terraform/terraform.tfvars not found. Add this line manually:"
+  echo "  lxc_root_password = \"${vault_password}\""
+fi
+
+# Step 2 (informational): the vault password is the LXC root password
+echo "The LXC root password for all containers will be the value you entered above."
+
+# Step 3: Offer to run the LXC root password playbook now
+echo
+read -r -p "Run the LXC root password playbook on existing LXCs now? [y/N] " run_playbook
+if [[ "$run_playbook" =~ ^[Yy]$ ]]; then
+  echo "Running lxc-root-password.yml playbook..."
+  cd "${REPO_ROOT}/ansible"
+  ansible-playbook \
+    -i inventories/production/hosts.ini \
+    --extra-vars "ansible_vault_password_file=${HOME}/.config/ansible/homelab-vault-pass.txt" \
+    playbooks/lxc-root-password.yml
+  echo "Playbook finished."
+else
+  echo "Skipping playbook. Run it later with:"
+  echo "  cd ~/HomeLab/ansible"
+  echo "  ANSIBLE_VAULT_PASSWORD_FILE=~/.config/ansible/homelab-vault-pass.txt \\"
+  echo "    ansible-playbook -i inventories/production/hosts.ini playbooks/lxc-root-password.yml"
+fi
+
+# Step 4: Save vault password file
+VAULT_PASS_FILE="${HOME}/.config/ansible/homelab-vault-pass.txt"
+if [[ -f "$VAULT_PASS_FILE" ]]; then
+  read -r -p "Vault password file already exists at ${VAULT_PASS_FILE}. Overwrite? [y/N] " overwrite_vault
+  if [[ "$overwrite_vault" =~ ^[Yy]$ ]]; then
+    printf '%s\n' "$vault_password" > "$VAULT_PASS_FILE"
+    chmod 600 "$VAULT_PASS_FILE"
+    echo "Vault password file overwritten."
+  else
+    echo "Keeping existing vault password file."
+  fi
+else
+  mkdir -p "$(dirname "$VAULT_PASS_FILE")"
+  printf '%s\n' "$vault_password" > "$VAULT_PASS_FILE"
+  chmod 600 "$VAULT_PASS_FILE"
+  echo "Vault password file saved to ${VAULT_PASS_FILE}."
+fi
+
+echo
+echo "Step 7.4 complete."
