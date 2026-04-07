@@ -456,24 +456,23 @@ This copies:
 To set the LXC root password, the operator should:
 
 1. Decide on the Ansible vault password (e.g. `MyVaultSecret123`)
-2. Generate a password hash from that same secret:
+2. Generate a SHA-512 password hash from that same secret:
 
 ```bash
-python3 -c "import crypt; print(crypt.crypt('MyVaultSecret123'))"
+openssl passwd -6 'MyVaultSecret123'
 ```
+
+(Alternatively, if `mkpasswd` is available: `mkpasswd -m sha-512 'MyVaultSecret123'`.
+The `python3 -c "import crypt; ..."` approach no longer works on Python 3.13+
+where the `crypt` module was removed.)
 
 3. Place the hash in `ansible/inventories/production/group_vars/lxc_root_passwords.vault.yml` encrypted with Ansible Vault
 4. Use the plain-text vault password as the LXC root password when logging in initially
 
-**Important:** The Terraform LXC modules currently use a hardcoded `password = "change-me-now"`. Until the modules are updated to accept the vault-derived password, the operator must manually set the LXC root password after creation:
-
-```bash
-# After LXC is created, SSH in as root with the Terraform default password
-# Then change it to match the vault password:
-echo 'root:YourVaultPlainTextPassword' | chpasswd
-```
-
-Alternatively, run the LXC root password playbook after the production Terraform apply:
+**Important:** The Terraform LXC modules now accept `lxc_root_password` as a variable.
+Set it in `terraform.tfvars` to the same plain-text value as your Ansible vault password.
+If you need to change the password on already-created LXCs, run the LXC root password
+playbook after the production Terraform apply:
 
 ```bash
 cd ansible
