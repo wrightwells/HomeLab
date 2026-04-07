@@ -400,7 +400,10 @@ The repo uses a single `ed25519` keypair for initial machine bootstrap. If you d
 
 ```bash
 ssh-keygen -t ed25519 -C "homelab-deploy" -f ~/.ssh/id_ed25519 -N ""
+cat ~/.ssh/id_ed25519.pub
 ```
+add this key to the github deploy key
+ssh-ed25519 AAA..... homelab-deploy
 
 This same public key is passed to all VMs and LXCs via Terraform `ssh_public_key`.
 
@@ -453,7 +456,19 @@ This copies:
 
 **Tradeoff:** This simplifies the operator flow -- the vault password you type for `ansible-vault` is also the initial root password for every LXC. The downside is that compromising the vault password also gives you LXC root access, and rotating the vault password requires manually updating the LXC root passwords to match. This is accepted for this lab because the vault password file is kept private and the lab is not multi-tenant.
 
-To set the LXC root password, the operator should:
+To set the LXC root password, use the helper script:
+
+```bash
+./scripts/setup-lxc-root-password.sh
+```
+
+This script prompts for the vault password, generates the SHA-512 hash,
+and writes the encrypted vault file. You will then need to:
+
+1. Set `lxc_root_password` in `terraform/terraform.tfvars` to the same plain-text value you entered in the script.
+2. Save the vault password to `~/.config/ansible/homelab-vault-pass.txt` for Ansible use.
+
+**Manual alternative:** if you prefer not to use the script:
 
 1. Decide on the Ansible vault password (e.g. `MyVaultSecret123`)
 2. Generate a SHA-512 password hash from that same secret:
