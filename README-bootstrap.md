@@ -487,10 +487,10 @@ where the `crypt` module was removed.)
 **Important:** The Terraform LXC modules now accept `lxc_root_password` as a variable.
 Set it in `terraform.tfvars` to the same plain-text value as your Ansible vault password.
 If you need to change the password on already-created LXCs, run the LXC root password
-playbook after the production Terraform apply:
+playbook after the production Terraform apply (from the HomeLab repo root):
 
 ```bash
-cd ansible
+cd ~/HomeLab/ansible
 ansible-playbook -i inventories/production/hosts.ini playbooks/lxc-root-password.yml
 ```
 

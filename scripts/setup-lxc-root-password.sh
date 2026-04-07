@@ -86,8 +86,8 @@ if [[ $? -eq 0 ]]; then
   echo "     same plain-text vault password you entered above."
   echo "  2. After creating LXCs via Terraform, the initial root password"
   echo "     for all LXC containers is the vault password you entered."
-  echo "  3. To apply the password to existing LXCs, run:"
-  echo "       cd ansible"
+  echo "  3. To apply the password to existing LXCs, run (from the HomeLab repo root):"
+  echo "       cd ~/HomeLab/ansible"
   echo "       ANSIBLE_VAULT_PASSWORD_FILE=~/.config/ansible/homelab-vault-pass.txt \\"
   echo "         ansible-playbook -i inventories/production/hosts.ini playbooks/lxc-root-password.yml"
   echo
