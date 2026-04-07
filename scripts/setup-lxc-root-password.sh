@@ -109,11 +109,17 @@ echo "The LXC root password for all containers will be the value you entered abo
 echo
 read -r -p "Run the LXC root password playbook on existing LXCs now? [y/N] " run_playbook
 if [[ "$run_playbook" =~ ^[Yy]$ ]]; then
+  # Ensure vault password file has the correct password before running the playbook
+  VAULT_PASS_FILE="${HOME}/.config/ansible/homelab-vault-pass.txt"
+  mkdir -p "$(dirname "$VAULT_PASS_FILE")"
+  printf '%s\n' "$vault_password" > "$VAULT_PASS_FILE"
+  chmod 600 "$VAULT_PASS_FILE"
+  echo "Vault password file written to ${VAULT_PASS_FILE}."
   echo "Running lxc-root-password.yml playbook..."
   cd "${REPO_ROOT}/ansible"
-  ansible-playbook \
+  ANSIBLE_VAULT_PASSWORD_FILE="$VAULT_PASS_FILE" \
+    ansible-playbook \
     -i inventories/production/hosts.ini \
-    --extra-vars "ansible_vault_password_file=${HOME}/.config/ansible/homelab-vault-pass.txt" \
     playbooks/lxc-root-password.yml
   echo "Playbook finished."
 else
@@ -123,17 +129,11 @@ else
   echo "    ansible-playbook -i inventories/production/hosts.ini playbooks/lxc-root-password.yml"
 fi
 
-# Step 4: Save vault password file
+# Step 4: Ensure vault password file exists (may have been created in step 3)
 VAULT_PASS_FILE="${HOME}/.config/ansible/homelab-vault-pass.txt"
 if [[ -f "$VAULT_PASS_FILE" ]]; then
-  read -r -p "Vault password file already exists at ${VAULT_PASS_FILE}. Overwrite? [y/N] " overwrite_vault
-  if [[ "$overwrite_vault" =~ ^[Yy]$ ]]; then
-    printf '%s\n' "$vault_password" > "$VAULT_PASS_FILE"
-    chmod 600 "$VAULT_PASS_FILE"
-    echo "Vault password file overwritten."
-  else
-    echo "Keeping existing vault password file."
-  fi
+  # File was created in step 3, so it already has the correct password
+  echo "Vault password file already in place at ${VAULT_PASS_FILE}."
 else
   mkdir -p "$(dirname "$VAULT_PASS_FILE")"
   printf '%s\n' "$vault_password" > "$VAULT_PASS_FILE"
