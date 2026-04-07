@@ -26,12 +26,13 @@ module "homelab" {
   vm050_mint_media_disk_size_gb = var.vm050_mint_media_disk_size_gb
   vm210_gpu_pci_address         = var.vm210_gpu_pci_address
   debian_lxc_template           = var.debian_lxc_template
+  lxc_root_password             = var.lxc_root_password
   build_inventory_file          = var.build_inventory_file
   site_config_file              = var.site_config_file
 
   create_pfsense           = false
   create_workloads         = true
-  create_mint              = false
+  create_mint              = true
   render_ansible_inventory = true
 }
 

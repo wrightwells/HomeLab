@@ -132,3 +132,8 @@ variable "debian_lxc_template" {
   type    = string
   default = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
 }
+
+variable "lxc_root_password" {
+  type      = string
+  sensitive = true
+}

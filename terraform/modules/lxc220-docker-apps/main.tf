@@ -28,7 +28,7 @@ resource "proxmox_virtual_environment_container" "this" {
     }
 
     user_account {
-      password = "change-me-now"
+      password = var.lxc_root_password
       keys     = var.ssh_public_key == "" ? [] : [var.ssh_public_key]
     }
   }

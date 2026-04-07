@@ -295,6 +295,7 @@ module "lxc066_docker_arr" {
   ipv4_gateway        = local.all_inventory_hosts.lxc066_docker_arr.gateway
   bridge              = local.site_networks[local.inventory_hosts.lxc066_docker_arr.network].bridge
   vlan_id             = local.inventory_hosts.lxc066_docker_arr.network == "dmz" ? null : local.site_networks[local.inventory_hosts.lxc066_docker_arr.network].vlan
+  lxc_root_password   = var.lxc_root_password
 }
 
 module "lxc200_docker_services" {
@@ -315,6 +316,7 @@ module "lxc200_docker_services" {
   ipv4_gateway        = local.all_inventory_hosts.lxc200_docker_services.gateway
   bridge              = local.site_networks[local.inventory_hosts.lxc200_docker_services.network].bridge
   vlan_id             = local.site_networks[local.inventory_hosts.lxc200_docker_services.network].vlan
+  lxc_root_password   = var.lxc_root_password
 }
 
 module "lxc220_docker_apps" {
@@ -335,6 +337,7 @@ module "lxc220_docker_apps" {
   ipv4_gateway        = local.all_inventory_hosts.lxc220_docker_apps.gateway
   bridge              = local.site_networks[local.inventory_hosts.lxc220_docker_apps.network].bridge
   vlan_id             = local.site_networks[local.inventory_hosts.lxc220_docker_apps.network].vlan
+  lxc_root_password   = var.lxc_root_password
 }
 
 module "lxc230_docker_media" {
@@ -355,6 +358,7 @@ module "lxc230_docker_media" {
   ipv4_gateway        = local.all_inventory_hosts.lxc230_docker_media.gateway
   bridge              = local.site_networks[local.inventory_hosts.lxc230_docker_media.network].bridge
   vlan_id             = local.site_networks[local.inventory_hosts.lxc230_docker_media.network].vlan
+  lxc_root_password   = var.lxc_root_password
 }
 
 module "lxc240_docker_external" {
@@ -375,6 +379,7 @@ module "lxc240_docker_external" {
   ipv4_gateway        = local.all_inventory_hosts.lxc240_docker_external.gateway
   bridge              = local.site_networks[local.inventory_hosts.lxc240_docker_external.network].bridge
   vlan_id             = local.inventory_hosts.lxc240_docker_external.network == "dmz" ? null : local.site_networks[local.inventory_hosts.lxc240_docker_external.network].vlan
+  lxc_root_password   = var.lxc_root_password
 }
 
 module "lxc250_infra" {
@@ -395,6 +400,7 @@ module "lxc250_infra" {
   ipv4_gateway        = local.all_inventory_hosts.lxc250_infra.gateway
   bridge              = local.site_networks[local.inventory_hosts.lxc250_infra.network].bridge
   vlan_id             = local.site_networks[local.inventory_hosts.lxc250_infra.network].vlan
+  lxc_root_password   = var.lxc_root_password
 }
 
 moved {

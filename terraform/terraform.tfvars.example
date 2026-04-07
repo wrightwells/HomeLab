@@ -25,5 +25,10 @@ pfsense_lan_bridge  = "vmbr2"
 pfsense_dmz_bridge  = "vmbr3"
 debian_lxc_template = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
 
-ansible_user   = "ansible"
-ssh_public_key = "ssh-ed25519 AAAA_REPLACE_ME"
+ansible_user        = "ansible"
+ssh_public_key      = "ssh-ed25519 AAAA_REPLACE_ME"
+
+# LXC root password -- uses the same plain-text secret as the Ansible vault password.
+# Tradeoff: this simplifies the operator flow but means the vault password doubles as
+# LXC root access. Keep the vault password file private.
+lxc_root_password   = "CHANGE_ME_TO_VAULT_PASSWORD"

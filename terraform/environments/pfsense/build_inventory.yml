@@ -3,9 +3,10 @@ build_inventory:
   guests:
     vm100_pfsense:
       enabled: true
-      notes: "Always required."
+      notes: "Stage 1: pfSense only. All other guests are created in the production stage."
     vm050_mint:
-      enabled: true
+      enabled: false
+      notes: "Created in the production stage, not here."
     vm210_ai_gpu:
       enabled: false
     lxc066_docker_arr:

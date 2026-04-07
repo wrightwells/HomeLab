@@ -174,6 +174,12 @@ variable "debian_lxc_template" {
   default     = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
 }
 
+variable "lxc_root_password" {
+  description = "Root password for LXC containers. Uses the same plain-text secret as the Ansible vault password."
+  type        = string
+  sensitive   = true
+}
+
 variable "create_pfsense" {
   description = "Whether this Terraform state should manage the pfSense VM"
   type        = bool

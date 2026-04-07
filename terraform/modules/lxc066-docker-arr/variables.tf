@@ -13,3 +13,4 @@ variable "ipv4_address" { type = string }
 variable "ipv4_gateway" { type = string }
 variable "bridge" { type = string }
 variable "vlan_id" { type = number }
+variable "lxc_root_password" { type = string }

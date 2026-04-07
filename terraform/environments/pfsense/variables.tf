@@ -74,17 +74,6 @@ variable "ansible_user" {
   default = "ansible"
 }
 
-variable "ansible_default_user" {
-  type    = string
-  default = "ansible"
-}
-
-variable "ansible_inventory_path" {
-  type     = string
-  default  = null
-  nullable = true
-}
-
 variable "resource_profile" {
   type    = string
   default = "balanced_128gb"
@@ -92,35 +81,6 @@ variable "resource_profile" {
 
 variable "vm_template_vmid" {
   type = number
-}
-
-variable "vm050_mint_template_vmid" {
-  type = number
-}
-
-variable "vm050_mint_root_disk_size_gb" {
-  type    = number
-  default = 96
-}
-
-variable "vm050_mint_nvme_storage" {
-  type    = string
-  default = "local-lvm"
-}
-
-variable "vm050_mint_nvme_disk_size_gb" {
-  type    = number
-  default = 128
-}
-
-variable "vm050_mint_media_storage" {
-  type    = string
-  default = "local-lvm"
-}
-
-variable "vm050_mint_media_disk_size_gb" {
-  type    = number
-  default = 512
 }
 
 variable "vm210_gpu_pci_address" {
@@ -131,4 +91,10 @@ variable "vm210_gpu_pci_address" {
 variable "debian_lxc_template" {
   type    = string
   default = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
+}
+
+variable "lxc_root_password" {
+  type      = string
+  sensitive = true
+  default   = ""
 }

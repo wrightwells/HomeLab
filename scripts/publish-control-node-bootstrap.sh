@@ -14,6 +14,17 @@ TARGET_GITHUB_KEY="${TARGET_BIN}/github-deploy-key"
 TARGET_GITHUB_PUB_KEY="${TARGET_GITHUB_KEY}.pub"
 TARGET_NOTE="${TARGET_ROOT}/README-bootstrap.txt"
 
+# This script publishes the SSH bootstrap bundle to /mnt/appdata/homelab-control/bin/.
+#
+# It is designed to be run on the Proxmox host (or any machine that has /mnt/appdata
+# mounted) AFTER the shared storage has been prepared (step 3 of the bootstrap guide).
+#
+# The published scripts are then run manually on each created VM/LXC after
+# Terraform creates them (step 9 of the bootstrap guide).
+#
+# The deployment SSH keypair (github-deploy-key) is copied from /root/.ssh/id_ed25519
+# and used by the bootstrap scripts to clone the private HomeLab repo.
+
 mkdir -p "$TARGET_BIN"
 install -m 0755 "${ROOT_DIR}/scripts/bootstrap-control-node.sh" "$TARGET_BOOTSTRAP_SCRIPT"
 install -m 0755 "${ROOT_DIR}/scripts/fix-mint-apt-repos.sh" "$TARGET_APT_FIX_SCRIPT"
@@ -26,30 +37,32 @@ install -m 0644 "/root/.ssh/id_ed25519.pub" "$TARGET_GITHUB_PUB_KEY"
 cat >"$TARGET_NOTE" <<'EOF'
 Shared HomeLab control-node bootstrap
 
-Run this from Linux Mint or infra-250 after /mnt/appdata is mounted:
+This bundle is published by scripts/publish-control-node-bootstrap.sh.
+Run the bootstrap from here after Terraform creates each machine.
 
+For LXCs (log in as root first, using the vault password):
   /mnt/appdata/homelab-control/bin/bootstrap-control-node.sh
 
-If Linux Mint apt sources are broken with archive.ubuntu.com 404 errors, run:
+For Linux VMs (Mint, AI GPU -- via ansible user or root):
+  /mnt/appdata/homelab-control/bin/bootstrap-user-control-node.sh
 
+If Linux Mint apt sources are broken with archive.ubuntu.com 404 errors, run:
   /mnt/appdata/homelab-control/bin/fix-mint-apt-repos.sh
 
 If dpkg was interrupted and asks for "sudo dpkg --configure -a", run:
-
   /mnt/appdata/homelab-control/bin/fix-mint-dpkg.sh
 
 To pull the latest HomeLab repo updates into shared appdata and run Ansible:
-
   /mnt/appdata/homelab-control/bin/update-control-node.sh
 
-To build the control node the same way Mint and the future infra server will
-run it, cloning the repo into ~/HomeLab and then running Ansible:
-
-  /mnt/appdata/homelab-control/bin/bootstrap-user-control-node.sh
-
-That bootstrap also installs the shared GitHub deploy key from:
-
+The bootstrap scripts use the shared GitHub deploy key from:
   /mnt/appdata/homelab-control/bin/github-deploy-key
+
+Access model:
+  - root is used on all LXCs (required for nesting, bind-mounts, Docker)
+  - root is used on the Proxmox host
+  - ansible is used on Linux VMs (Mint, AI GPU) for Ansible runs
+  - root remains accessible via SSH key on all machines for emergencies
 
 The bootstrap script installs git and ansible, clones or updates the HomeLab
 repo under /mnt/appdata/homelab-control/HomeLab, and installs the Ansible
