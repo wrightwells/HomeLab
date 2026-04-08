@@ -71,6 +71,10 @@ build_inventory:
         enabled: true
         required_mounts:
           - appdata
+      searxng:
+        enabled: true
+        required_mounts:
+          - appdata
 
     lxc066_docker_arr:
       filebrowser:
