@@ -81,8 +81,10 @@
     repo: "{{ lxc250_infra_repo_url }}"
     dest: "{{ lxc250_infra_repo_dest }}"
     version: main
-    update: true
+    update: false
     accept_hostkey: true
+  ignore_errors: true
+  failed_when: false
 
 # --- Ansible vault password file ---
 
@@ -122,7 +124,17 @@
   loop:
     - /mnt/appdata/configs/alertmanager
     - /mnt/appdata/configs/prometheus
-  when: build_inventory.services.lxc250_infra.alertmanager.enabled | bool or build_inventory.services.lxc250_infra.prometheus.enabled | bool
+  ignore_errors: true
+  failed_when: false
+  register: infra_config_dirs_result
+
+- name: Ensure infra monitoring config directories exist (fallback - no chown)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop: "{{ infra_config_dirs_result.results | selectattr('failed', 'defined') | selectattr('failed') | map(attribute='item') | list }}"
+  when: infra_config_dirs_result.results | selectattr('failed', 'defined') | selectattr('failed') | list | length > 0
 
 - name: Deploy Alertmanager config
   ansible.builtin.copy:

@@ -58,9 +58,10 @@ services:
       # Uncomment the DB_STORAGE_TYPE: 'HDD' var if your database isn't stored on SSDs
       # DB_STORAGE_TYPE: 'HDD'
     volumes:
-      - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
+      - immich-db:/var/lib/postgresql/data
     shm_size: 128mb
     restart: always
 
 volumes:
   model-cache:
+  immich-db:

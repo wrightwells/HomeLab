@@ -15,7 +15,7 @@ services:
       - POSTGRES_USER=${PAPERLESS_DBUSER}
       - POSTGRES_PASSWORD=${PAPERLESS_DBPASS}
     volumes:
-      - /mnt/appdata/docker_volumes/paperless-ngx/db:/var/lib/postgresql/data
+      - paperless-db:/var/lib/postgresql/data
 
   gotenberg:
     image: docker.io/gotenberg/gotenberg:8.21
@@ -54,3 +54,6 @@ services:
       - /mnt/appdata/docker_volumes/paperless-ngx/media:/usr/src/paperless/media
       - /mnt/appdata/docker_volumes/paperless-ngx/export:/usr/src/paperless/export
       - /mnt/appdata/docker_volumes/paperless-ngx/consume:/usr/src/paperless/consume
+
+volumes:
+  paperless-db:

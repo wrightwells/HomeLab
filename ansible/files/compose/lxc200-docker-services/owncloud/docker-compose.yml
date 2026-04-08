@@ -45,7 +45,7 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
-      - /mnt/appdata/docker_volumes/owncloud:/var/lib/mysql
+      - owncloud-db:/var/lib/mysql
     networks:
       - owncloud_net
 
@@ -83,8 +83,7 @@ services:
       - owncloud_net
 
 volumes:
-  owncloud_files:
-  owncloud_db:
+  owncloud-db:
 
 networks:
   owncloud_net:
