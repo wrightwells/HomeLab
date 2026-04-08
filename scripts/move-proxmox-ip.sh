@@ -98,10 +98,11 @@ echo "Network interfaces updated."
 # ---------------------------------------------------------------------------
 # Fix hostname resolution for pvecm/pct after network change
 # ---------------------------------------------------------------------------
-if ! grep -q "$HOSTNAME_SHORT" /etc/hosts; then
-  echo "127.0.0.1 ${HOSTNAME_FQDN} ${HOSTNAME_SHORT}" >> /etc/hosts
-  echo "Added ${HOSTNAME_SHORT} to /etc/hosts"
+if grep -q "$HOSTNAME_SHORT" /etc/hosts; then
+  sed -i "/${HOSTNAME_SHORT}/d" /etc/hosts
 fi
+echo "10.10.99.10 ${HOSTNAME_FQDN} ${HOSTNAME_SHORT}" >> /etc/hosts
+echo "Updated hostname entry to point to management VLAN IP (10.10.99.10)"
 
 # ---------------------------------------------------------------------------
 # Apply the network change

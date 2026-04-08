@@ -124,13 +124,14 @@ echo ""
 echo "=== Fixing hostname resolution for Proxmox cluster tools ==="
 HOSTNAME_SHORT=$(hostname -s 2>/dev/null || echo "pve01")
 HOSTNAME_FQDN=$(hostname -f 2>/dev/null || echo "${HOSTNAME_SHORT}.uk.wrightwells.com")
+MANAGEMENT_IP="10.10.99.10"
 
-if ! grep -q "$HOSTNAME_SHORT" /etc/hosts; then
-  echo "127.0.0.1 ${HOSTNAME_FQDN} ${HOSTNAME_SHORT}" >> /etc/hosts
-  echo "Added ${HOSTNAME_SHORT} to /etc/hosts"
-else
-  echo "/etc/hosts already contains ${HOSTNAME_SHORT}"
-fi
+# Remove any stale entries for this hostname
+sed -i "/${HOSTNAME_SHORT}/d" /etc/hosts
+
+# Add the correct entry with the management IP
+echo "${MANAGEMENT_IP} ${HOSTNAME_FQDN} ${HOSTNAME_SHORT}" >> /etc/hosts
+echo "Added ${HOSTNAME_SHORT} -> ${MANAGEMENT_IP} to /etc/hosts"
 
 # ---------------------------------------------------------------------------
 # 1.10 Publish control node bootstrap scripts
