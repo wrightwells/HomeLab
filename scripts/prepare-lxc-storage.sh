@@ -5,6 +5,10 @@
 # required directories on the Proxmox host with 777 permissions so that
 # containers can read/write without ownership issues.
 #
+# IMPORTANT: Database containers (postgres, mariadb) now use Docker named
+# volumes instead of bind mounts to avoid ZFS chown failures. Only non-database
+# paths need host directories.
+#
 # Run this on the Proxmox host AFTER storage is set up (step 3) and BEFORE
 # running Ansible (step 10).
 #
@@ -25,20 +29,51 @@ mkdir -p /mnt/appdata/openvscode/config
 mkdir -p /mnt/appdata/code
 chmod 777 /mnt/appdata /mnt/appdata/docker_volumes /mnt/appdata/configs /mnt/appdata/homelab-control
 
-# Docker volume subdirectories (shared across all LXCs)
+# ---------------------------------------------------------------------------
+# Docker volume subdirectories (non-database paths only)
+# Database containers use Docker named volumes to avoid ZFS chown issues
+# ---------------------------------------------------------------------------
 echo "Creating Docker volume subdirectories..."
+
+# ARR stack (lxc066-docker-arr)
 mkdir -p /mnt/appdata/docker_volumes/{gluetun,qbittorrent,prowlarr,sonarr,radarr,lidarr,bazarr,readarr,filebrowser,jellyseerr,aurral}
+
+# Media stack (lxc230-docker-media)
 mkdir -p /mnt/appdata/docker_volumes/{jellyfin,plex,jellyswarrm/tailscale}
-mkdir -p /mnt/appdata/docker_volumes/{immich/immich_db,immich/immich_ml,immich/immich_redis,immich/immich_library}
-mkdir -p /mnt/appdata/docker_volumes/{owncloud/config,owncloud/mysql,owncloud/redis,owncloud/data}
-mkdir -p /mnt/appdata/docker_volumes/{paperless-ngx/db,paperless-ngx/data,paperless-ngx/media,paperless-ngx/export,paperless-ngx/consume}
+
+# Services stack (lxc200-docker-services) -- data/media paths only, no DB paths
+mkdir -p /mnt/appdata/docker_volumes/{owncloud/config,owncloud/data}
+mkdir -p /mnt/appdata/docker_volumes/{paperless-ngx/data,paperless-ngx/media,paperless-ngx/export,paperless-ngx/consume}
 mkdir -p /mnt/appdata/docker_volumes/{syncthing/config}
-mkdir -p /mnt/appdata/docker_volumes/{syncthing_sync}
-mkdir -p /mnt/appdata/docker_volumes/{mqtt,homebridge,portainer,prometheus,grafana,alertmanager,uptime-kuma,semaphore/postgres}
-mkdir -p /mnt/appdata/docker_volumes/{blinko/blinko-db,calibre,calibre-web,grist,homarr,node-red,influxdb,pairdrop,erugo,finance/db,teslamate/postgres}
-mkdir -p /mnt/appdata/docker_volumes/{ghost,kutt/db,wordpress/wordpress_db,rustdesk_id,rustdesk_relay,rustdesk_tailscale}
-mkdir -p /mnt/appdata/docker_volumes/{cloudflare-ddns-all,walletpage,open-webui,ollama,n8n,frigate,home-assistant,home-assistant-voice/piper,home-assistant-voice/whisper,home-assistant-voice/openwakeword,home-assistant-voice/openwakeword/custom,openvscode-server}
+mkdir -p /mnt/appdata/docker_volumes/syncthing_sync
+
+# Apps stack (lxc220-docker-apps) -- no DB paths (use named volumes)
+mkdir -p /mnt/appdata/docker_volumes/{calibre,calibre-web,grist,homarr,influxdb,pairdrop,erugo}
+mkdir -p /mnt/appdata/docker_volumes/{blinko/files}
+mkdir -p /mnt/appdata/docker_volumes/{node-red}
+
+# External stack (lxc240-docker-external) -- no DB paths
+mkdir -p /mnt/appdata/docker_volumes/{ghost,kutt,walletpage,nginx}
+mkdir -p /mnt/appdata/docker_volumes/{rustdesk_id,rustdesk_relay,rustdesk_tailscale}
+mkdir -p /mnt/appdata/docker_volumes/{cloudflare-ddns-all,wordpress/data}
+
+# Infra stack (lxc250-infra) -- no DB paths
+mkdir -p /mnt/appdata/docker_volumes/{portainer,prometheus/data,uptime-kuma}
+mkdir -p /mnt/appdata/docker_volumes/{mosquitto/config,mosquitto/data,mosquitto/log}
+
+# AI GPU VM (vm210-ai-gpu) -- no DB paths
+mkdir -p /mnt/appdata/docker_volumes/{open-webui,frigate,home-assistant}
+mkdir -p /mnt/appdata/docker_volumes/{home-assistant-voice/piper,home-assistant-voice/whisper,home-assistant-voice/openwakeword,home-assistant-voice/openwakeword/custom}
+mkdir -p /mnt/appdata/docker_volumes/{n8n,openvscode-server}
 chmod -R 777 /mnt/appdata/docker_volumes
+
+# ---------------------------------------------------------------------------
+# Config directories (for non-docker-config files)
+# ---------------------------------------------------------------------------
+echo "Creating config directories..."
+mkdir -p /mnt/appdata/configs/{alertmanager,prometheus,mosquitto,homebridge,node-red}
+mkdir -p /mnt/appdata/configs/tailscale-ai
+chmod -R 777 /mnt/appdata/configs
 
 # ---------------------------------------------------------------------------
 # AI model storage
@@ -49,11 +84,28 @@ mkdir -p /mnt/ai_models/cache
 chmod 777 /mnt/ai_models /mnt/ai_models/ollama /mnt/ai_models/cache
 
 # ---------------------------------------------------------------------------
+# Tailscale state (for ai-gpu Tailscale container)
+# ---------------------------------------------------------------------------
+echo "Creating /mnt/appdata/tailscale directory..."
+mkdir -p /mnt/appdata/tailscale/ai/state
+chmod 777 /mnt/appdata/tailscale/ai/state
+
+# ---------------------------------------------------------------------------
 # Verify
 # ---------------------------------------------------------------------------
 echo ""
-echo "=== Verifying directories ==="
-echo "Appdata: $(ls -ld /mnt/appdata | awk '{print $1, $9}')"
-echo "AI models: $(ls -ld /mnt/ai_models | awk '{print $1, $9}')"
+echo "=== Verifying key directories ==="
+for dir in /mnt/appdata/docker_volumes /mnt/appdata/configs /mnt/ai_models; do
+  if [ -d "$dir" ]; then
+    echo "EXISTS: $dir ($(stat -c '%a' "$dir"))"
+  else
+    echo "MISSING: $dir"
+  fi
+done
+
 echo ""
 echo "=== LXC storage preparation complete ==="
+echo ""
+echo "Note: Database containers (postgres, mariadb, redis) use Docker named"
+echo "volumes and do NOT require host directories. This avoids ZFS chown failures"
+echo "in unprivileged LXCs where root maps to nobody:65534 on the host."
