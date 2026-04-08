@@ -68,3 +68,11 @@
   register: ollama_list_result
   changed_when: false
   when: ollama_models_pull_enabled | bool
+
+- name: Install HACS in Home Assistant container
+  ansible.builtin.command:
+    cmd: "docker exec -i homeassistant bash -c 'wget -O - https://get.hacs.xyz | bash -'"
+  register: hacs_install_result
+  changed_when: "'HACS is now installed' in hacs_install_result.stdout"
+  failed_when: false
+  when: build_inventory.services.vm210_ai_gpu["home-assistant"].enabled | bool
