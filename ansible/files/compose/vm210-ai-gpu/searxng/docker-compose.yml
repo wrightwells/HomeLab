@@ -1,0 +1,20 @@
+services:
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    restart: unless-stopped
+    user: root
+    env_file:
+      - stack.env
+    ports:
+      - "8080:8080"
+    volumes:
+      - searxng-config:/etc/searxng
+    logging:
+      driver: json-file
+      options:
+        max-size: 1m
+        max-file: 1
+
+volumes:
+  searxng-config:
