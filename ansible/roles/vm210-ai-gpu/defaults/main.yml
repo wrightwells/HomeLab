@@ -49,5 +49,6 @@ ollama_models_to_pull:
   - qwen2.5-coder:7b
   - qwen2.5vl:7b
   - qwen3-vl:4b
-ollama_container_name: ollama
+  - llama3:8b
+ollama_container_name: ollama-ai
 ollama_models_pull_enabled: true
