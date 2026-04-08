@@ -63,5 +63,13 @@ resource "proxmox_virtual_environment_vm" "this" {
     type = "l26"
   }
 
+  hostpci {
+    device = "hostpci0"
+    id     = var.gpu_pci_address
+    pcie   = true
+    rombar = true
+    x_vga  = true
+  }
+
   description = "AI VM cloned from a prepared Proxmox template. Extend with GPU passthrough as needed."
 }
