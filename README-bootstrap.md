@@ -196,12 +196,10 @@ iface nic1 inet manual
 auto nic2
 iface nic2 inet manual
 
-# Bootstrap bridge on the Proxmox uplink NIC.
-# Proxmox host IP lives here during bring-up.
+# Bootstrap / temporary access bridge on nic0
 auto vmbr0
 iface vmbr0 inet static
     address 10.10.1.10/24
-    gateway 10.10.1.1
     bridge-ports nic0
     bridge-stp off
     bridge-fd 0
@@ -214,7 +212,6 @@ iface vmbr1 inet manual
     bridge-fd 0
 
 # pfSense LAN trunk on nic2
-# Carries internal VLANs once pfSense is in place
 auto vmbr2
 iface vmbr2 inet manual
     bridge-ports nic2
@@ -222,6 +219,12 @@ iface vmbr2 inet manual
     bridge-fd 0
     bridge-vlan-aware yes
     bridge-vids 2-4094
+
+# Proxmox host management on VLAN 99 behind pfSense
+auto vmbr2.99
+iface vmbr2.99 inet static
+    address 10.10.99.10/24
+    gateway 10.10.99.1
 
 # Optional DMZ / untrusted bridge
 auto vmbr3
@@ -555,10 +558,10 @@ iface nic1 inet manual
 auto nic2
 iface nic2 inet manual
 
-# Bootstrap bridge -- remains defined but no longer carries the host IP.
-# Kept present for legacy/template VM access if needed.
+# Bootstrap / temporary access bridge on nic0
 auto vmbr0
-iface vmbr0 inet manual
+iface vmbr0 inet static
+    address 10.10.1.10/24
     bridge-ports nic0
     bridge-stp off
     bridge-fd 0
@@ -571,7 +574,6 @@ iface vmbr1 inet manual
     bridge-fd 0
 
 # pfSense LAN trunk on nic2
-# Proxmox host management IP now lives here on VLAN 99
 auto vmbr2
 iface vmbr2 inet manual
     bridge-ports nic2
@@ -580,7 +582,7 @@ iface vmbr2 inet manual
     bridge-vlan-aware yes
     bridge-vids 2-4094
 
-# Proxmox host management interface on vmbr2, VLAN 99
+# Proxmox host management on VLAN 99 behind pfSense
 auto vmbr2.99
 iface vmbr2.99 inet static
     address 10.10.99.10/24
@@ -750,8 +752,8 @@ This same plain-text value is used as the LXC root password (see step 7.4).
 | Host | IP | Network |
 |------|----|---------|
 | Proxmox host (step 2) | `10.10.1.10` | `vmbr0` (bootstrap) |
-| Proxmox host (step 10) | `10.10.99.10` | `vmbr2.99` (management VLAN) |
-| `vm100_pfsense` | `10.10.1.110` | `vmbr0` (bootstrap), plus pfSense-side interfaces on `vmbr1`/`vmbr2`/`vmbr3` |
+| Proxmox host (step 9+) | `10.10.99.10` | `vmbr2.99` (management VLAN) |
+| `vm100_pfsense` (post-config) | `10.10.99.1` | management VLAN 99 (pfSense IS the gateway) |
 | `vm050_mint` | `10.10.10.50` | `vmbr2` VLAN 10 |
 | `vm210_ai_gpu` | `10.10.20.210` | `vmbr2` VLAN 20 |
 | `lxc066_docker_arr` | `10.10.66.66` | `vmbr3` (DMZ) |

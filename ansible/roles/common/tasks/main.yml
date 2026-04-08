@@ -23,9 +23,10 @@
   community.general.timezone:
     name: "{{ timezone }}"
 
-- name: Enable qemu guest agent
+- name: Enable qemu guest agent (VMs only)
   ansible.builtin.service:
     name: qemu-guest-agent
     state: started
     enabled: true
+  when: inventory_hostname in groups.get('ai_gpu', []) or inventory_hostname in groups.get('mint_desktop', [])
   ignore_errors: true

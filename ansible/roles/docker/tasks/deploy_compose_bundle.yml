@@ -24,6 +24,17 @@
     group: "{{ item.group | default(docker_project_group) }}"
     mode: "{{ item.mode | default('0755') }}"
   loop: "{{ docker_host_paths }}"
+  ignore_errors: true
+  register: docker_host_path_result
+  failed_when: false
+
+- name: Ensure declared host bind-mount paths exist (fallback - no chown)
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: "{{ item.state | default('directory') }}"
+    mode: "{{ item.mode | default('0755') }}"
+  loop: "{{ docker_host_path_result.results | selectattr('failed', 'defined') | selectattr('failed') | list }}"
+  when: docker_host_path_result.results | selectattr('failed', 'defined') | selectattr('failed') | list | length > 0
 
 - name: Copy compose bundle contents
   ansible.builtin.copy:
@@ -69,8 +80,20 @@
 - name: Load bundled Docker image archives
   ansible.builtin.command:
     cmd: "docker load -i {{ item.path }}"
-  loop: "{{ docker_image_archive_find_results.results | default([]) | map(attribute='files') | flatten }}"
-  when: (docker_image_archive_find_results.results | default([]) | map(attribute='files') | flatten | length) > 0
+  loop: >-
+    {{
+      (docker_image_archive_find_results.results | default([]))
+      | selectattr('matched', 'defined')
+      | map(attribute='files')
+      | flatten
+      | default([])
+    }}
+  when: >-
+    (docker_image_archive_find_results.results | default([]))
+    | selectattr('matched', 'defined')
+    | map(attribute='files')
+    | flatten
+    | length > 0
 
 - name: Render docker-compose from template when present
   ansible.builtin.template:
@@ -117,6 +140,15 @@
     - lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/stack.env.vault', wantlist=True) | length == 0
     - lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/stack.env.example.j2', wantlist=True) | length == 0
     - lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/stack.env.example', wantlist=True) | length > 0
+
+- name: Ensure .env symlink points to stack.env when present
+  ansible.builtin.file:
+    src: stack.env
+    dest: "{{ docker_compose_root }}/{{ item }}/.env"
+    state: link
+    force: true
+  loop: "{{ compose_stacks }}"
+  when: lookup('ansible.builtin.fileglob', docker_compose_root ~ '/' ~ item ~ '/stack.env', wantlist=True) | length > 0
 
 - name: Start compose stacks
   community.docker.docker_compose_v2:

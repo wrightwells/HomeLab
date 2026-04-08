@@ -39,8 +39,12 @@ homelab_site:
     vm100_pfsense:
       hostname: pfsense
       host_id: 110
-      network: bootstrap
-      bridge: vmbr0
+      # After pfSense manual config (step 6), manage via VLAN 99 gateway IP.
+      # management_host_id overrides host_id for Ansible inventory IP calculation
+      # so pfSense is reached at 10.10.99.1 (its management VLAN interface).
+      management_host_id: 1
+      network: management
+      bridge: vmbr2
     vm210_ai_gpu:
       hostname: ai-gpu
       host_id: 210

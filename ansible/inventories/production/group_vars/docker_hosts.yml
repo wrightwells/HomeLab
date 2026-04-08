@@ -1,3 +1,14 @@
 ---
-ansible_ssh_private_key_file: "{{ lookup('env', 'HOME') + '/.ssh/id_ed25519' }}"
-ansible_ssh_common_args: "-o IdentitiesOnly=yes"
+# LXC containers use password-based SSH auth for initial bootstrap.
+# The password is the same as lxc_root_password in terraform.tfvars
+# (which equals the Ansible vault password).
+#
+# VMs in docker_hosts (ai-gpu) override ansible_ssh_pass to "" so they
+# use key-based auth only.
+ansible_ssh_pass: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          61623361316662643361663363363138343331646235313434326138363333653231376363393064
+          3136373761336165653763623763333532363431653632660a613734323038613131633431663034
+          32646135303262326330376464366230323462343062373237313434623633666536643332386262
+          6436373830656364660a313637343338643465653235366263393665396563636234323461626139
+          3935

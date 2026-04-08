@@ -101,7 +101,10 @@ locals {
     proxmox_host = {
       name    = "proxmox-host"
       type    = "host"
-      network = "bootstrap"
+      # After step 9 the Proxmox management IP lives on vmbr2.99 (management VLAN).
+      # During bootstrap it is on vmbr0, but the Ansible inventory targets the
+      # post-move management IP so playbooks run over the pfSense-routed network.
+      network = "management"
       vmid    = null
       host_id = local.homelab_site.proxmox.management_host_id
       groups  = ["proxmox"]
@@ -113,9 +116,10 @@ locals {
       type    = "vm"
       network = local.homelab_site.guests.vm100_pfsense.network
       vmid    = 100
-      host_id = local.homelab_site.guests.vm100_pfsense.host_id
-      groups  = ["pfsense_firewall"]
-      user    = "admin"
+      # After pfSense config, use management_host_id (gateway IP) for Ansible.
+      host_id  = try(local.homelab_site.guests.vm100_pfsense.management_host_id, local.homelab_site.guests.vm100_pfsense.host_id)
+      groups   = ["pfsense_firewall"]
+      user     = "admin"
     }
 
     vm050_mint = {

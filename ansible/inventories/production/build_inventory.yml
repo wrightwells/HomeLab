@@ -141,7 +141,7 @@ build_inventory:
         required_mounts:
           - appdata
       grist-finance-connector:
-        enabled: true
+        enabled: false
         required_mounts:
           - appdata
       blinko:

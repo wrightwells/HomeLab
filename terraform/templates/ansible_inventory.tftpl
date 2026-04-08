@@ -3,7 +3,7 @@
 %{ for group_name in sort(keys(groups)) ~}
 [${group_name}]
 %{   for host_name in sort(keys(groups[group_name])) ~}
-${host_name} ansible_host=${groups[group_name][host_name].ansible_host} ansible_user=${try(groups[group_name][host_name].ansible_user, ansible_default_user)}%{ if try(length(keys(groups[group_name][host_name].extra_vars)), 0) > 0 } %{ for k in sort(keys(groups[group_name][host_name].extra_vars)) }${k}=${groups[group_name][host_name].extra_vars[k]}%{ endfor }%{ endif }
+${host_name} ansible_host=${groups[group_name][host_name].ansible_host} ansible_user=${try(groups[group_name][host_name].ansible_user, ansible_default_user)} ansible_ssh_extra_args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"%{ if try(length(keys(groups[group_name][host_name].extra_vars)), 0) > 0 } %{ for k in sort(keys(groups[group_name][host_name].extra_vars)) }${k}=${groups[group_name][host_name].extra_vars[k]}%{ endfor }%{ endif }
 %{   endfor ~}
 
 %{ endfor ~}

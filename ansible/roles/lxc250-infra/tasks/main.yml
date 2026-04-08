@@ -12,6 +12,16 @@
     owner: root
     group: root
     mode: "0755"
+  ignore_errors: true
+  failed_when: false
+  register: infra_control_root_result
+
+- name: Ensure shared control-node root exists (fallback - no chown)
+  ansible.builtin.file:
+    path: "{{ lxc250_infra_control_root }}"
+    state: directory
+    mode: "0755"
+  when: infra_control_root_result is defined and infra_control_root_result.failed | default(false)
 
 # --- SSH control-plane setup ---
 

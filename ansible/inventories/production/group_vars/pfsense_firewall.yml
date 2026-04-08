@@ -184,6 +184,20 @@ pfsense_rule_groups:
       protocol: any
       source: NET:opt2
       destination: RFC1918
+    # Allow management network to reach DMZ hosts for Ansible administration
+    - name: "Management to DMZ SSH"
+      interface: opt2
+      action: pass
+      protocol: tcp
+      source: NET:opt2
+      destination: LittleDown
+      destination_port: "22"
+    - name: "Management to DMZ ICMP"
+      interface: opt2
+      action: pass
+      protocol: icmp
+      source: NET:opt2
+      destination: LittleDown
   servers:
     - name: "Servers to RFC1918"
       interface: opt4
@@ -256,6 +270,29 @@ pfsense_rule_groups:
       source: any
       destination: tailscale_peer_relay
       destination_port: rustdesk_relay_port
+  dmz:
+    # Allow DMZ hosts to reach the internet (docker-external needs this for
+    # Docker image pulls, nginx reverse proxy, etc.)
+    - name: "DMZ to Internet"
+      interface: opt1
+      action: pass
+      protocol: any
+      source: NET:opt1
+      destination: any
+    # Allow management network to reach DMZ for Ansible administration
+    - name: "Management to DMZ SSH"
+      interface: opt1
+      action: pass
+      protocol: tcp
+      source: LittleDown
+      destination: NET:opt1
+      destination_port: "22"
+    - name: "Management to DMZ ICMP"
+      interface: opt1
+      action: pass
+      protocol: icmp
+      source: LittleDown
+      destination: NET:opt1
 
 pfsense_nat_rules:
   - descr: Teslamate

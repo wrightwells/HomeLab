@@ -73,10 +73,17 @@ echo "Encrypting and writing vault file to: ${VAULT_FILE#${REPO_ROOT}/}"
 
 mkdir -p "$(dirname "$VAULT_FILE")"
 
-echo "$hash" | \
-  ansible-vault encrypt_string --stdin-name 'lxc_root_password_hash' \
-  > "$VAULT_FILE" \
-  <<< "$vault_password"
+# Pass the hash via stdin, vault password via --vault-password-file
+printf '%s' "$vault_password" > /tmp/homelab-vault-pass-temp.txt
+chmod 600 /tmp/homelab-vault-pass-temp.txt
+
+printf '%s' "$hash" | \
+  ansible-vault encrypt_string \
+  --vault-password-file /tmp/homelab-vault-pass-temp.txt \
+  --stdin-name 'lxc_root_password_hash' \
+  > "$VAULT_FILE"
+
+rm -f /tmp/homelab-vault-pass-temp.txt
 
 if [[ $? -ne 0 ]]; then
   echo "Error: failed to encrypt vault file." >&2
