@@ -17,3 +17,6 @@ Thumbs.db
 ansible/files/docker-images/**/*.tar
 ansible/files/docker-images/**/*.tar.gz
 ansible/files/docker-images/**/*.tgz
+
+# Private Docker image archives (built locally, not committed)
+ansible/files/docker-images/**/*.tar
