@@ -1,3 +1,26 @@
+configs:
+  ts-serve:
+    content: |
+      {
+        "TCP": {
+          "443": {
+            "HTTPS": true
+          }
+        },
+        "Web": {
+          "$${TS_CERT_DOMAIN}:443": {
+            "Handlers": {
+              "/": {
+                "Proxy": "http://127.0.0.1:8080"
+              }
+            }
+          }
+        },
+        "AllowFunnel": {
+          "$${TS_CERT_DOMAIN}:443": false
+        }
+      }
+
 services:
   tailscale:
     image: tailscale/tailscale:latest
@@ -12,9 +35,11 @@ services:
       - TS_LOCAL_ADDR_PORT=127.0.0.1:41234
       - TS_AUTH_ONCE=true
       - TS_ACCEPT_DNS=true
+    configs:
+      - source: ts-serve
+        target: /config/serve.json
     volumes:
       - /mnt/appdata/tailscale/${SERVICE}/state:/var/lib/tailscale
-      - /opt/containers/ai-models/config/serve.json:/config/serve.json:ro
     devices:
       - /dev/net/tun:/dev/net/tun
     cap_add:
