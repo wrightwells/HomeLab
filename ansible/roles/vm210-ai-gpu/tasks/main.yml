@@ -40,3 +40,31 @@
         owner: "{{ docker_app_uid }}"
         group: "{{ docker_app_gid }}"
   when: (build_inventory.services.vm210_ai_gpu | dict2items | selectattr('value.enabled') | list | length) > 0
+
+- name: Ensure /mnt/ai_models/ollama directory exists for model storage
+  ansible.builtin.file:
+    path: /mnt/ai_models/ollama
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  ignore_errors: true
+  failed_when: false
+
+- name: Pull Ollama models into local cache
+  ansible.builtin.command:
+    cmd: "docker exec -i {{ ollama_container_name }} ollama pull {{ item }}"
+  loop: "{{ ollama_models_to_pull }}"
+  when:
+    - ollama_models_pull_enabled | bool
+    - build_inventory.services.vm210_ai_gpu["ai-models"].enabled | bool
+  register: ollama_pull_result
+  changed_when: "'pulling manifest' in ollama_pull_result.stdout"
+  failed_when: false
+
+- name: Verify pulled Ollama models
+  ansible.builtin.command:
+    cmd: "docker exec {{ ollama_container_name }} ollama list"
+  register: ollama_list_result
+  changed_when: false
+  when: ollama_models_pull_enabled | bool

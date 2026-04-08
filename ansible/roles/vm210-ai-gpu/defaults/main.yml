@@ -41,3 +41,13 @@ frigate_example_camera_main_rtsp_url: rtsp://REPLACE_ME_EXAMPLE_CAMERA_MAIN
 frigate_example_camera_detect_width: 640
 frigate_example_camera_detect_height: 360
 frigate_example_camera_detect_fps: 5
+
+# Ollama model pulls — run after the ai-models stack is deployed.
+ollama_models_to_pull:
+  - qwen3:8b
+  - qwen3:4b
+  - qwen2.5-coder:7b
+  - qwen2.5vl:7b
+  - qwen3-vl:4b
+ollama_container_name: ollama
+ollama_models_pull_enabled: true
