@@ -109,7 +109,10 @@
       "Bash(apt-get *)",
       "Bash(sshpass *)",
       "Bash(head *)",
-      "Bash(./scripts/publish-control-node-bootstrap.sh)"
+      "Bash(./scripts/publish-control-node-bootstrap.sh)",
+      "Bash(printf *)",
+      "Bash(tr *)",
+      "Bash(find *)"
     ]
   },
   "$version": 3
