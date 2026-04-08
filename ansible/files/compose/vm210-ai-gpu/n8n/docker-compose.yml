@@ -13,6 +13,7 @@ services:
       - WEBHOOK_URL=${WEBHOOK_URL}
       - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL}
       - GENERIC_TIMEZONE=${TZ}
+      - N8N_SECURE_COOKIE=false
     ports:
       - "5678:5678"
     volumes:

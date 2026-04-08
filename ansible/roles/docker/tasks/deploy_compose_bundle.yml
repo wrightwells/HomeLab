@@ -141,6 +141,12 @@
     - lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/stack.env.example.j2', wantlist=True) | length == 0
     - lookup('ansible.builtin.fileglob', playbook_dir ~ '/../files/compose/' ~ compose_bundle_name ~ '/' ~ item ~ '/stack.env.example', wantlist=True) | length > 0
 
+- name: Check if stack.env exists on target
+  ansible.builtin.stat:
+    path: "{{ docker_compose_root }}/{{ item }}/stack.env"
+  loop: "{{ compose_stacks }}"
+  register: stack_env_stat_results
+
 - name: Ensure .env symlink points to stack.env when present
   ansible.builtin.file:
     src: stack.env
@@ -148,7 +154,10 @@
     state: link
     force: true
   loop: "{{ compose_stacks }}"
-  when: lookup('ansible.builtin.fileglob', docker_compose_root ~ '/' ~ item ~ '/stack.env', wantlist=True) | length > 0
+  when: >-
+    stack_env_stat_results.results | selectattr('stat.exists', 'defined')
+    | selectattr('stat.exists') | map(attribute='item') | list | length > 0
+    and item in (stack_env_stat_results.results | selectattr('stat.exists') | map(attribute='item') | list)
 
 - name: Start compose stacks
   community.docker.docker_compose_v2:
