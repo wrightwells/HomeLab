@@ -5,9 +5,6 @@ services:
     restart: unless-stopped
     env_file:
       - stack.env
-    environment:
-      - TZ=${TZ}
-      - OLLAMA_HOST=${OLLAMA_HOST}
     ports:
       - "11434:11434"
     volumes:
@@ -22,9 +19,6 @@ services:
       - ollama
     env_file:
       - stack.env
-    environment:
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
-      - WEBUI_AUTH=${WEBUI_AUTH}
     ports:
       - "3000:8080"
     volumes:
