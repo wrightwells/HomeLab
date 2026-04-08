@@ -1,353 +1,111 @@
 # Bootstrap Guide
 
-This guide follows the approved 10-step operational flow for building this HomeLab from bare metal to fully configured services.
+This guide takes you from a freshly installed Proxmox host with storage prepared
+to a fully deployed HomeLab with all services running.
 
-**Read the full flow first.** Steps are numbered in execution order. Each step is tagged `[MANUAL]` or `[TERRAFORM]` / `[ANSIBLE]` so you can see exactly what is automated and what requires human action.
-
----
-
-## Approved operational flow
-
-| Step | Description | Driver |
-|------|-------------|--------|
-| 1 | Proxmox install and base host preparation | [MANUAL] |
-| 2 | `/etc/network/interfaces` setup on `vmbr0` | [MANUAL] |
-| 3 | Disk creation / storage preparation | [MANUAL / ANSIBLE] |
-| 4 | Tailscale on the host, verify SSH over Tailscale | [MANUAL / ANSIBLE] |
-| 5 | Terraform pfSense only | [TERRAFORM] |
-| 6 | Install and configure pfSense manually | [MANUAL] |
-| 7 | Create deployment SSH keypair, publish bootstrap script to `/mnt/appdata` | [MANUAL] |
-| 8 | Terraform remaining VMs and LXCs (including Mint) | [TERRAFORM] |
-| 9 | Move Proxmox host IP from `vmbr0` to `vmbr2` | [MANUAL] |
-| 10 | Run Ansible to build/configure VMs and LXCs | [ANSIBLE] |
+Every step is a **script** you run from the Proxmox host. Manual steps are
+explicitly marked and kept to a minimum.
 
 ---
 
-Note on step 7: the bootstrap scripts published to `/mnt/appdata/homelab-control/bin/` are **not run during the initial build**. Ansible runs from the Proxmox host (step 10), so machines only need to be reachable over SSH. The published scripts are reserved for future use if a machine like infra-250 is promoted to a dedicated Ansible control node.
+## Prerequisites
+
+Before starting:
+
+1. **Proxmox VE is installed** on the 500 GB SATA SSD with `ext4`.
+2. **Storage is prepared** — run the storage playbook per
+   [README-storage.md](README-storage.md) so that `/mnt/appdata`,
+   `/mnt/media_pool`, and `/mnt/ai_models` exist.
+3. **The repo is cloned** to `~/HomeLab` on the Proxmox host.
+4. **You know your real NIC names** — discover them with `ip -br link`. Replace
+   `nic0`/`nic1`/`nic2` in `/etc/network/interfaces` accordingly.
 
 ---
 
-## Step 1 -- Proxmox install and base host preparation `[MANUAL]`
+## Quick-start flow
 
-### 1.1 BIOS Configuration
-
-Boot into the Z420 BIOS with `F10` and set:
-
-- Storage:
-  - `SATA Mode -> AHCI`
-  - disable RAID mode
-- Boot:
-  - enable UEFI boot
-  - disable legacy boot
-- Security:
-  - `System Security -> Virtualization Technology (VTx) -> Enable`
-  - `System Security -> Intel VT-d` or `Virtualization Technology Directed I/O (VTd) -> Enable`
-- PCI:
-  - `Above 4G decoding -> Enable` if the option exists
-
-Save and reboot.
-
-Exact HP Z420 path for virtualization:
-
-```text
-F10 BIOS Setup -> Security -> System Security
-```
-
-If a BIOS update is needed, apply it before installing Proxmox, then re-check all settings above.
-
-Why these matter:
-
-- `AHCI` keeps storage simple for the Proxmox OS disk
-- `UEFI` matches the recommended modern Proxmox install path
-- `VT-x` and `VT-d` are required for virtualization and later GPU passthrough
-- `Above 4G decoding` is strongly recommended for PCIe GPU passthrough
-
-### 1.2 Prepare the Proxmox Installer
-
-From another machine, download the latest Proxmox VE ISO:
-
-- <https://www.proxmox.com/en/downloads>
-
-Create a bootable USB on Linux:
-
-```bash
-sudo dd if=proxmox-ve_*.iso of=/dev/sdX bs=4M status=progress oflag=sync
-```
-
-### 1.3 Install Proxmox
-
-Boot from the USB installer and use these baseline choices:
-
-- target disk: `500 GB SATA SSD`
-- filesystem: `ext4`
-- hostname example: `pve01.uk.wrightwells.com`
-- management NIC: onboard `1 Gb` NIC
-
-Recommended installer network values:
-
-- UK: IP `10.10.1.10`, gateway `10.10.1.1`, DNS `10.10.1.1`
-- France: IP `10.20.1.10`, gateway `10.20.1.1`, DNS `10.20.1.1`
-
-Site-aware rule:
-
-- UK builds use `10.10.x.x`
-- France builds use `10.20.x.x`
-- VLAN-aware guest addressing follows `10.<site_octet>.<vlan>.<host_id>`
-
-Use `ext4` for the Proxmox OS install disk. Do not use ZFS for the OS disk.
-
-### 1.4 First Host Upgrade
-
-```bash
-ssh root@10.10.1.10
-```
-
-If not using a Proxmox subscription:
-
-```bash
-sed -i 's/^deb/#deb/g' /etc/apt/sources.list.d/pve-enterprise.list
-echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-no-sub.list
-apt update
-apt full-upgrade -y
-reboot
-```
-
-Install required utilities:
-
-```bash
-sudo apt update
-sudo apt install -y wget jq unzip pciutils lsblk git curl gnupg software-properties-common python3-pip ansible
-```
-
-Install Terraform:
-
-```bash
-wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(. /etc/os-release && echo ${VERSION_CODENAME}) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-sudo apt update
-sudo apt install -y terraform
-```
-
-Clone the repo:
-
-```bash
-git clone https://github.com/wrightwells/HomeLab.git ~/HomeLab
-cd ~/HomeLab
-```
-
-Verify:
-
-```bash
-git --version
-ansible --version
-terraform version
-```
-
-Identify disks:
-
-```bash
-lsblk -o NAME,SIZE,MODEL
-```
-
-### 1.5 Switch SSH from Password to Key Authentication
-
-```bash
-~/HomeLab/scripts/setup-ssh-key-login.sh --host 10.10.1.10 --user root
-```
-
-After key login works, disable password auth in `/etc/ssh/sshd_config`:
-
-```ssh-config
-PasswordAuthentication no
-KbdInteractiveAuthentication no
-ChallengeResponseAuthentication no
-PermitRootLogin prohibit-password
-```
-
-Then:
-
-```bash
-sshd -t
-systemctl restart ssh
-```
+| Step | Script | What it does |
+|------|--------|--------------|
+| 1 | `./scripts/prepare-proxmox-host.sh` | Packages, repos, vault, SSH key, deploy key |
+| 2 | `./scripts/prepare-templates.sh` | Downloads Debian 12 LXC template, verifies VM templates |
+| 3 | *(configure tfvars)* | API token, node name, template VMIDs, GPU PCI |
+| 4 | `./scripts/terraform-init.sh pfsense` + plan + apply | Creates pfSense VM |
+| 5 | *(manual pfSense install)* | Attach ISO, install, detach ISO |
+| 6 | *(manual pfSense GUI setup)* | See README-pfsense.md |
+| 7 | `./scripts/terraform-init.sh production` + plan + apply | Creates all other VMs and LXCs |
+| 8 | `./scripts/proxmox-apply-lxc-postcreate.sh` | LXC nesting, bind mounts |
+| 9 | `./scripts/setup-lxc-root-password.sh` | Sets LXC root password |
+| 10 | `./scripts/apply-lxc-root-password.sh` | Applies password to rebooted LXCs |
+| 11 | `./scripts/setup-tun-device.sh` | Adds /dev/net/tun to docker-arr LXC |
+| 12 | `./scripts/prepare-lxc-storage.sh` | Creates ZFS bind-mount dirs with 777 perms |
+| 13 | `./scripts/move-proxmox-ip.sh` | Moves host IP from vmbr0 to vmbr2.99 |
+| 14 | `./scripts/verify-ansible-hosts.sh` | Pings all hosts |
+| 15 | `./scripts/deploy-all.sh` | Runs Ansible site playbook |
+| 16 | `./scripts/apply-pfsense-config.sh` | Applies pfSense firewall rules |
+| 17 | *(GPU passthrough — optional)* | See GPU section below |
+| 18 | *(grist-finance-connector — optional)* | See private image section below |
 
 ---
 
-## Step 2 -- `/etc/network/interfaces` on `vmbr0` `[MANUAL]`
+## Step-by-step detail
 
-Terraform does **not** configure Proxmox host networking. You must create the bridge layout manually.
-
-At this stage the Proxmox host management IP lives on `vmbr0`. Later (step 10) it will move to `vmbr2`, but `vmbr0` remains defined.
-
-### Initial `/etc/network/interfaces` (step 2 -- bring-up on `vmbr0`)
-
-```text
-# Loopback
-auto lo
-iface lo inet loopback
-
-# Physical NICs
-auto nic0
-iface nic0 inet manual
-
-auto nic1
-iface nic1 inet manual
-
-auto nic2
-iface nic2 inet manual
-
-# Bootstrap / temporary access bridge on nic0
-auto vmbr0
-iface vmbr0 inet static
-    address 10.10.1.10/24
-    bridge-ports nic0
-    bridge-stp off
-    bridge-fd 0
-
-# pfSense WAN bridge on nic1
-auto vmbr1
-iface vmbr1 inet manual
-    bridge-ports nic1
-    bridge-stp off
-    bridge-fd 0
-
-# pfSense LAN trunk on nic2
-auto vmbr2
-iface vmbr2 inet manual
-    bridge-ports nic2
-    bridge-stp off
-    bridge-fd 0
-    bridge-vlan-aware yes
-    bridge-vids 2-4094
-
-# Proxmox host management on VLAN 99 behind pfSense
-auto vmbr2.99
-iface vmbr2.99 inet static
-    address 10.10.99.10/24
-    gateway 10.10.99.1
-
-# Optional DMZ / untrusted bridge
-auto vmbr3
-iface vmbr3 inet manual
-    bridge-ports none
-    bridge-stp off
-    bridge-fd 0
-```
-
-Notes:
-
-- Discover real interface names with `ip -br link` and `ip -br addr`. Replace `nic0`/`nic1`/`nic2` with the actual names on your hardware.
-- `vmbr0` carries the Proxmox management IP during initial bring-up.
-- `vmbr1` is the dedicated pfSense WAN bridge.
-- `vmbr2` is the pfSense LAN/trunk bridge for internal VLAN-backed guests.
-- `vmbr3` is the separate DMZ segment.
-- Apply network changes carefully, especially on a remote host.
-
----
-
-## Step 3 -- Disk creation / storage preparation `[MANUAL / ANSIBLE]`
-
-Leave disk creation/storage preparation ownership unchanged from the current repo behavior.
-
-If you want Ansible to prepare host storage (NVMe ext4, ZFS mirror appdata, XFS media disks + mergerfs), follow:
-
-- [README-storage.md](README-storage.md)
-- [proxmox-storage.yml](ansible/playbooks/proxmox-storage.yml)
-
-Update the real disk IDs in:
-
-- [ansible/inventories/production/group_vars/proxmox.yml](ansible/inventories/production/group_vars/proxmox.yml)
-
-Then run:
+### Step 1 -- Prepare the Proxmox host
 
 ```bash
-cd ansible
-ansible-playbook -i inventories/production/hosts.ini playbooks/proxmox-storage.yml
+./scripts/prepare-proxmox-host.sh
 ```
 
-After the initial format-and-create run, set:
+This script:
 
-```yaml
-proxmox_storage_allow_destructive_create: false
-```
+- Configures no-subscription apt repositories
+- Upgrades all packages
+- Installs git, ansible, terraform, and build dependencies
+- Clones the HomeLab repo to `~/HomeLab`
+- Creates the Ansible vault password file (`~/.config/ansible/homelab-vault-pass.txt`)
+- Generates an `ed25519` SSH deploy key (if not already present)
+- Publishes bootstrap scripts to `/mnt/appdata/homelab-control/bin/`
+- Fixes hostname resolution for `pvecm`/`pct`
 
-This step creates the shared host directories used by the rest of the lab:
+**You must** add the displayed public key as a deploy key on your GitHub repo.
 
-- `/mnt/media_pool/*`
-- `/mnt/appdata/docker_volumes`
-- `/mnt/appdata/configs`
-
----
-
-## Step 4 -- Tailscale on the host, verify SSH over Tailscale `[MANUAL / ANSIBLE]`
-
-Run the dedicated Proxmox host Tailscale playbook:
+### Step 2 -- Prepare Proxmox templates
 
 ```bash
-cd ansible
-ansible-playbook -i inventories/production/hosts.ini playbooks/proxmox-host.yml
+./scripts/prepare-templates.sh
 ```
 
-This installs Tailscale on the Proxmox host using the vaulted `TS_AUTHKEY` stored in:
+Downloads the Debian 12 standard LXC template and verifies that VM templates
+9000 (Ubuntu AI) and 9050 (Linux Mint) exist. If the VM templates don't exist
+yet, create them using the reference instructions at the bottom of this guide.
 
-- [ansible/files/compose/lxc240-docker-external/tailscale-peer-relay/stack.env.vault](ansible/files/compose/lxc240-docker-external/tailscale-peer-relay/stack.env.vault)
-
-After enrollment, verify SSH access to the Proxmox host over its Tailscale IP:
-
-```bash
-ssh root@<tailscale-ip-of-proxmox>
-```
-
-This step happens **before** Terraform pfSense (step 5) so you have verified remote access to the host before committing to the staged Terraform flow.
-
----
-
-## Step 5 -- Terraform pfSense only `[TERRAFORM]`
-
-### 5.1 Create the Proxmox API token
-
-```bash
-pveum user token add root@pam provider --privsep 0
-```
-
-### 5.2 Configure Terraform variables
+### Step 3 -- Configure Terraform variables
 
 ```bash
 cp terraform/terraform.tfvars.example terraform/terraform.tfvars
 ```
 
-Set at least:
+Edit `terraform/terraform.tfvars` and set at minimum:
 
 ```hcl
-pm_api_url          = "https://YOUR-PROXMOX-IP:8006/api2/json"
+pm_api_url          = "https://10.10.1.10:8006/api2/json"
 pm_api_token_id     = "root@pam!provider"
-pm_api_token_secret = "PASTE_NEW_SECRET_HERE"
+pm_api_token_secret = "<secret from pveum command below>"
 pm_tls_insecure     = true
-proxmox_node        = "littledown"
-resource_profile    = "balanced_128gb"
+proxmox_node        = "pve01"
+resource_profile    = "balanced_64gb"
+vm_template_vmid    = 9000
+vm050_mint_template_vmid = 9050
+lxc_root_password   = "<same as your Ansible vault password>"
+ssh_public_key      = "<contents of ~/.ssh/id_ed25519.pub>"
 ```
 
-### 5.3 Prepare templates
-
-Before running Terraform, make sure Proxmox already has:
-
-- the Debian LXC template (downloaded via `pveam`)
-- a prepared Linux Mint Cinnamon VM template (for later use in step 8)
-- a prepared Ubuntu Server 24.04 LTS cloud-image template (for the AI VM, later use in step 8)
-
-Debian LXC template:
+Create the API token:
 
 ```bash
-pveam update
-TEMPLATE=$(pveam available | awk '/debian-12-standard/ {print $2; exit}')
-pveam download local "$TEMPLATE"
+pveum user token add root@pam provider --privsep 0
 ```
 
-VM template preparation is documented in the "Template preparation reference" section near the end of this guide.
-
-### 5.4 Apply Terraform -- pfSense stage only
-
-The `pfsense` environment creates **pfSense only**. It does **not** create Mint or any other workload.
+### Step 4 -- Terraform: pfSense only
 
 ```bash
 ./scripts/terraform-init.sh pfsense
@@ -356,13 +114,9 @@ terraform -chdir=terraform/environments/pfsense validate
 ./scripts/terraform-apply.sh pfsense
 ```
 
-This creates VM 100 (pfSense) with its four network interfaces attached to `vmbr0` (bootstrap), `vmbr1` (WAN), `vmbr2` (LAN/trunk), and `vmbr3` (DMZ).
+This creates VM 100 (pfSense) with four NICs on `vmbr0`/`vmbr1`/`vmbr2`/`vmbr3`.
 
----
-
-## Step 6 -- Install and configure pfSense manually `[MANUAL]`
-
-After Terraform creates VM 100:
+### Step 5 -- Manual pfSense install
 
 ```bash
 # Attach the installer ISO
@@ -375,12 +129,12 @@ qm set 100 --boot order=ide2
 qm start 100
 ```
 
-Complete the pfSense install in the Proxmox console. Use `UFS` for the filesystem.
+Use the Proxmox console to complete the pfSense install (`UFS` filesystem).
 
-After the first installed boot succeeds:
+After first boot:
 
 ```bash
-# Confirm disk
+# Confirm disk layout
 qm config 100
 
 # Restore boot from VM disk
@@ -390,126 +144,35 @@ qm set 100 --boot order=scsi0
 qm set 100 --delete ide2
 ```
 
-Then complete the manual pfSense GUI prerequisites:
+### Step 6 -- Manual pfSense GUI setup
 
-- [README-pfsense.md](README-pfsense.md)
+Follow [README-pfsense.md](README-pfsense.md) to configure:
 
-This includes: hostname/domain, pfBlockerNG, Tailscale, ntopng, PPPoE, PIA OpenVPN, interface assignment, WAN/LAN/DMZ checks.
+- Hostname/domain (`pfsense.uk.wrightwells.com`)
+- Interface assignment (WAN = `vmbr1`, LAN = `vmbr2`, DMZ = `vmbr3`)
+- Management VLAN 99 on the LAN interface (IP `10.10.99.1/24`)
+- DHCP scopes, DNS, firewall rules
+- pfBlockerNG, Tailscale, PPPoE/OpenVPN as needed
 
----
+**Verify**: pfSense management is reachable at `10.10.99.1` and routing works
+for VLANs 10, 20, and 66.
 
-## Step 7 -- Create deployment SSH keypair, publish bootstrap script to `/mnt/appdata` `[MANUAL]`
-
-### 7.1 Generate or confirm the deployment SSH keypair
-
-The repo uses a single `ed25519` keypair for initial machine bootstrap. If you do not already have one:
-
-```bash
-ssh-keygen -t ed25519 -C "homelab-deploy" -f ~/.ssh/id_ed25519 -N ""
-cat ~/.ssh/id_ed25519.pub
-```
-add this key to the github deploy key
-ssh-ed25519 AAA..... homelab-deploy
-
-This same public key is passed to all VMs and LXCs via Terraform `ssh_public_key`.
-
-### 7.2 Publish the SSH bootstrap script
-
-The bootstrap scripts are published to `/mnt/appdata/homelab-control/bin/`. These are **not run during the initial build** -- Ansible runs from the Proxmox host (step 10). The published scripts are reserved for future use if a machine is promoted to a dedicated Ansible control node.
-
-```bash
-./scripts/publish-control-node-bootstrap.sh
-```
-
-This copies:
-
-- `bootstrap-control-node.sh` -- clones the repo, installs packages, runs Ansible (for future control node use)
-- `bootstrap-user-control-node.sh` -- bootstrap from a user home directory (for future control node use)
-- `fix-mint-apt-repos.sh` -- repairs stale Mint APT sources
-- `fix-mint-dpkg.sh` -- repairs interrupted dpkg
-- `update-control-node.sh` -- pulls latest repo and re-runs Ansible
-- `github-deploy-key` and `github-deploy-key.pub` -- the deployment SSH keypair
-
-### 7.3 Purpose of the published bootstrap scripts
-
-The scripts published to `/mnt/appdata/homelab-control/bin/` are **not run during the initial build**. Ansible runs from the Proxmox host (step 10), so each machine only needs to be reachable over SSH:
-
-- **VMs**: cloud-init injects the SSH key and creates the `ansible` user with passwordless sudo.
-- **LXCs**: the root password is set via `lxc_root_password` in tfvars, and verified by the `apply-lxc-root-password.sh` playbook.
-
-The published bootstrap scripts are reserved for future use if a machine like infra-250 is promoted to a dedicated Ansible control node. They are not needed for the initial build.
-
-**Access model summary:**
-
-- `root` is used on all LXCs (required for nesting, bind-mounts, Docker operations)
-- `root` is used on the Proxmox host
-- `ansible` is used on Linux VMs (Mint, AI GPU) for Ansible runs, with passwordless sudo
-- `root` remains accessible via SSH key on all machines for emergency access
-- privilege escalation (`become: true`) is expected in Ansible playbooks
-
-### 7.4 LXC root password -- explicit tradeoff
-
-**Decision:** LXC root password uses the **same plain-text secret text** as the Ansible vault password value. It does **not** use a hash of the vault value.
-
-**Tradeoff:** This simplifies the operator flow -- the vault password you type for `ansible-vault` is also the initial root password for every LXC. The downside is that compromising the vault password also gives you LXC root access, and rotating the vault password requires manually updating the LXC root passwords to match. This is accepted for this lab because the vault password file is kept private and the lab is not multi-tenant.
-
-To set the LXC root password, run this script **before Terraform** creates the LXCs:
+### Step 7 -- LXC root password
 
 ```bash
 ./scripts/setup-lxc-root-password.sh
 ```
 
-This script prompts for the vault password, generates the SHA-512 hash,
-writes the encrypted vault file, and updates `terraform/terraform.tfvars`.
+Prompts for the vault password and creates the encrypted vault file and updates
+`terraform.tfvars`. This must run **before** Terraform creates the LXCs.
 
-After Terraform and `proxmox-apply-lxc-postcreate.sh` have run (which reboots
-the LXCs), apply the password to the freshly rebooted LXCs:
+If LXCs were already created, run this after step 8:
 
 ```bash
 ./scripts/apply-lxc-root-password.sh
 ```
 
-The full order is:
-
-1. `setup-lxc-root-password.sh` -- generates vault file, writes tfvars, saves vault-pass file
-2. Terraform creates LXCs (cloud-init sets the password from tfvars)
-3. `proxmox-apply-lxc-postcreate.sh` (applies features/mounts, reboots LXCs)
-4. `apply-lxc-root-password.sh` (playbook runs on freshly rebooted LXCs)
-
-Step 4 is a verification pass on a fresh build, and actually sets the correct
-password on existing LXCs that were created before the setup script ran.
-
-**Manual alternative:** if you prefer not to use the scripts:
-
-1. Decide on the Ansible vault password (e.g. `MyVaultSecret123`)
-2. Generate a SHA-512 password hash from that same secret:
-
-```bash
-openssl passwd -6 'MyVaultSecret123'
-```
-
-(Alternatively, if `mkpasswd` is available: `mkpasswd -m sha-512 'MyVaultSecret123'`.
-The `python3 -c "import crypt; ..."` approach no longer works on Python 3.13+
-where the `crypt` module was removed.)
-
-3. Place the hash in `ansible/inventories/production/group_vars/lxc_root_passwords.vault.yml` encrypted with Ansible Vault
-4. Use the plain-text vault password as the LXC root password when logging in initially
-
-**Important:** The Terraform LXC modules now accept `lxc_root_password` as a variable.
-Set it in `terraform.tfvars` to the same plain-text value as your Ansible vault password.
-If you need to change the password on already-created LXCs, run the LXC root password
-playbook after the production Terraform apply (from the HomeLab repo root):
-
-```bash
-cd ~/HomeLab/ansible
-ansible-playbook -i inventories/production/hosts.ini playbooks/lxc-root-password.yml
-```
-
----
-
-## Step 8 -- Terraform remaining VMs and LXCs (including Mint) `[TERRAFORM]`
-
-The `production` environment creates Mint plus all non-pfSense workloads.
+### Step 8 -- Terraform: all remaining VMs and LXCs
 
 ```bash
 ./scripts/terraform-init.sh production
@@ -518,108 +181,68 @@ terraform -chdir=terraform/environments/production validate
 ./scripts/terraform-apply.sh production
 ```
 
-After Terraform creates the LXCs, apply Proxmox root-only post-create settings:
+### Step 9 -- LXC post-create settings
 
 ```bash
 ./scripts/proxmox-apply-lxc-postcreate.sh
 ```
 
-This applies:
+Applies `nesting=1,keyctl=1` and bind mounts for `/mnt/appdata` and
+`/mnt/media_pool`. Reboot any LXCs that were already running.
 
-- `nesting=1,keyctl=1`
-- bind mounts for `/mnt/appdata`
-- bind mounts for `/mnt/media_pool`
+### Step 10 -- Add TUN device to docker-arr LXC
 
-If any LXCs were already running, reboot them after that script finishes.
-
----
-
-## Step 9 -- Move Proxmox host IP from `vmbr0` to `vmbr2` `[MANUAL]`
-
-After all VMs and LXCs are created and configured, move the Proxmox management IP from the bootstrap bridge (`vmbr0`) to the trusted internal trunk (`vmbr2`).
-
-**Before:** Proxmox management IP is on `vmbr0` (step 2 initial state).
-**After:** Proxmox management IP is on `vmbr2` with VLAN tag 99 (management VLAN). `vmbr0` remains defined but no longer carries the host IP.
-
-### Updated `/etc/network/interfaces` (step 10 -- after move)
-
-```text
-# Loopback
-auto lo
-iface lo inet loopback
-
-# Physical NICs
-auto nic0
-iface nic0 inet manual
-
-auto nic1
-iface nic1 inet manual
-
-auto nic2
-iface nic2 inet manual
-
-# Bootstrap / temporary access bridge on nic0
-auto vmbr0
-iface vmbr0 inet static
-    address 10.10.1.10/24
-    bridge-ports nic0
-    bridge-stp off
-    bridge-fd 0
-
-# pfSense WAN bridge on nic1
-auto vmbr1
-iface vmbr1 inet manual
-    bridge-ports nic1
-    bridge-stp off
-    bridge-fd 0
-
-# pfSense LAN trunk on nic2
-auto vmbr2
-iface vmbr2 inet manual
-    bridge-ports nic2
-    bridge-stp off
-    bridge-fd 0
-    bridge-vlan-aware yes
-    bridge-vids 2-4094
-
-# Proxmox host management on VLAN 99 behind pfSense
-auto vmbr2.99
-iface vmbr2.99 inet static
-    address 10.10.99.10/24
-    gateway 10.10.99.1
-
-# Optional DMZ / untrusted bridge
-auto vmbr3
-iface vmbr3 inet manual
-    bridge-ports none
-    bridge-stp off
-    bridge-fd 0
-```
-
-Notes:
-
-- The gateway `10.10.99.1` is now the pfSense management interface on VLAN 99.
-- `vmbr0` remains defined as a plain bridge on `nic0` but carries no host IP.
-- Apply carefully -- a mistake here will lose SSH access to the Proxmox host.
-- Use the Proxmox console or Tailscale as a fallback if the network change breaks SSH.
-
----
-
-## Step 10 -- Run Ansible to build/configure VMs and LXCs `[ANSIBLE]`
-
-### 10.1 Verify Ansible can see the hosts
+The ARR stack uses gluetun which requires `/dev/net/tun`:
 
 ```bash
-./scripts/ansible-ping.sh
+./scripts/setup-tun-device.sh
 ```
 
-### 10.2 Run the full deployment
+This adds the device to LXC 166 and reboots it.
+
+### Step 11 -- Prepare LXC storage directories
+
+Unprivileged LXCs cannot `chown` ZFS bind-mount paths. This script creates all
+directories on the Proxmox host with `777` permissions:
+
+```bash
+./scripts/prepare-lxc-storage.sh
+```
+
+Covers every volume used by the ARR stack, services, apps, media, external, and
+infra hosts.
+
+### Step 12 -- Move Proxmox host IP to management VLAN
+
+```bash
+./scripts/move-proxmox-ip.sh
+```
+
+Moves the Proxmox management IP from `10.10.1.10` (vmbr0) to `10.10.99.10`
+(vmbr2.99) behind pfSense.
+
+**Your SSH session will disconnect.** Reconnect with:
+
+```bash
+ssh root@10.10.99.10
+```
+
+### Step 13 -- Verify Ansible can reach all hosts
+
+```bash
+./scripts/verify-ansible-hosts.sh
+```
+
+Expected output: every host returns `pong`. If pfSense shows `UNREACHABLE`
+that's normal — it has its own playbook (step 16).
+
+### Step 14 -- Run Ansible site deploy
 
 ```bash
 ./scripts/deploy-all.sh
 ```
 
-Or run manually:
+Or manually:
 
 ```bash
 ./scripts/ansible-install.sh
@@ -627,57 +250,166 @@ cd ansible
 ansible-playbook -i inventories/production/hosts.ini playbooks/site.yml
 ```
 
-### 10.3 Apply pfSense configuration
+This deploys Docker and all compose stacks to every LXC and VM.
+
+### Step 15 -- Apply pfSense firewall rules
 
 ```bash
-cd ansible
-ansible-playbook -i inventories/production/hosts.ini playbooks/pfsense.yml
+./scripts/apply-pfsense-config.sh
 ```
 
-### 10.4 Pull the initial Ollama models
+Pushes firewall rules, aliases, and NAT from `pfsense_firewall.yml`.
 
-After the AI VM stack is up:
+### Step 16 -- GPU passthrough (optional)
+
+After the AI VM exists, pass the GPU through to it:
 
 ```bash
-docker exec -it ollama ollama pull qwen3:8b
-docker exec -it ollama ollama pull qwen3:4b
-docker exec -it ollama ollama pull qwen2.5-coder:7b
-docker exec -it ollama ollama pull qwen2.5vl:7b
-docker exec -it ollama ollama pull qwen3-vl:4b
+# 1. Discover GPU and set up IOMMU/VFIO
+./scripts/setup-gpu-passthrough.sh
+
+# 2. Reboot the Proxmox host
+reboot
+
+# 3. After reboot, update terraform.tfvars with the PCI address
+#    (the script prints the correct value)
+
+# 4. Configure the VM with GPU passthrough
+ssh root@10.10.99.10 "qm set 210 --hostpci0 '0000:06:00,pcie=1,rombar=1,x-vga=1'"
+ssh root@10.10.99.10 "qm set 210 --machine q35"
+
+# 5. Start the AI VM
+ssh root@10.10.99.10 "qm start 210"
+
+# 6. Install NVIDIA drivers and Container Toolkit inside the VM
+ssh ansible@10.10.20.210 'bash -s' < scripts/install-nvidia-drivers.sh
+
+# 7. Reboot the AI VM, then re-run the Ansible AI GPU role
+ssh root@10.10.99.10 "qm reboot 210"
+# After reboot:
+cd ~/HomeLab/ansible
+ansible-playbook -i inventories/production/hosts.ini playbooks/site.yml --limit ai_gpu
+```
+
+### Step 17 -- Private Docker images (optional)
+
+The `grist-finance-connector` is a private image built from a Dockerfile in the
+repo. Build and load it with:
+
+```bash
+./scripts/load-grist-finance-connector.sh
+```
+
+Then ensure it's enabled in `build_inventory.yml` and re-run the site playbook:
+
+```bash
+cd ~/HomeLab/ansible
+ansible-playbook -i inventories/production/hosts.ini playbooks/site.yml --limit docker_apps
 ```
 
 ---
 
-## GPU passthrough discovery `[LATER -- after step 8, before AI VM GPU use]`
+## Deployed services summary
 
-GPU PCI passthrough address discovery happens **after** the production Terraform apply (step 8) has created VM 210, and **before** you expect the AI VM to use the GPU.
+After a successful run, these services are running:
 
-This is a Proxmox host preparation step:
+| Host | IP | Services |
+|------|----|----------|
+| `vm210-ai-gpu` | `10.10.20.210` | Ollama, Open WebUI, Frigate, Home Assistant, Home Assistant Voice, n8n, OpenVSCode Server |
+| `lxc066-docker-arr` | `10.10.66.66` | gluetun, qbittorrent, prowlarr, sonarr, radarr, lidarr, bazarr, readarr, filebrowser, jellyseerr, aurrar |
+| `lxc200-docker-services` | `10.10.20.200` | Immich, ownCloud, Paperless-ngx, Syncthing |
+| `lxc220-docker-apps` | `10.10.20.220` | Blinko, Calibre, Calibre-Web, EruGo, Firefly III, Grafana, Grist, Homarr, InfluxDB, Node-RED, Pairdrop, Semaphore, TeslaMate, grist-finance-connector |
+| `lxc230-docker-media` | `10.10.20.230` | Jellyfin, Plex, Jellyswarrm |
+| `lxc240-docker-external` | `10.10.66.240` | Cloudflare DDNS, Ghost, Kutt, nginx, RustDesk, Tailscale relay, Walletpage, WordPress |
+| `lxc250-infra` | `10.10.20.250` | Alertmanager, Grafana, Homebridge, Mosquitto MQTT, Portainer, Prometheus, Semaphore, Uptime Kuma |
 
-1. After step 8, on the Proxmox host run:
+---
+
+## Guest IP layout (UK defaults)
+
+| Host | IP | Network |
+|------|----|---------|
+| Proxmox host (after step 12) | `10.10.99.10` | `vmbr2.99` (management VLAN) |
+| `vm100_pfsense` | `10.10.99.1` | management VLAN 99 (pfSense IS the gateway) |
+| `vm050_mint` | `10.10.10.50` | `vmbr2` VLAN 10 |
+| `vm210_ai_gpu` | `10.10.20.210` | `vmbr2` VLAN 20 |
+| `lxc066_docker_arr` | `10.10.66.66` | `vmbr3` (DMZ) |
+| `lxc200_docker_services` | `10.10.20.200` | `vmbr2` VLAN 20 |
+| `lxc220_docker_apps` | `10.10.20.220` | `vmbr2` VLAN 20 |
+| `lxc230_docker_media` | `10.10.20.230` | `vmbr2` VLAN 20 |
+| `lxc240_docker_external` | `10.10.66.240` | `vmbr3` (DMZ) |
+| `lxc250_infra` | `10.10.20.250` | `vmbr2` VLAN 20 |
+
+---
+
+## Network intent
+
+| Bridge | NIC | Purpose |
+|--------|-----|---------|
+| `vmbr0` | `nic0` | Bootstrap / temporary access. Remains defined but carries no host IP after step 12. |
+| `vmbr1` | `nic1` | pfSense WAN (dedicated) |
+| `vmbr2` | `nic2` | pfSense LAN trunk — VLAN-aware, carries VLANs 10, 20, 99 |
+| `vmbr3` | — | DMZ / untrusted bridge for isolated workloads |
+
+VLAN 99 = management, VLAN 10 = workstation, VLAN 20 = servers, VLAN 66 = DMZ.
+
+External exposure and NAT are handled in pfSense, not Terraform.
+
+---
+
+## Troubleshooting
+
+### Hostname resolution for Proxmox cluster tools
+
+If `pvecm`, `pct`, or `pvesh` fail with "address lookup" errors:
 
 ```bash
-lspci -nn | grep -iE 'vga|3d|audio'
+./scripts/fix-hostname-resolution.sh
 ```
 
-2. Record the GPU function address (not the audio function). Example: `01:00.0`.
-3. Convert to Proxmox PCI form: `01:00.0` becomes `0000:01:00`.
-4. Enable IOMMU in GRUB, load VFIO modules, bind the GPU, and reboot the host.
-5. Update `terraform/terraform.tfvars`:
+### ZFS bind-mount permission denied in LXCs
 
-```hcl
-vm210_gpu_pci_address = "0000:01:00"
+Unprivileged LXCs map host root to `nobody`. All directories under
+`/mnt/appdata` and `/mnt/ai_models` must be created on the **Proxmox host**
+with `chmod 777`. Run:
+
+```bash
+./scripts/prepare-lxc-storage.sh
 ```
 
-6. Re-run the production Terraform apply to attach the GPU to VM 210.
+### Docker compose plugin not found on Debian LXCs
 
-Do **not** guess the PCI address before the host is built. Discover it on the real hardware after the production stage has created the AI VM context.
+The Docker role now installs the official Docker apt repository on Debian LXCs
+which provides `docker-compose-plugin`. If a LXC was created before this fix:
+
+```bash
+cd ~/HomeLab/ansible
+ansible-playbook -i inventories/production/hosts.ini playbooks/site.yml --limit <host>
+```
+
+### Vault decryption errors for stack.env.vault files
+
+The vault files must be encrypted with the same password as
+`~/.config/ansible/homelab-vault-pass.txt`. If you changed the vault password,
+re-encrypt all vault files:
+
+```bash
+./scripts/recreate-stack-vaults.sh
+```
+
+### GPU not visible in AI VM
+
+1. Verify IOMMU is enabled: `cat /proc/cmdline | grep intel_iommu`
+2. Verify VFIO is loaded: `lsmod | grep vfio`
+3. Verify GPU is bound to VFIO: `lspci -nnk -s 06:00.0`
+4. Verify VM config: `qm config 210 | grep -i pci`
+5. Verify VM uses q35 machine: `qm config 210 | grep machine`
 
 ---
 
 ## Template preparation reference
 
-### Ubuntu Server 24.04 LTS cloud-image template (for AI VM)
+### Ubuntu Server 24.04 LTS cloud-image template (for AI VM, VMID 9000)
 
 ```bash
 cd /var/lib/vz/template/iso
@@ -694,7 +426,7 @@ qm template 9000
 
 Set `vm_template_vmid = 9000` in `terraform.tfvars`.
 
-### Linux Mint Cinnamon template (for vm050-mint)
+### Linux Mint Cinnamon template (for vm050-mint, VMID 9050)
 
 1. Download the Linux Mint Cinnamon ISO.
 2. Create a temporary VM on Proxmox and install Mint.
@@ -703,7 +435,7 @@ Set `vm_template_vmid = 9000` in `terraform.tfvars`.
 ```bash
 sudo useradd -m -s /bin/bash ansible || true
 sudo install -d -m 700 -o ansible -g ansible /home/ansible/.ssh
-printf '%s\n' 'ssh-ed25519 AAAA...' | sudo tee /home/ansible/.ssh/authorized_keys >/dev/null
+printf '%s\n' 'ssh-ed25519 AAAA...homelab-deploy' | sudo tee /home/ansible/.ssh/authorized_keys >/dev/null
 sudo chown ansible:ansible /home/ansible/.ssh/authorized_keys
 sudo chmod 600 /home/ansible/.ssh/authorized_keys
 sudo usermod -aG sudo ansible
@@ -711,7 +443,7 @@ printf 'ansible ALL=(ALL) NOPASSWD:ALL\n' | sudo tee /etc/sudoers.d/90-ansible >
 sudo chmod 440 /etc/sudoers.d/90-ansible
 ```
 
-4. Install Tailscale, RustDesk, qemu-guest-agent:
+4. Install required packages:
 
 ```bash
 sudo apt update
@@ -735,44 +467,17 @@ Set `vm050_mint_template_vmid = 9050` in `terraform.tfvars`.
 
 ## Ansible vault password file
 
-Create on the machine where you run Ansible:
+Created automatically by `./scripts/prepare-proxmox-host.sh`.
+
+Manual creation:
 
 ```bash
 mkdir -p ~/.config/ansible
-printf '%s\n' 'REPLACE_WITH_YOUR_VAULT_PASSWORD' > ~/.config/ansible/homelab-vault-pass.txt
+printf '%s\n' '<your-vault-password>' > ~/.config/ansible/homelab-vault-pass.txt
 chmod 600 ~/.config/ansible/homelab-vault-pass.txt
 ```
 
-This same plain-text value is used as the LXC root password (see step 7.4).
-
----
-
-## Current guest IP layout (UK defaults)
-
-| Host | IP | Network |
-|------|----|---------|
-| Proxmox host (step 2) | `10.10.1.10` | `vmbr0` (bootstrap) |
-| Proxmox host (step 9+) | `10.10.99.10` | `vmbr2.99` (management VLAN) |
-| `vm100_pfsense` (post-config) | `10.10.99.1` | management VLAN 99 (pfSense IS the gateway) |
-| `vm050_mint` | `10.10.10.50` | `vmbr2` VLAN 10 |
-| `vm210_ai_gpu` | `10.10.20.210` | `vmbr2` VLAN 20 |
-| `lxc066_docker_arr` | `10.10.66.66` | `vmbr3` (DMZ) |
-| `lxc200_docker_services` | `10.10.20.200` | `vmbr2` VLAN 20 |
-| `lxc220_docker_apps` | `10.10.20.220` | `vmbr2` VLAN 20 |
-| `lxc230_docker_media` | `10.10.20.230` | `vmbr2` VLAN 20 |
-| `lxc240_docker_external` | `10.10.66.240` | `vmbr3` (DMZ) |
-| `lxc250_infra` | `10.10.20.250` | `vmbr2` VLAN 20 |
-
----
-
-## Network intent
-
-- `vmbr0` is the bootstrap/install bridge on the Proxmox uplink. It remains defined after the host IP moves to `vmbr2`.
-- `vmbr1` is the pfSense WAN bridge.
-- `vmbr2` is the trusted internal trunk (VLAN-aware).
-- `vmbr3` is the DMZ-style network for isolated workloads.
-- VLAN 99 = management, VLAN 10 = workstation, VLAN 20 = servers, VLAN 66 = DMZ.
-- External exposure and NAT are handled in pfSense, not Terraform.
+**This same plain-text value is used as the LXC root password.**
 
 ---
 
