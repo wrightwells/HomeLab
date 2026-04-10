@@ -1,0 +1,30 @@
+---
+- name: Deploy paperless-ngx stack only (fresh install)
+  hosts: docker_services
+  become: true
+
+  pre_tasks:
+    - name: Load build inventory
+      ansible.builtin.include_vars:
+        file: ../inventories/production/build_inventory.yml
+
+    - name: Stop existing paperless-ngx stack
+      community.docker.docker_compose_v2:
+        project_src: /opt/containers/paperless-ngx
+        state: absent
+        remove_volumes: true
+      ignore_errors: true
+
+  roles:
+    - role: lxc200-docker-services
+      vars:
+        compose_bundle_name: lxc200-docker-services
+        compose_stacks:
+          - paperless-ngx
+        docker_host_paths:
+          - path: /mnt/appdata/docker_volumes/paperless-ngx
+          - path: /mnt/appdata/docker_volumes/paperless-ngx/db
+          - path: /mnt/appdata/docker_volumes/paperless-ngx/data
+          - path: /mnt/appdata/docker_volumes/paperless-ngx/media
+          - path: /mnt/appdata/docker_volumes/paperless-ngx/export
+          - path: /mnt/appdata/docker_volumes/paperless-ngx/consume

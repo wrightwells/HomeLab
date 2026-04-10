@@ -112,7 +112,8 @@
       "Bash(./scripts/publish-control-node-bootstrap.sh)",
       "Bash(printf *)",
       "Bash(tr *)",
-      "Bash(find *)"
+      "Bash(find *)",
+      "Bash(ansible-inventory *)"
     ]
   },
   "$version": 3
