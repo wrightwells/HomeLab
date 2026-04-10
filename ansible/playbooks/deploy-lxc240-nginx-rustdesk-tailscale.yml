@@ -1,0 +1,72 @@
+---
+- name: Deploy lxc240 nginx, rustdesk, tailscale stacks
+  hosts: docker_external
+  become: true
+
+  pre_tasks:
+    - name: Load site configuration
+      ansible.builtin.include_vars:
+        file: ../inventories/production/site_config.yml
+
+    - name: Load group vars (all)
+      ansible.builtin.include_vars:
+        file: ../inventories/production/group_vars/all.yml
+
+    - name: Load build inventory
+      ansible.builtin.include_vars:
+        file: ../inventories/production/build_inventory.yml
+
+    - name: Stop existing nginx stack
+      community.docker.docker_compose_v2:
+        project_src: /opt/containers/nginx
+        state: absent
+        remove_volumes: true
+      ignore_errors: true
+
+    - name: Stop existing rustdesk stack
+      community.docker.docker_compose_v2:
+        project_src: /opt/containers/rustdesk
+        state: absent
+        remove_volumes: true
+      ignore_errors: true
+
+    - name: Stop existing tailscale-peer-relay stack
+      community.docker.docker_compose_v2:
+        project_src: /opt/containers/tailscale-peer-relay
+        state: absent
+        remove_volumes: true
+      ignore_errors: true
+
+    - name: Clean up leftover volumes
+      ansible.builtin.command:
+        cmd: "docker volume rm {{ item }}"
+      loop:
+        - nginx_nginx-html
+        - nginx_nginx-logs
+        - rustdesk_rustdesk-ts-state
+        - rustdesk_rustdesk-data
+        - tailscale-peer-relay_ts-peer-relay-state
+      failed_when: false
+      ignore_errors: true
+
+  roles:
+    - role: lxc240-docker-external
+      vars:
+        compose_bundle_name: lxc240-docker-external
+        compose_stacks:
+          - nginx
+          - rustdesk
+          - tailscale-peer-relay
+        docker_host_paths: []
+
+  post_tasks:
+    - name: Wait for stacks to finish startup
+      ansible.builtin.pause:
+        seconds: 20
+        prompt: "Waiting for nginx, rustdesk, tailscale to start..."
+
+    - name: Verify nginx is responding
+      ansible.builtin.uri:
+        url: http://127.0.0.1:80
+        status_code: [200, 301, 302]
+      failed_when: false

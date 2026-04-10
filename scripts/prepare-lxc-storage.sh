@@ -51,10 +51,8 @@ mkdir -p /mnt/appdata/docker_volumes/{homarr,influxdb,pairdrop}
 mkdir -p /mnt/appdata/docker_volumes/{blinko/files}
 mkdir -p /mnt/appdata/docker_volumes/{node-red}
 
-# External stack (lxc240-docker-external) -- no DB paths
-mkdir -p /mnt/appdata/docker_volumes/{ghost,kutt,walletpage,nginx}
-mkdir -p /mnt/appdata/docker_volumes/{rustdesk_id,rustdesk_relay,rustdesk_tailscale}
-mkdir -p /mnt/appdata/docker_volumes/{cloudflare-ddns-all,wordpress/data}
+# External stack (lxc240-docker-external) -- no DB paths (use named volumes)
+mkdir -p /mnt/appdata/docker_volumes/walletpage
 
 # Infra stack (lxc250-infra) -- no DB paths
 mkdir -p /mnt/appdata/docker_volumes/{portainer,prometheus/data,uptime-kuma}

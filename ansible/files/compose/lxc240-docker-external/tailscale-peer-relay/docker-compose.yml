@@ -3,20 +3,16 @@ services:
     image: tailscale/tailscale:latest
     container_name: tailscale-peer-relay
     restart: unless-stopped
-
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
     volumes:
-      - /mnt/appdata/docker_volumes/tailscale/tailscale-state:/var/lib/tailscale
+      - ts-peer-relay-state:/var/lib/tailscale
     env_file:
       - stack.env
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY}
       - TS_HOSTNAME=peer-relay-node
       - TS_STATE_DIR=/var/lib/tailscale
-      - TS_USERSPACE=false
-
+      - TS_USERSPACE=true
     network_mode: host
-  
+
+volumes:
+  ts-peer-relay-state:
