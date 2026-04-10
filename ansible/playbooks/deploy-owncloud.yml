@@ -36,13 +36,10 @@
         docker_host_paths: []
 
   post_tasks:
-    - name: Wait for ownCloud to be ready
-      ansible.builtin.command:
-        cmd: docker inspect -f '{{.State.Running}}' owncloud
-      register: owncloud_running
-      retries: 30
-      delay: 5
-      until: owncloud_running.stdout == 'true'
+    - name: Wait for ownCloud to finish startup
+      ansible.builtin.pause:
+        seconds: 30
+        prompt: "Waiting for ownCloud to start..."
 
     - name: Configure trusted_domains
       community.docker.docker_container_exec:

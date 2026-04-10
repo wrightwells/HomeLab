@@ -1,0 +1,57 @@
+---
+- name: Deploy grist stack only
+  hosts: docker_apps
+  become: true
+
+  pre_tasks:
+    - name: Load site configuration
+      ansible.builtin.include_vars:
+        file: ../inventories/production/site_config.yml
+
+    - name: Load group vars (all)
+      ansible.builtin.include_vars:
+        file: ../inventories/production/group_vars/all.yml
+
+    - name: Load build inventory
+      ansible.builtin.include_vars:
+        file: ../inventories/production/build_inventory.yml
+
+    - name: Stop existing grist stack
+      community.docker.docker_compose_v2:
+        project_src: /opt/containers/grist
+        state: absent
+        remove_volumes: true
+      ignore_errors: true
+
+    - name: Clean up any leftover grist volumes
+      ansible.builtin.command:
+        cmd: docker volume rm grist_grist-data
+      failed_when: false
+      ignore_errors: true
+
+  roles:
+    - role: lxc220-docker-apps
+      vars:
+        compose_bundle_name: lxc220-docker-apps
+        compose_stacks:
+          - grist
+        docker_host_paths: []
+
+  post_tasks:
+    - name: Wait for grist to finish startup
+      ansible.builtin.pause:
+        seconds: 20
+        prompt: "Waiting for grist to start..."
+
+    - name: Verify grist is responding
+      ansible.builtin.uri:
+        url: http://127.0.0.1:8484
+        status_code:
+          - 200
+          - 301
+          - 302
+      register: grist_result
+      retries: 15
+      delay: 5
+      until: grist_result.status in [200, 301, 302]
+      failed_when: false

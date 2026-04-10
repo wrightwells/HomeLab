@@ -5,7 +5,7 @@ services:
     ports:
       - "8484:8484"
     volumes:
-      - /mnt/appdata/docker_volumes/grist:/persist
+      - grist-data:/persist
     env_file:
       - stack.env
     environment:
@@ -13,3 +13,6 @@ services:
       - GRIST_SANDBOX_FLAVOR=${GRIST_SANDBOX_FLAVOR}
       - GRIST_DEFAULT_EMAIL=${GRIST_DEFAULT_EMAIL}
     restart: unless-stopped
+
+volumes:
+  grist-data:
