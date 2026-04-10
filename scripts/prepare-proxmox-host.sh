@@ -118,20 +118,33 @@ echo ""
 read -rp "Press Enter after the deploy key is added to GitHub..."
 
 # ---------------------------------------------------------------------------
-# 1.9 Fix hostname resolution for Proxmox cluster (pvecm/pct rely on hostname)
+# 1.9 Fix hostname for Proxmox cluster (pvecm/pct rely on correct hostname)
 # ---------------------------------------------------------------------------
 echo ""
-echo "=== Fixing hostname resolution for Proxmox cluster tools ==="
-HOSTNAME_SHORT=$(hostname -s 2>/dev/null || echo "pve01")
-HOSTNAME_FQDN=$(hostname -f 2>/dev/null || echo "${HOSTNAME_SHORT}.uk.wrightwells.com")
+echo "=== Fixing Proxmox hostname for cluster tools ==="
+EXPECTED_HOSTNAME="pve01.uk.wrightwells.com"
+EXPECTED_SHORT="pve01"
 MANAGEMENT_IP="10.10.99.10"
 
-# Remove any stale entries for this hostname
-sed -i "/${HOSTNAME_SHORT}/d" /etc/hosts
+# Fix /etc/hostname
+if [ "$(cat /etc/hostname 2>/dev/null)" != "${EXPECTED_HOSTNAME}" ]; then
+  echo "Fixing /etc/hostname from '$(cat /etc/hostname 2>/dev/null || echo "(empty)")' to '${EXPECTED_HOSTNAME}'"
+  echo "${EXPECTED_HOSTNAME}" > /etc/hostname
+else
+  echo "/etc/hostname is already correct"
+fi
+
+# Set the live hostname
+hostnamectl set-hostname "${EXPECTED_HOSTNAME}"
+echo "Live hostname set to '${EXPECTED_HOSTNAME}'"
+
+# Remove any stale entries for pve01 or old hostnames
+sed -i '/pve01/d' /etc/hosts
+sed -i '/vm050-mint/d' /etc/hosts
 
 # Add the correct entry with the management IP
-echo "${MANAGEMENT_IP} ${HOSTNAME_FQDN} ${HOSTNAME_SHORT}" >> /etc/hosts
-echo "Added ${HOSTNAME_SHORT} -> ${MANAGEMENT_IP} to /etc/hosts"
+echo "${MANAGEMENT_IP} ${EXPECTED_HOSTNAME} ${EXPECTED_SHORT}" >> /etc/hosts
+echo "Added ${EXPECTED_SHORT} -> ${MANAGEMENT_IP} to /etc/hosts"
 
 # ---------------------------------------------------------------------------
 # 1.10 Publish control node bootstrap scripts
