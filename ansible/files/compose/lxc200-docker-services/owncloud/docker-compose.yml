@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
 
   owncloud:
@@ -26,7 +24,7 @@ services:
       - OWNCLOUD_CRON=true
     # OwnCloud main data
     volumes:
-      - /mnt/appdata/docker_volumes/owncloud:/mnt/data
+      - owncloud-data:/mnt/data
       - /mnt/media_pool:/external/shared
     networks:
       - owncloud_net
@@ -78,11 +76,12 @@ services:
       - OWNCLOUD_REDIS_HOST=redis
       - OWNCLOUD_REDIS_PASSWORD=${REDIS_PASSWORD}
     volumes:
-      - /mnt/appdata/docker_volumes/owncloud:/mnt/data
+      - owncloud-data:/mnt/data
     networks:
       - owncloud_net
 
 volumes:
+  owncloud-data:
   owncloud-db:
 
 networks:

@@ -1,0 +1,24 @@
+---
+- name: Deploy ownCloud stack only
+  hosts: docker_services
+  become: true
+
+  pre_tasks:
+    - name: Load build inventory
+      ansible.builtin.include_vars:
+        file: ../inventories/production/build_inventory.yml
+
+    - name: Stop existing ownCloud stack
+      community.docker.docker_compose_v2:
+        project_src: /opt/containers/owncloud
+        state: absent
+        remove_volumes: true
+      ignore_errors: true
+
+  roles:
+    - role: lxc200-docker-services
+      vars:
+        compose_bundle_name: lxc200-docker-services
+        compose_stacks:
+          - owncloud
+        docker_host_paths: []
