@@ -11,6 +11,7 @@ services:
       - stack.env
     environment:
       - OWNCLOUD_DOMAIN=${OWNCLOUD_DOMAIN}
+      - OWNCLOUD_TRUSTED_DOMAINS=${OWNCLOUD_DOMAIN},10.10.20.200,10.10.20.200:9090,localhost
       - OWNCLOUD_DB_TYPE=mysql
       - OWNCLOUD_DB_NAME=${MYSQL_DATABASE}
       - OWNCLOUD_DB_USERNAME=${MYSQL_USER}

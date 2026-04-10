@@ -15,6 +15,18 @@
         remove_volumes: true
       ignore_errors: true
 
+    - name: Clean up any leftover named volumes
+      ansible.builtin.command:
+        cmd: docker volume rm owncloud_owncloud-data
+      failed_when: false
+      ignore_errors: true
+
+    - name: Clean up any leftover DB volumes
+      ansible.builtin.command:
+        cmd: docker volume rm owncloud_owncloud-db
+      failed_when: false
+      ignore_errors: true
+
   roles:
     - role: lxc200-docker-services
       vars:
@@ -22,3 +34,30 @@
         compose_stacks:
           - owncloud
         docker_host_paths: []
+
+  post_tasks:
+    - name: Wait for ownCloud to be ready
+      ansible.builtin.command:
+        cmd: docker inspect -f '{{.State.Running}}' owncloud
+      register: owncloud_running
+      retries: 30
+      delay: 5
+      until: owncloud_running.stdout == 'true'
+
+    - name: Configure trusted_domains
+      community.docker.docker_container_exec:
+        container: owncloud
+        command: occ config:system:set trusted_domains 1 --value=10.10.20.200
+      failed_when: false
+
+    - name: Configure trusted_domains with port
+      community.docker.docker_container_exec:
+        container: owncloud
+        command: occ config:system:set trusted_domains 2 --value=10.10.20.200:9090
+      failed_when: false
+
+    - name: Configure overwrite.cli.url
+      community.docker.docker_container_exec:
+        container: owncloud
+        command: occ config:system:set overwrite.cli.url --value=http://10.10.20.200:9090
+      failed_when: false

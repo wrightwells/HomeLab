@@ -42,7 +42,6 @@ mkdir -p /mnt/appdata/docker_volumes/{gluetun,qbittorrent,prowlarr,sonarr,radarr
 mkdir -p /mnt/appdata/docker_volumes/{jellyfin,plex,jellyswarrm/tailscale}
 
 # Services stack (lxc200-docker-services) -- data/media paths only, no DB paths
-mkdir -p /mnt/appdata/docker_volumes/{owncloud/config,owncloud/data}
 mkdir -p /mnt/appdata/docker_volumes/{paperless-ngx/data,paperless-ngx/media,paperless-ngx/export,paperless-ngx/consume}
 mkdir -p /mnt/appdata/docker_volumes/{syncthing/config}
 mkdir -p /mnt/appdata/docker_volumes/syncthing_sync
