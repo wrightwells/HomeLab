@@ -6,11 +6,5 @@
   vars:
     compose_bundle_name: lxc220-docker-apps
     compose_stacks: "{{ build_inventory.services.lxc220_docker_apps | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
-    docker_host_paths:
-      - path: /mnt/appdata/docker_volumes/calibre
-        owner: "{{ docker_app_uid }}"
-        group: "{{ docker_app_gid }}"
-      - path: /mnt/appdata/docker_volumes/calibre-web
-        owner: "{{ docker_app_uid }}"
-        group: "{{ docker_app_gid }}"
+    docker_host_paths: []
   when: (build_inventory.services.lxc220_docker_apps | dict2items | selectattr('value.enabled') | list | length) > 0

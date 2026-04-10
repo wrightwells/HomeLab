@@ -1,0 +1,82 @@
+---
+- name: Deploy broken lxc220 stacks (calibre, calibre-web, eurgo)
+  hosts: docker_apps
+  become: true
+
+  pre_tasks:
+    - name: Load site configuration
+      ansible.builtin.include_vars:
+        file: ../inventories/production/site_config.yml
+
+    - name: Load group vars (all)
+      ansible.builtin.include_vars:
+        file: ../inventories/production/group_vars/all.yml
+
+    - name: Load build inventory
+      ansible.builtin.include_vars:
+        file: ../inventories/production/build_inventory.yml
+
+    - name: Stop existing calibre stack
+      community.docker.docker_compose_v2:
+        project_src: /opt/containers/calibre
+        state: absent
+        remove_volumes: true
+      ignore_errors: true
+
+    - name: Stop existing calibre-web stack
+      community.docker.docker_compose_v2:
+        project_src: /opt/containers/calibre-web
+        state: absent
+        remove_volumes: true
+      ignore_errors: true
+
+    - name: Stop existing eurgo stack
+      community.docker.docker_compose_v2:
+        project_src: /opt/containers/eurgo
+        state: absent
+        remove_volumes: true
+      ignore_errors: true
+
+    - name: Clean up leftover volumes
+      ansible.builtin.command:
+        cmd: "docker volume rm {{ item }}"
+      loop:
+        - calibre_calibre-data
+        - calibre-web_calibre-web-data
+        - erugo_erugo-data
+      failed_when: false
+      ignore_errors: true
+
+  roles:
+    - role: lxc220-docker-apps
+      vars:
+        compose_bundle_name: lxc220-docker-apps
+        compose_stacks:
+          - calibre
+          - calibre-web
+          - eurgo
+        docker_host_paths: []
+
+  post_tasks:
+    - name: Wait for stacks to finish startup
+      ansible.builtin.pause:
+        seconds: 20
+        prompt: "Waiting for stacks to start..."
+
+    - name: Verify calibre is responding
+      ansible.builtin.uri:
+        url: http://127.0.0.1:8083
+        status_code: [200, 301, 302]
+      failed_when: false
+
+    - name: Verify calibre-web is responding
+      ansible.builtin.uri:
+        url: http://127.0.0.1:8084
+        status_code: [200, 301, 302]
+      failed_when: false
+
+    - name: Verify eurgo is responding
+      ansible.builtin.uri:
+        url: http://127.0.0.1:9998
+        status_code: [200, 301, 302]
+      failed_when: false

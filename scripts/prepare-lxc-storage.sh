@@ -47,7 +47,7 @@ mkdir -p /mnt/appdata/docker_volumes/{syncthing/config}
 mkdir -p /mnt/appdata/docker_volumes/syncthing_sync
 
 # Apps stack (lxc220-docker-apps) -- no DB paths (use named volumes)
-mkdir -p /mnt/appdata/docker_volumes/{calibre,calibre-web,grist,homarr,influxdb,pairdrop,erugo}
+mkdir -p /mnt/appdata/docker_volumes/{homarr,influxdb,pairdrop}
 mkdir -p /mnt/appdata/docker_volumes/{blinko/files}
 mkdir -p /mnt/appdata/docker_volumes/{node-red}
 

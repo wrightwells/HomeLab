@@ -7,10 +7,13 @@ services:
       - TZ=Europe/London
       - PUID=1000
       - PGID=1000
-      - DOCKER_MODS=linuxserver/mods:universal-calibre #optional
-      - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #optional
+      - DOCKER_MODS=linuxserver/mods:universal-calibre
+      - OAUTHLIB_RELAX_TOKEN_SCOPE=1
     ports:
       - "8084:8083"
     volumes:
-      - /mnt/appdata/docker_volumes/calibre-web:/config
+      - calibre-web-data:/config
       - /mnt/media_pool/books:/books
+
+volumes:
+  calibre-web-data:

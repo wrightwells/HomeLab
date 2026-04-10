@@ -1,0 +1,50 @@
+---
+- name: Deploy uptime-kuma stack (fix ZFS bind-mount issue)
+  hosts: infra
+  become: true
+
+  pre_tasks:
+    - name: Load site configuration
+      ansible.builtin.include_vars:
+        file: ../inventories/production/site_config.yml
+
+    - name: Load group vars (all)
+      ansible.builtin.include_vars:
+        file: ../inventories/production/group_vars/all.yml
+
+    - name: Load build inventory
+      ansible.builtin.include_vars:
+        file: ../inventories/production/build_inventory.yml
+
+    - name: Stop existing uptime-kuma stack
+      community.docker.docker_compose_v2:
+        project_src: /opt/containers/uptime-kuma
+        state: absent
+        remove_volumes: true
+      ignore_errors: true
+
+    - name: Clean up leftover uptime-kuma volumes
+      ansible.builtin.command:
+        cmd: docker volume rm uptime-kuma_uptime-kuma-data
+      failed_when: false
+      ignore_errors: true
+
+  roles:
+    - role: lxc250-infra
+      vars:
+        compose_bundle_name: lxc250-infra
+        compose_stacks:
+          - uptime-kuma
+        docker_host_paths: []
+
+  post_tasks:
+    - name: Wait for uptime-kuma to finish startup
+      ansible.builtin.pause:
+        seconds: 15
+        prompt: "Waiting for uptime-kuma to start..."
+
+    - name: Verify uptime-kuma is responding
+      ansible.builtin.uri:
+        url: http://127.0.0.1:3001
+        status_code: [200, 301, 302]
+      failed_when: false

@@ -113,7 +113,8 @@
       "Bash(printf *)",
       "Bash(tr *)",
       "Bash(find *)",
-      "Bash(ansible-inventory *)"
+      "Bash(ansible-inventory *)",
+      "Bash(mv *)"
     ]
   },
   "$version": 3

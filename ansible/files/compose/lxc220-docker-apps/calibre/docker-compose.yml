@@ -4,17 +4,20 @@ services:
     container_name: calibre
     restart: unless-stopped
     security_opt:
-      - seccomp:unconfined #optional
+      - seccomp:unconfined
     env_file:
       - stack.env
     environment:
       - TZ=${TZ}
       - PUID=1000
       - PGID=1000
-      - PASSWORD=${PASSWORD} #optional
-      - CLI_ARGS=${CLI_ARGS} #optional
+      - PASSWORD=${PASSWORD}
+      - CLI_ARGS=${CLI_ARGS}
     ports:
       - "8083:8080"
       - "8181:8181"
     volumes:
-      - /mnt/appdata/docker_volumes/calibre:/config
+      - calibre-data:/config
+
+volumes:
+  calibre-data:

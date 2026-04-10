@@ -1,4 +1,3 @@
-
 services:
   erugo:
     image: wardy784/erugo:latest
@@ -7,5 +6,7 @@ services:
     ports:
       - "9998:80"
     volumes:
-        - /mnt/appdata/docker_volumes/erugo:/var/www/html/storage
+      - erugo-data:/var/www/html/storage
 
+volumes:
+  erugo-data:
