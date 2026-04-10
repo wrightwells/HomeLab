@@ -1,0 +1,67 @@
+---
+- name: Deploy lxc240 stacks (ghost, kutt) - fix ZFS bind-mount issue
+  hosts: docker_external
+  become: true
+
+  pre_tasks:
+    - name: Load site configuration
+      ansible.builtin.include_vars:
+        file: ../inventories/production/site_config.yml
+
+    - name: Load group vars (all)
+      ansible.builtin.include_vars:
+        file: ../inventories/production/group_vars/all.yml
+
+    - name: Load build inventory
+      ansible.builtin.include_vars:
+        file: ../inventories/production/build_inventory.yml
+
+    - name: Stop existing ghost stack
+      community.docker.docker_compose_v2:
+        project_src: /opt/containers/ghost
+        state: absent
+        remove_volumes: true
+      ignore_errors: true
+
+    - name: Stop existing kutt stack
+      community.docker.docker_compose_v2:
+        project_src: /opt/containers/kutt
+        state: absent
+        remove_volumes: true
+      ignore_errors: true
+
+    - name: Clean up leftover volumes
+      ansible.builtin.command:
+        cmd: "docker volume rm {{ item }}"
+      loop:
+        - ghost_ghost-data
+        - kutt_kutt-db
+      failed_when: false
+      ignore_errors: true
+
+  roles:
+    - role: lxc240-docker-external
+      vars:
+        compose_bundle_name: lxc240-docker-external
+        compose_stacks:
+          - ghost
+          - kutt
+        docker_host_paths: []
+
+  post_tasks:
+    - name: Wait for stacks to finish startup
+      ansible.builtin.pause:
+        seconds: 20
+        prompt: "Waiting for ghost and kutt to start..."
+
+    - name: Verify ghost is responding
+      ansible.builtin.uri:
+        url: http://127.0.0.1:2368
+        status_code: [200, 301, 302]
+      failed_when: false
+
+    - name: Verify kutt is responding
+      ansible.builtin.uri:
+        url: http://127.0.0.1:7070
+        status_code: [200, 301, 302]
+      failed_when: false

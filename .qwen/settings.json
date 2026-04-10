@@ -114,7 +114,8 @@
       "Bash(tr *)",
       "Bash(find *)",
       "Bash(ansible-inventory *)",
-      "Bash(mv *)"
+      "Bash(mv *)",
+      "Bash(xxd *)"
     ]
   },
   "$version": 3
