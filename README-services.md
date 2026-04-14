@@ -18,6 +18,7 @@ Notes:
 | --- | --- | --- |
 | `vm050-mint` (VMID `150`) | `10.10.10.50` | Linux Mint Cinnamon desktop VM with Tailscale and HomeLab tools |
 | `vm210-ai-gpu` | `10.10.20.210` | AI services, Frigate, Home Assistant, coding tools |
+| `vm300-openclaw` (VMID `300`) | `10.10.66.70` | OpenClaw Telegram bot gateway, Open WebUI |
 | `lxc066-docker-arr` | `10.10.66.66` | ARR stack, downloads, media request tools |
 | `lxc200-docker-services` | `10.10.20.200` | Core data services and sync tools |
 | `lxc220-docker-apps` | `10.10.20.220` | General-purpose apps |
@@ -38,6 +39,8 @@ Notes:
 | `wyoming-openwakeword` | `vm210-ai-gpu` | `10.10.20.210` | `tcp://10.10.20.210:10400` | `10400` | Local Wyoming wake word service for voice pipelines |
 | `n8n` | `vm210-ai-gpu` | `10.10.20.210` | `http://10.10.20.210:5678` | `5678` | Workflow automation and service orchestration |
 | `openvscode-server` | `vm210-ai-gpu` | `10.10.20.210` | `http://10.10.20.210:3100` | `3100` | Remote VS Code-style editor for homelab work |
+| `openclaw-gateway` | `vm300-openclaw` | `10.10.66.70` | `http://10.10.66.70:18789` | `18789` | OpenClaw AI agent gateway with Telegram bot integration, uses remote Ollama |
+| `open-webui` | `vm300-openclaw` | `10.10.66.70` | `http://10.10.66.70:3000` | `3000` | Local Open WebUI instance connected to remote Ollama |
 | `gluetun` | `lxc066-docker-arr` | `10.10.66.66` | `N/A` | `6881`, `6881/udp` | VPN sidecar and network gateway for the ARR/download stack |
 | `qbittorrent` | `lxc066-docker-arr` | `10.10.66.66` | `http://10.10.66.66:8085` | `8085` | Torrent client behind the VPN |
 | `prowlarr` | `lxc066-docker-arr` | `10.10.66.66` | `http://10.10.66.66:9696` | `9696` | Indexer management for the ARR stack |

@@ -33,15 +33,16 @@ Before starting:
 | 5 | *(manual pfSense install)* | Attach ISO, install, detach ISO |
 | 6 | *(manual pfSense GUI setup)* | See README-pfsense.md |
 | 7 | `./scripts/terraform-init.sh production` + plan + apply | Creates all other VMs and LXCs |
-| 8 | `./scripts/proxmox-apply-lxc-postcreate.sh` | LXC nesting, bind mounts |
-| 9 | `./scripts/setup-lxc-root-password.sh` | Sets LXC root password |
-| 10 | `./scripts/apply-lxc-root-password.sh` | Applies password to rebooted LXCs |
-| 11 | `./scripts/setup-tun-device.sh` | Adds /dev/net/tun to docker-arr LXC |
-| 12 | `./scripts/prepare-lxc-storage.sh` | Creates ZFS bind-mount dirs with 777 perms |
-| 13 | `./scripts/move-proxmox-ip.sh` | Moves host IP from vmbr0 to vmbr2.99 |
-| 14 | `./scripts/verify-ansible-hosts.sh` | Pings all hosts |
-| 15 | `./scripts/deploy-all.sh` | Runs Ansible site playbook |
-| 16 | `./scripts/apply-pfsense-config.sh` | Applies pfSense firewall rules |
+| 8 | `./scripts/fix-lxc-recreate.sh` | LXC post-create + TUN + storage + verify (combines steps 9–12) |
+| 8a | `./scripts/proxmox-apply-lxc-postcreate.sh` | LXC nesting, bind mounts (if running manually) |
+| 8b | `./scripts/setup-lxc-root-password.sh` | Sets LXC root password (if not already set) |
+| 8c | `./scripts/apply-lxc-root-password.sh` | Applies password to rebooted LXCs (if needed) |
+| 8d | `./scripts/setup-tun-device.sh` | Adds /dev/net/tun to docker-arr LXC |
+| 8e | `./scripts/prepare-lxc-storage.sh` | Creates ZFS bind-mount dirs with 777 perms |
+| 9 | `./scripts/move-proxmox-ip.sh` | Moves host IP from vmbr0 to vmbr2.99 |
+| 10 | `./scripts/verify-ansible-hosts.sh` | Pings all hosts |
+| 11 | `./scripts/deploy-all.sh` | Runs Ansible site playbook |
+| 12 | `./scripts/apply-pfsense-config.sh` | Applies pfSense firewall rules |
 | 17 | *(GPU passthrough — optional)* | See GPU section below |
 | 18 | *(grist-finance-connector — optional)* | See private image section below |
 
@@ -316,6 +317,7 @@ After a successful run, these services are running:
 | Host | IP | Services |
 |------|----|----------|
 | `vm210-ai-gpu` | `10.10.20.210` | Ollama, Open WebUI, Frigate, Home Assistant, Home Assistant Voice, n8n, OpenVSCode Server |
+| `vm300-openclaw` | `10.10.66.70` | OpenClaw Gateway (Telegram bot, remote Ollama), Open WebUI |
 | `lxc066-docker-arr` | `10.10.66.66` | gluetun, qbittorrent, prowlarr, sonarr, radarr, lidarr, bazarr, readarr, filebrowser, jellyseerr, aurrar |
 | `lxc200-docker-services` | `10.10.20.200` | Immich, ownCloud, Paperless-ngx, Syncthing |
 | `lxc220-docker-apps` | `10.10.20.220` | Blinko, Calibre, Calibre-Web, EruGo, Firefly III, Grafana, Grist, Homarr, InfluxDB, Node-RED, Pairdrop, Semaphore, TeslaMate, grist-finance-connector |
@@ -333,6 +335,7 @@ After a successful run, these services are running:
 | `vm100_pfsense` | `10.10.99.1` | management VLAN 99 (pfSense IS the gateway) |
 | `vm050_mint` | `10.10.10.50` | `vmbr2` VLAN 10 |
 | `vm210_ai_gpu` | `10.10.20.210` | `vmbr2` VLAN 20 |
+| `vm300_openclaw` | `10.10.66.70` | `vmbr3` (DMZ) |
 | `lxc066_docker_arr` | `10.10.66.66` | `vmbr3` (DMZ) |
 | `lxc200_docker_services` | `10.10.20.200` | `vmbr2` VLAN 20 |
 | `lxc220_docker_apps` | `10.10.20.220` | `vmbr2` VLAN 20 |
@@ -494,3 +497,4 @@ chmod 600 ~/.config/ansible/homelab-vault-pass.txt
 - [README-stack-env-vaults.md](README-stack-env-vaults.md)
 - [README-private-docker-images.md](README-private-docker-images.md)
 - [README-sizing.md](README-sizing.md)
+- [Terraform Corrections](docs/terraform-corrections.md)

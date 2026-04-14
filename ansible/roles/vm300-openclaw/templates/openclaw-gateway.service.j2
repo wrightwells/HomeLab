@@ -1,0 +1,21 @@
+# OpenClaw Gateway - system-level systemd service
+# Runs as root on port {{ vm300_openclaw_gateway_port }}.
+# Bind mode is set to "lan" in openclaw.json so the control UI and gateway API
+# are reachable via Tailscale and the local network.
+# Telegram polling and remote Ollama integration work reliably without user-session quirks.
+[Unit]
+Description=OpenClaw Gateway
+After=network-online.target tailscaled.service
+Wants=network-online.target tailscaled.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/openclaw gateway --port {{ vm300_openclaw_gateway_port }}
+Restart=always
+RestartSec=5
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

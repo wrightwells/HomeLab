@@ -55,6 +55,7 @@ state, `vmbr0` can be left unused apart from occasional template builds.
 | pfSense | `pfsense` | VM | Bootstrap / control | `vmbr0` | `10.10.1.110` |
 | Mint desktop | `vm050-mint` (VMID `150`) | VM | Workstations | `vmbr2` | `10.10.10.50` |
 | AI GPU | `ai-gpu` | VM | Servers | `vmbr2` | `10.10.20.210` |
+| OpenClaw | `UK-OpenClaw` | VM | DMZ | `vmbr3` | `10.10.66.70` |
 | Docker ARR | `docker-arr` | LXC | DMZ | `vmbr3` | `10.10.66.66` |
 | Docker services | `docker-services` | LXC | Servers | `vmbr2` | `10.10.20.200` |
 | Docker apps | `docker-apps` | LXC | Servers | `vmbr2` | `10.10.20.220` |

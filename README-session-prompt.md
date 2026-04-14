@@ -232,6 +232,7 @@ Shared host directories created during storage bootstrap include:
 | `proxmox-host` | `10.10.1.10` | Proxmox host on the bootstrap/uplink network; seed Ansible target before Terraform rewrites inventory |
 | `vm050-mint` (VMID `150`) | `10.10.10.50` | Linux Mint Cinnamon desktop VM, Tailscale client, repo tools, UK/France themed wallpaper |
 | `vm210-ai-gpu` | `10.10.20.210` | AI services, Frigate, Home Assistant, automation, coding tools |
+| `vm300-openclaw` | `10.10.66.70` | OpenClaw AI agent gateway, Telegram bot, remote Ollama, Open WebUI |
 | `lxc066-docker-arr` | `10.10.66.66` | ARR stack, downloads, request tools |
 | `lxc200-docker-services` | `10.10.20.200` | data and sync services |
 | `lxc220-docker-apps` | `10.10.20.220` | general-purpose apps |
@@ -246,6 +247,12 @@ Shared host directories created during storage bootstrap include:
   - Frigate
   - Home Assistant
   - local automation and coding support
+- `vm300-openclaw`:
+  - OpenClaw AI agent gateway running as root systemd service on port 18789
+  - Telegram bot integration with polling mode
+  - Remote Ollama model server at 10.10.20.210:11434
+  - Default model: qwen2.5-coder:7b
+  - DMZ placement on vmbr3
 - `vm050-mint` (VMID `150`):
   - Linux Mint Cinnamon desktop workstation
   - HomeLab repo checkout and local tooling

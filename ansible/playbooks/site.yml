@@ -90,3 +90,13 @@
     - ../inventories/production/build_inventory.yml
   roles:
     - lxc250-infra
+
+- name: Configure OpenClaw VM
+  hosts: openclaw
+  become: true
+  vars_files:
+    - ../inventories/production/site_config.yml
+    - ../inventories/production/build_inventory.yml
+    - ../inventories/production/group_vars/openclaw_vault.yml
+  roles:
+    - vm300-openclaw

@@ -60,6 +60,7 @@ Use [site_config.yml](ansible/inventories/production/site_config.yml) to control
 - VM100 pfSense
 - VM150 Mint desktop
 - VM210 AI-GPU
+- VM300 OpenClaw
 - LXC066 docker-arr
 - LXC200 docker-services
 - LXC220 docker-apps
@@ -76,6 +77,12 @@ the build inventory file rather than by deleting repo configuration.
 - SSD 500GB: Proxmox OS, Terraform repo, LXC rootfs, VM root disks, Docker runtime
 - RAID1 2x4TB: /mnt/appdata for config, databases, Docker volumes, Syncthing critical data
 - Media pool 4x12TB: /mnt/media_pool via mergerfs
+
+## Hardware
+
+- CPU: 8 cores / 16 threads
+- RAM: 128 GB
+- See [docs/terraform-corrections.md](docs/terraform-corrections.md) for profile adjustments made to match actual hardware.
 
 Note:
 

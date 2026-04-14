@@ -1,0 +1,41 @@
+---
+# vm300-openclaw role defaults
+
+# Tailscale
+vm300_tailscale_enabled: true
+vm300_tailscale_authkey: "tskey-auth-kGYCHYZAz221CNTRL-XTNReEaxoKc9TeVi3yLqKcSGbfJjQhn8B"
+
+# Open WebUI
+vm300_openwebui_port: 3000
+vm300_openwebui_image: "ghcr.io/open-webui/open-webui:main"
+vm300_openwebui_ollama_url: ""
+
+# OpenClaw - user-level service (legacy, will be disabled)
+vm300_openclaw_user: openclaw
+vm300_openclaw_group: openclaw
+vm300_openclaw_home: /opt/openclaw
+vm300_openclaw_config_dir: /etc/openclaw
+vm300_openclaw_state_dir: /var/lib/openclaw
+vm300_openclaw_log_dir: /var/log/openclaw
+vm300_openclaw_node_major: "24"
+vm300_openclaw_bind_host: "127.0.0.1"
+vm300_openclaw_port: 3001
+vm300_openclaw_gateway_auth_token: "CHANGE_ME_LONG_RANDOM_TOKEN"
+vm300_openclaw_npm_package: "openclaw@latest"
+vm300_openclaw_service_name: "openclaw"
+
+# OpenClaw - system-level gateway service (new, runs as root)
+# Runs on port 18789 so Telegram polling and remote Ollama work reliably
+vm300_openclaw_gateway_port: 18789
+vm300_openclaw_gateway_service_name: "openclaw-gateway"
+
+# OpenClaw - remote Ollama model server
+vm300_ollama_base_url: "http://10.10.20.210:11434"
+vm300_ollama_default_model: "ollama/qwen2.5-coder:7b"
+vm300_ollama_model_name: "qwen2.5-coder:7b"
+
+# OpenClaw - Telegram bot token (set via group_vars or vault)
+vm300_openclaw_telegram_bot_token: ""
+
+# OpenClaw - root home for system-level gateway config
+vm300_openclaw_root_config_dir: /root/.openclaw

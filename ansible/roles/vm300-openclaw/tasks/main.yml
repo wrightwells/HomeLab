@@ -1,0 +1,461 @@
+---
+# vm300-openclaw role - Tailscale, Docker, Open WebUI, OpenClaw Gateway
+
+# ===========================================================================
+# 1. Tailscale
+# ===========================================================================
+
+- name: Install Tailscale prerequisites
+  ansible.builtin.apt:
+    name:
+      - curl
+      - ca-certificates
+      - gnupg
+    state: present
+    update_cache: true
+  when: vm300_tailscale_enabled
+
+- name: Install Tailscale signing key
+  ansible.builtin.get_url:
+    url: "https://pkgs.tailscale.com/stable/ubuntu/noble.noarmor.gpg"
+    dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+    mode: "0644"
+  when: vm300_tailscale_enabled
+
+- name: Install Tailscale apt source
+  ansible.builtin.get_url:
+    url: "https://pkgs.tailscale.com/stable/ubuntu/noble.tailscale-keyring.list"
+    dest: /etc/apt/sources.list.d/tailscale.list
+    mode: "0644"
+  when: vm300_tailscale_enabled
+
+- name: Install Tailscale client
+  ansible.builtin.apt:
+    name: tailscale
+    state: present
+    update_cache: true
+  when: vm300_tailscale_enabled
+
+- name: Enable and start tailscaled
+  ansible.builtin.service:
+    name: tailscaled
+    state: started
+    enabled: true
+  when: vm300_tailscale_enabled
+
+- name: Authenticate Tailscale
+  ansible.builtin.command:
+    cmd: tailscale up --authkey={{ vm300_tailscale_authkey }} --accept-dns=true
+  register: vm300_tailscale_up
+  changed_when: "'Logged out' not in vm300_tailscale_up.stderr"
+  failed_when: false
+  when: vm300_tailscale_enabled
+
+- name: Check Tailscale status
+  ansible.builtin.command:
+    cmd: tailscale status --json
+  register: vm300_tailscale_status
+  changed_when: false
+  failed_when: false
+  when: vm300_tailscale_enabled
+
+- name: Display Tailscale auth URL if needed
+  ansible.builtin.debug:
+    msg: "Tailscale needs authentication. Visit: {{ vm300_tailscale_status.stdout | from_json | json_query('AuthURL') }}"
+  when:
+    - vm300_tailscale_enabled
+    - vm300_tailscale_status.rc is defined
+    - vm300_tailscale_status.rc != 0
+
+# ===========================================================================
+# 2. Docker
+# ===========================================================================
+
+- name: Install Docker prerequisites
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+    state: present
+    update_cache: true
+
+- name: Create Docker keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Download Docker GPG key
+  ansible.builtin.shell: |
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /tmp/docker.gpg
+    gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg /tmp/docker.gpg
+    chmod a+r /etc/apt/keyrings/docker.gpg
+    rm -f /tmp/docker.gpg
+  args:
+    creates: /etc/apt/keyrings/docker.gpg
+
+- name: Add Docker apt repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/docker.list
+    mode: "0644"
+    content: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu noble stable\n"
+
+- name: Install Docker packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+
+- name: Start and enable Docker
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+# ===========================================================================
+# 3. Open WebUI (Docker Compose)
+# ===========================================================================
+
+- name: Create Docker compose root
+  ansible.builtin.file:
+    path: /opt/containers
+    state: directory
+    mode: "0755"
+
+- name: Create Open WebUI compose directory
+  ansible.builtin.file:
+    path: /opt/containers/open-webui
+    state: directory
+    mode: "0755"
+
+- name: Deploy Open WebUI docker-compose.yml
+  ansible.builtin.copy:
+    dest: /opt/containers/open-webui/docker-compose.yml
+    mode: "0644"
+    content: |
+      services:
+        open-webui:
+          image: {{ vm300_openwebui_image }}
+          container_name: open-webui
+          restart: unless-stopped
+          ports:
+            - "{{ vm300_openwebui_port }}:8080"
+          volumes:
+            - open-webui-data:/app/backend/data
+          environment:
+            - OLLAMA_BASE_URL={{ vm300_openwebui_ollama_url | default('') }}
+            - WEBUI_AUTH=True
+          extra_hosts:
+            - "host.docker.internal:host-gateway"
+
+      volumes:
+        open-webui-data:
+
+- name: Start Open WebUI
+  community.docker.docker_compose_v2:
+    project_src: /opt/containers/open-webui
+    state: present
+
+# ===========================================================================
+# 4. OpenClaw - Install Node.js and OpenClaw binary
+# ===========================================================================
+
+- name: Ensure apt dependencies are installed
+  ansible.builtin.apt:
+    name:
+      - curl
+      - ca-certificates
+      - gnupg
+      - git
+      - build-essential
+    state: present
+    update_cache: true
+
+- name: Ensure NodeSource keyring directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Download NodeSource GPG key
+  ansible.builtin.get_url:
+    url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+    dest: /tmp/nodesource.gpg.key
+    mode: "0644"
+
+- name: Dearmor NodeSource GPG key
+  ansible.builtin.command:
+    cmd: gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg /tmp/nodesource.gpg.key
+  args:
+    creates: /etc/apt/keyrings/nodesource.gpg
+
+- name: Add NodeSource repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/nodesource.list
+    mode: "0644"
+    content: |
+      deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_{{ vm300_openclaw_node_major }}.x nodistro main
+
+- name: Install Node.js
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: true
+
+- name: Enable corepack
+  ansible.builtin.command:
+    cmd: corepack enable
+  changed_when: false
+
+- name: Prepare pnpm through corepack
+  ansible.builtin.command:
+    cmd: corepack prepare pnpm@latest --activate
+  changed_when: false
+
+# ===========================================================================
+# 5. OpenClaw - Detect and disable conflicting gateway runners
+# ===========================================================================
+# The original role installed openclaw.service running as the openclaw user.
+# We need exactly one gateway process owning port 18789, running as root.
+# Disable any pre-existing openclaw.service so it does not compete with
+# openclaw-gateway.service.
+
+- name: Check if conflicting openclaw.service exists
+  ansible.builtin.stat:
+    path: /etc/systemd/system/openclaw.service
+  register: vm300_old_service_stat
+
+- name: Disable and stop conflicting openclaw.service
+  ansible.builtin.systemd:
+    name: openclaw
+    state: stopped
+    enabled: false
+    daemon_reload: true
+  when: vm300_old_service_stat.stat.exists
+
+- name: Check if anything else owns port 18789
+  ansible.builtin.shell: |
+    ss -ltnp 'sport = :{{ vm300_openclaw_gateway_port }}' | grep -v 'State' || true
+  register: vm300_port_18789_check
+  changed_when: false
+
+- name: Report port 18789 status
+  ansible.builtin.debug:
+    msg: "Port {{ vm300_openclaw_gateway_port }} current listeners: {{ vm300_port_18789_check.stdout | default('none') }}"
+
+# ===========================================================================
+# 6. OpenClaw - Deploy system-level gateway service
+# ===========================================================================
+# Run as root, not via systemctl --user, so Telegram polling survives
+# logout and the service starts reliably at boot.
+
+- name: Deploy openclaw-gateway.service systemd unit
+  ansible.builtin.template:
+    src: openclaw-gateway.service.j2
+    dest: /etc/systemd/system/{{ vm300_openclaw_gateway_service_name }}.service
+    mode: "0644"
+  notify:
+    - Reload systemd
+
+- name: Enable and start openclaw-gateway.service
+  ansible.builtin.systemd:
+    name: "{{ vm300_openclaw_gateway_service_name }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+
+# ===========================================================================
+# 7. OpenClaw - Configure /root/.openclaw/openclaw.json
+# ===========================================================================
+# Set up remote Ollama provider, default model, and Telegram bot token.
+# Back up the existing config before editing so we can recover if needed.
+
+- name: Check if openclaw.json already exists
+  ansible.builtin.stat:
+    path: "{{ vm300_openclaw_root_config_dir }}/openclaw.json"
+  register: vm300_openclaw_json_stat
+
+- name: Back up existing openclaw.json
+  ansible.builtin.copy:
+    src: "{{ vm300_openclaw_root_config_dir }}/openclaw.json"
+    dest: "{{ vm300_openclaw_root_config_dir }}/openclaw.json.bak.{{ ansible_date_time.epoch }}"
+    remote_src: true
+  when: vm300_openclaw_json_stat.stat.exists
+
+- name: Ensure root .openclaw config directory exists
+  ansible.builtin.file:
+    path: "{{ vm300_openclaw_root_config_dir }}"
+    state: directory
+    mode: "0700"
+
+- name: Deploy openclaw.json configuration
+  ansible.builtin.copy:
+    dest: "{{ vm300_openclaw_root_config_dir }}/openclaw.json"
+    mode: "0600"
+    content: |
+      {
+        "models": {
+          "providers": {
+            "ollama": {
+              "baseUrl": "{{ vm300_ollama_base_url }}",
+              "apiKey": "ollama-local",
+              "models": [
+                {
+                  "id": "{{ vm300_ollama_model_name }}",
+                  "name": "{{ vm300_ollama_model_name }}",
+                  "api": "ollama"
+                }
+              ]
+            }
+          }
+        },
+        "agents": {
+          "defaults": {
+            "model": "{{ vm300_ollama_default_model }}"
+          }
+        },
+        "channels": {
+          "telegram": {
+            "enabled": true,
+            "botToken": "{{ vm300_openclaw_telegram_bot_token }}"
+          }
+        },
+        "gateway": {
+          "mode": "local",
+          "port": {{ vm300_openclaw_gateway_port }},
+          "bind": "lan",
+          "controlUi": {
+            "enabled": true
+          }
+        }
+      }
+  notify:
+    - Restart openclaw-gateway
+
+# ===========================================================================
+# 8. OpenClaw - Session and reply stability fixes
+# ===========================================================================
+# Stale session indexes and Telegram update offsets cause reply stalls.
+# The session-memory hook also contributed to stalls, so we disable it.
+
+- name: Back up stale sessions.json if it exists
+  ansible.builtin.stat:
+    path: "{{ vm300_openclaw_root_config_dir }}/agents/main/sessions/sessions.json"
+  register: vm300_sessions_stat
+
+- name: Clear stale sessions index
+  ansible.builtin.copy:
+    content: "{}"
+    dest: "{{ vm300_openclaw_root_config_dir }}/agents/main/sessions/sessions.json"
+    mode: "0644"
+  when: vm300_sessions_stat.stat.exists
+
+- name: Back up stale Telegram update offset if it exists
+  ansible.builtin.stat:
+    path: "{{ vm300_openclaw_root_config_dir }}/telegram/update-offset-default.json"
+  register: vm300_telegram_offset_stat
+
+- name: Clear stale Telegram update offset
+  ansible.builtin.copy:
+    content: "{}"
+    dest: "{{ vm300_openclaw_root_config_dir }}/telegram/update-offset-default.json"
+    mode: "0644"
+  when: vm300_telegram_offset_stat.stat.exists
+
+- name: Disable session-memory hook
+  ansible.builtin.command:
+    cmd: /usr/bin/openclaw hooks disable session-memory
+  register: vm300_hook_disable
+  changed_when: true
+  failed_when: false
+
+- name: Report session-memory hook disable result
+  ansible.builtin.debug:
+    msg: "session-memory hook disable output: {{ vm300_hook_disable.stdout | default('already disabled') }}"
+
+# ===========================================================================
+# 9. OpenClaw - Final restart after all config/hook/session changes
+# ===========================================================================
+
+- name: Restart openclaw-gateway after config changes
+  ansible.builtin.systemd:
+    name: "{{ vm300_openclaw_gateway_service_name }}"
+    state: restarted
+    daemon_reload: true
+
+# ===========================================================================
+# 10. Validation
+# ===========================================================================
+
+- name: Wait for gateway to be ready
+  ansible.builtin.wait_for:
+    port: "{{ vm300_openclaw_gateway_port }}"
+    delay: 5
+    timeout: 30
+
+- name: Check openclaw-gateway.service status
+  ansible.builtin.command:
+    cmd: systemctl status {{ vm300_openclaw_gateway_service_name }} --no-pager
+  register: vm300_service_status
+  changed_when: false
+  failed_when: false
+
+- name: Print openclaw-gateway.service status
+  ansible.builtin.debug:
+    var: vm300_service_status.stdout
+
+- name: Verify port {{ vm300_openclaw_gateway_port }} is listening
+  ansible.builtin.shell: |
+    ss -ltnp | grep {{ vm300_openclaw_gateway_port }}
+  register: vm300_port_check
+  changed_when: false
+
+- name: Print port verification
+  ansible.builtin.debug:
+    var: vm300_port_check.stdout
+
+- name: Test remote Ollama connectivity
+  ansible.builtin.uri:
+    url: "{{ vm300_ollama_base_url }}/api/tags"
+    method: GET
+    status_code: 200
+    timeout: 10
+  register: vm300_ollama_test
+  changed_when: false
+  failed_when: false
+
+- name: Print Ollama test result
+  ansible.builtin.debug:
+    msg: "Ollama API response: {{ vm300_ollama_test.status | default('failed') }}"
+
+- name: Direct Ollama generation test with qwen2.5-coder:7b
+  ansible.builtin.uri:
+    url: "{{ vm300_ollama_base_url }}/api/generate"
+    method: POST
+    body: '{"model":"qwen2.5-coder:7b","prompt":"hello","stream":false}'
+    body_format: json
+    status_code: 200
+    timeout: 120
+  register: vm300_ollama_generate
+  changed_when: false
+  failed_when: false
+
+- name: Print Ollama generation test result
+  ansible.builtin.debug:
+    msg: "Ollama generation test: {{ vm300_ollama_generate.status | default('failed') }} - {{ vm300_ollama_generate.json.get('response', 'no response')[:100] if vm300_ollama_generate.json is defined else 'no json' }}"
+
+- name: Check gateway logs for readiness markers
+  ansible.builtin.shell: |
+    journalctl -u {{ vm300_openclaw_gateway_service_name }} --no-pager -n 200 2>/dev/null | grep -iE 'gateway ready|telegram provider starting|telegram sendMessage ok' || echo "NO_MATCHES_FOUND"
+  register: vm300_log_check
+  changed_when: false
+  failed_when: false
+
+- name: Print log verification
+  ansible.builtin.debug:
+    var: vm300_log_check.stdout

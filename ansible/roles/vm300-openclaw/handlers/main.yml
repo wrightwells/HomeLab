@@ -1,0 +1,9 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart openclaw-gateway
+  ansible.builtin.systemd:
+    name: "{{ vm300_openclaw_gateway_service_name }}"
+    state: restarted
