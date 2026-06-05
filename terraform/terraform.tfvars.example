@@ -1,4 +1,4 @@
-pm_api_url          = "https://pve.example.com:8006/api2/json"
+pm_api_url          = "https://pve.example.com:8006/"
 pm_api_token_id     = "root@pam!provider"
 pm_api_token_secret = "PASTE_NEW_SECRET_HERE"
 pm_tls_insecure     = true
@@ -13,6 +13,8 @@ vm050_mint_template_vmid = 9050
 # is known from lspci, for example "0000:02:00". Leave blank for now.
 vm210_gpu_pci_address = ""
 vm_storage          = "local-lvm"
+pfsense_iso_datastore = "local"
+pfsense_iso_file_name = "netgate-installer-v1.1.1-RELEASE-amd64.img"
 vm050_mint_nvme_storage = "local-lvm"
 vm050_mint_media_storage = "local-lvm"
 lxc_storage         = "local-lvm"

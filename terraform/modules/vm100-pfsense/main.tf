@@ -6,13 +6,22 @@ terraform {
   }
 }
 
+data "proxmox_virtual_environment_file" "pfsense_iso" {
+  node_name    = var.proxmox_node
+  datastore_id = var.pfsense_iso_datastore
+  content_type = "iso"
+  file_name    = var.pfsense_iso_file_name
+}
+
 resource "proxmox_virtual_environment_vm" "this" {
-  name      = "pfsense"
-  node_name = var.proxmox_node
-  vm_id     = 100
-  started   = var.started
-  on_boot   = var.on_boot
-  tags      = ["terraform", "firewall", "pfsense"]
+  depends_on = [data.proxmox_virtual_environment_file.pfsense_iso]
+  name       = "pfsense"
+  node_name  = var.proxmox_node
+  vm_id      = 100
+  started    = var.started
+  on_boot    = var.on_boot
+  tags       = ["terraform", "firewall", "pfsense"]
+  boot_order = ["sata0", "scsi0"]
 
   cpu {
     cores = var.cpu_cores
@@ -28,6 +37,11 @@ resource "proxmox_virtual_environment_vm" "this" {
     interface    = "scsi0"
     size         = 32
     file_format  = "raw"
+  }
+
+  disk {
+    file_id   = data.proxmox_virtual_environment_file.pfsense_iso.id
+    interface = "sata0"
   }
 
   network_device {
@@ -58,7 +72,7 @@ resource "proxmox_virtual_environment_vm" "this" {
     enabled = false
   }
 
-  description = "Starter pfSense VM with bootstrap, WAN, LAN/trunk, and DMZ interfaces. Attach ISO and finish install in Proxmox console."
+  description = "Starter pfSense VM with bootstrap, WAN, LAN/trunk, and DMZ interfaces. Boot from the imported Netgate installer disk image and finish setup in the Proxmox console."
 
   lifecycle {
     prevent_destroy = true

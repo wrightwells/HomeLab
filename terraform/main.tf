@@ -99,8 +99,8 @@ locals {
 
   inventory_hosts = {
     proxmox_host = {
-      name    = "proxmox-host"
-      type    = "host"
+      name = "proxmox-host"
+      type = "host"
       # After step 9 the Proxmox management IP lives on vmbr2.99 (management VLAN).
       # During bootstrap it is on vmbr0, but the Ansible inventory targets the
       # post-move management IP so playbooks run over the pfSense-routed network.
@@ -117,9 +117,9 @@ locals {
       network = local.homelab_site.guests.vm100_pfsense.network
       vmid    = 100
       # After pfSense config, use management_host_id (gateway IP) for Ansible.
-      host_id  = try(local.homelab_site.guests.vm100_pfsense.management_host_id, local.homelab_site.guests.vm100_pfsense.host_id)
-      groups   = ["pfsense_firewall"]
-      user     = "admin"
+      host_id = try(local.homelab_site.guests.vm100_pfsense.management_host_id, local.homelab_site.guests.vm100_pfsense.host_id)
+      groups  = ["pfsense_firewall"]
+      user    = "admin"
     }
 
     vm050_mint = {
@@ -219,18 +219,20 @@ locals {
 }
 
 module "vm100_pfsense" {
-  count            = var.create_pfsense ? 1 : 0
-  source           = "./modules/vm100-pfsense"
-  proxmox_node     = var.proxmox_node
-  vm_storage       = var.vm_storage
-  bootstrap_bridge = local.homelab_site.bridges.bootstrap
-  wan_bridge       = var.pfsense_wan_bridge
-  lan_bridge       = var.pfsense_lan_bridge
-  dmz_bridge       = var.pfsense_dmz_bridge
-  cpu_cores        = local.profile.vm100_pfsense.cpu
-  memory_mb        = local.profile.vm100_pfsense.memory
-  started          = local.profile.vm100_pfsense.started
-  on_boot          = local.profile.vm100_pfsense.on_boot
+  count                 = var.create_pfsense ? 1 : 0
+  source                = "./modules/vm100-pfsense"
+  proxmox_node          = var.proxmox_node
+  vm_storage            = var.vm_storage
+  pfsense_iso_datastore = var.pfsense_iso_datastore
+  pfsense_iso_file_name = var.pfsense_iso_file_name
+  bootstrap_bridge      = local.homelab_site.bridges.bootstrap
+  wan_bridge            = var.pfsense_wan_bridge
+  lan_bridge            = var.pfsense_lan_bridge
+  dmz_bridge            = var.pfsense_dmz_bridge
+  cpu_cores             = local.profile.vm100_pfsense.cpu
+  memory_mb             = local.profile.vm100_pfsense.memory
+  started               = local.profile.vm100_pfsense.started
+  on_boot               = local.profile.vm100_pfsense.on_boot
 }
 
 module "vm050_mint" {

@@ -38,6 +38,16 @@ variable "vm_storage" {
   default = "local-lvm"
 }
 
+variable "pfsense_iso_datastore" {
+  type    = string
+  default = "local"
+}
+
+variable "pfsense_iso_file_name" {
+  type    = string
+  default = "netgate-installer-v1.1.1-RELEASE-amd64.img"
+}
+
 variable "lxc_storage" {
   type    = string
   default = "local-lvm"
@@ -80,6 +90,10 @@ variable "resource_profile" {
 }
 
 variable "vm_template_vmid" {
+  type = number
+}
+
+variable "vm050_mint_template_vmid" {
   type = number
 }
 

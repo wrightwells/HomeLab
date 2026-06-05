@@ -19,6 +19,7 @@ Before starting:
 3. **The repo is cloned** to `~/HomeLab` on the Proxmox host.
 4. **You know your real NIC names** — discover them with `ip -br link`. Replace
    `nic0`/`nic1`/`nic2` in `/etc/network/interfaces` accordingly.
+5. **pfSense installer image is uploaded** — Download `netgate-installer-v1.1.1-RELEASE-amd64.img` and upload it to Proxmox at `/var/lib/vz/template/iso/`. This must be done **before** continuing the bootstrap.
 
 ---
 
@@ -29,22 +30,23 @@ Before starting:
 | 1 | `./scripts/prepare-proxmox-host.sh` | Packages, repos, vault, SSH key, deploy key |
 | 2 | `./scripts/prepare-templates.sh` | Downloads Debian 12 LXC template, verifies VM templates |
 | 3 | *(configure tfvars)* | API token, node name, template VMIDs, GPU PCI |
-| 4 | `./scripts/terraform-init.sh pfsense` + plan + apply | Creates pfSense VM |
-| 5 | *(manual pfSense install)* | Attach ISO, install, detach ISO |
-| 6 | *(manual pfSense GUI setup)* | See README-pfsense.md |
-| 7 | `./scripts/terraform-init.sh production` + plan + apply | Creates all other VMs and LXCs |
-| 8 | `./scripts/fix-lxc-recreate.sh` | LXC post-create + TUN + storage + verify (combines steps 9–12) |
-| 8a | `./scripts/proxmox-apply-lxc-postcreate.sh` | LXC nesting, bind mounts (if running manually) |
-| 8b | `./scripts/setup-lxc-root-password.sh` | Sets LXC root password (if not already set) |
-| 8c | `./scripts/apply-lxc-root-password.sh` | Applies password to rebooted LXCs (if needed) |
-| 8d | `./scripts/setup-tun-device.sh` | Adds /dev/net/tun to docker-arr LXC |
-| 8e | `./scripts/prepare-lxc-storage.sh` | Creates ZFS bind-mount dirs with 777 perms |
-| 9 | `./scripts/move-proxmox-ip.sh` | Moves host IP from vmbr0 to vmbr2.99 |
-| 10 | `./scripts/verify-ansible-hosts.sh` | Pings all hosts |
-| 11 | `./scripts/deploy-all.sh` | Runs Ansible site playbook |
-| 12 | `./scripts/apply-pfsense-config.sh` | Applies pfSense firewall rules |
-| 17 | *(GPU passthrough — optional)* | See GPU section below |
-| 18 | *(grist-finance-connector — optional)* | See private image section below |
+| 3a | *(SSH key setup — optional)* | Adds client SSH key to Proxmox root's authorized_keys |
+| 3b | *(Upload pfSense image)* | **REQUIRED** Download and upload `netgate-installer-v1.1.1-RELEASE-amd64.img` to Proxmox `/var/lib/vz/template/iso/` |
+| 4 | *(Manual pfSense install)* | VM 100 is pre-created with the Netgate `.img` imported as a boot disk; boot and install pfSense manually |
+| 5 | *(Manual pfSense GUI setup)* | See [README-pfsense.md](README-pfsense.md) — configure VLANs, interfaces, firewall rules |
+| 6 | `./scripts/terraform-init.sh production` + plan + apply | Creates all VMs and LXCs (excluding pfSense) |
+| 7 | `./scripts/fix-lxc-recreate.sh` | LXC post-create + TUN + storage + verify (combines steps 9–12) |
+| 7a | `./scripts/proxmox-apply-lxc-postcreate.sh` | LXC nesting, bind mounts (if running manually) |
+| 7b | `./scripts/setup-lxc-root-password.sh` | Sets LXC root password (if not already set) |
+| 7c | `./scripts/apply-lxc-root-password.sh` | Applies password to rebooted LXCs (if needed) |
+| 7d | `./scripts/setup-tun-device.sh` | Adds /dev/net/tun to docker-arr LXC |
+| 7e | `./scripts/prepare-lxc-storage.sh` | Creates ZFS bind-mount dirs with 777 perms |
+| 8 | `./scripts/move-proxmox-ip.sh` | Moves host IP from vmbr0 to vmbr2.99 |
+| 9 | `./scripts/verify-ansible-hosts.sh` | Pings all hosts |
+| 10 | `./scripts/deploy-all.sh` | Runs Ansible site playbook |
+| 11 | `./scripts/apply-pfsense-config.sh` | Applies pfSense firewall rules |
+| 12 | *(GPU passthrough — optional)* | See GPU section below |
+| 13 | *(grist-finance-connector — optional)* | See private image section below |
 
 ---
 
@@ -88,7 +90,7 @@ cp terraform/terraform.tfvars.example terraform/terraform.tfvars
 Edit `terraform/terraform.tfvars` and set at minimum:
 
 ```hcl
-pm_api_url          = "https://10.10.1.10:8006/api2/json"
+pm_api_url          = "https://10.10.1.10:8006/"
 pm_api_token_id     = "root@pam!provider"
 pm_api_token_secret = "<secret from pveum command below>"
 pm_tls_insecure     = true
@@ -106,46 +108,113 @@ Create the API token:
 pveum user token add root@pam provider --privsep 0
 ```
 
-### Step 4 -- Terraform: pfSense only
+### Step 3a -- Set up SSH key authentication (optional)
+
+By default, SSH operations use `sshpass` with the root password. To enable
+key-based authentication for future sessions (more secure and convenient):
+
+**On your client machine** (where you run terraform commands):
+
+Ensure your SSH private key is in the default location:
 
 ```bash
-./scripts/terraform-init.sh pfsense
-terraform -chdir=terraform/environments/pfsense validate
-./scripts/terraform-plan.sh pfsense
-./scripts/terraform-apply.sh pfsense
+ls -la ~/.ssh/id_ed25519
 ```
 
-This creates VM 100 (pfSense) with four NICs on `vmbr0`/`vmbr1`/`vmbr2`/`vmbr3`.
-
-### Step 5 -- Manual pfSense install
+If it doesn't exist, the Proxmox prepare script should have created it. If you're
+using a different identity, use:
 
 ```bash
-# Attach the installer ISO
-qm set 100 --ide2 local:iso/netgate-installer-v1.1.1-RELEASE-amd64.iso,media=cdrom
-
-# Boot from CD
-qm set 100 --boot order=ide2
-
-# Start the VM
-qm start 100
+ssh-add ~/.ssh/your_key
 ```
 
-Use the Proxmox console to complete the pfSense install (`UFS` filesystem).
+**On the Proxmox host** (one-time setup):
 
-After first boot:
+Run this command from your client to add your public key to the Proxmox root's
+`authorized_keys`:
 
 ```bash
-# Confirm disk layout
-qm config 100
-
-# Restore boot from VM disk
-qm set 100 --boot order=scsi0
-
-# Remove the ISO
-qm set 100 --delete ide2
+ssh-keyscan -H 10.10.1.110 >> ~/.ssh/known_hosts 2>/dev/null
+ssh-copy-id -i ~/.ssh/id_ed25519 root@10.10.1.110
 ```
 
-### Step 6 -- Manual pfSense GUI setup
+Or manually via password:
+
+```bash
+sshpass -p '<root_password>' ssh -o StrictHostKeyChecking=no root@10.10.1.110 \
+  'mkdir -p ~/.ssh && chmod 700 ~/.ssh && \
+   cat >> ~/.ssh/authorized_keys << "KEY"
+<your_public_key_from_terraform.tfvars>
+KEY
+chmod 600 ~/.ssh/authorized_keys && echo "SSH key added"'
+```
+
+**Verify** key auth works:
+
+```bash
+ssh root@10.10.1.110 "echo SSH key auth works!"
+```
+
+After this, all future `ssh` and `scp` commands will use the key instead of
+requiring the password.
+
+### Step 3b -- Upload pfSense installer image (REQUIRED)
+
+**This step must be completed before continuing bootstrap.**
+
+Download the pfSense installer image from https://www.netgate.com/downloads/pfsense/ and use the AMD64 `.img` variant.
+
+Upload it to the Proxmox host:
+
+```bash
+# From your client machine
+scp netgate-installer-v1.1.1-RELEASE-amd64.img root@10.10.1.110:/var/lib/vz/template/iso/
+
+# Or manually on the Proxmox host
+wget -O /var/lib/vz/template/iso/netgate-installer-v1.1.1-RELEASE-amd64.img \
+  '<download the current Netgate AMD64 IMG URL from your account>'
+```
+
+Verify the file is present:
+
+```bash
+ssh root@10.10.1.110 'ls -lh /var/lib/vz/template/iso/netgate-installer-v1.1.1-RELEASE-amd64.img'
+```
+
+**Do not continue until this file exists.**
+
+### Step 4 -- Manual pfSense install from installer image
+
+VM 100 is pre-created with the pfSense installer image imported as boot media and 4 network interfaces configured:
+- `net0`: vmbr0 (bootstrap)
+- `net1`: vmbr1 (WAN)
+- `net2`: vmbr2 (LAN/trunk)
+- `net3`: vmbr3 (DMZ)
+
+Start VM 100 and complete the install:
+
+```bash
+ssh root@10.10.1.110 'qm start 100'
+```
+
+Use the Proxmox console to complete the pfSense install:
+1. Boot from the imported installer disk image (already configured)
+2. Choose `UFS` filesystem
+3. Complete the FreeBSD/pfSense installation wizard
+4. After first boot, configure basic networking (optional CLI setup)
+
+After the installer finishes writing pfSense to `scsi0`, switch the VM to boot
+from the installed system disk instead of the imported installer image:
+
+```bash
+ssh root@10.10.1.110 'qm stop 100'
+ssh root@10.10.1.110 "qm set 100 --boot order='scsi0' --delete sata0"
+ssh root@10.10.1.110 'qm start 100'
+```
+
+**Do not start Terraform until pfSense is fully installed and you can reach its management interface.**
+
+### Step 5 -- Manual pfSense GUI setup
 
 Follow [README-pfsense.md](README-pfsense.md) to configure:
 
@@ -158,22 +227,9 @@ Follow [README-pfsense.md](README-pfsense.md) to configure:
 **Verify**: pfSense management is reachable at `10.10.99.1` and routing works
 for VLANs 10, 20, and 66.
 
-### Step 7 -- LXC root password
+**Do not proceed to Step 6 until pfSense is fully operational.**
 
-```bash
-./scripts/setup-lxc-root-password.sh
-```
-
-Prompts for the vault password and creates the encrypted vault file and updates
-`terraform.tfvars`. This must run **before** Terraform creates the LXCs.
-
-If LXCs were already created, run this after step 8:
-
-```bash
-./scripts/apply-lxc-root-password.sh
-```
-
-### Step 8 -- Terraform: all remaining VMs and LXCs
+### Step 6 -- Terraform: all VMs and LXCs (except pfSense)
 
 ```bash
 ./scripts/terraform-init.sh production
@@ -182,7 +238,9 @@ terraform -chdir=terraform/environments/production validate
 ./scripts/terraform-apply.sh production
 ```
 
-### Step 9 -- LXC post-create settings
+This creates all Docker LXCs, Mint VM, and AI GPU VM. **pfSense (VM 100) is NOT managed by Terraform** and will not be touched.
+
+### Step 7 -- LXC post-create settings
 
 ```bash
 ./scripts/proxmox-apply-lxc-postcreate.sh
@@ -191,7 +249,7 @@ terraform -chdir=terraform/environments/production validate
 Applies `nesting=1,keyctl=1` and bind mounts for `/mnt/appdata` and
 `/mnt/media_pool`. Reboot any LXCs that were already running.
 
-### Step 10 -- Add TUN device to docker-arr LXC
+### Step 8 -- Add TUN device to docker-arr LXC
 
 The ARR stack uses gluetun which requires `/dev/net/tun`:
 
@@ -201,7 +259,7 @@ The ARR stack uses gluetun which requires `/dev/net/tun`:
 
 This adds the device to LXC 166 and reboots it.
 
-### Step 11 -- Prepare LXC storage directories
+### Step 9 -- Prepare LXC storage directories
 
 Unprivileged LXCs cannot `chown` ZFS bind-mount paths. This script creates all
 directories on the Proxmox host with `777` permissions:
@@ -213,7 +271,7 @@ directories on the Proxmox host with `777` permissions:
 Covers every volume used by the ARR stack, services, apps, media, external, and
 infra hosts.
 
-### Step 12 -- Move Proxmox host IP to management VLAN
+### Step 10 -- Move Proxmox host IP to management VLAN
 
 ```bash
 ./scripts/move-proxmox-ip.sh
@@ -228,7 +286,7 @@ Moves the Proxmox management IP from `10.10.1.10` (vmbr0) to `10.10.99.10`
 ssh root@10.10.99.10
 ```
 
-### Step 13 -- Verify Ansible can reach all hosts
+### Step 11 -- Verify Ansible can reach all hosts
 
 ```bash
 ./scripts/verify-ansible-hosts.sh
@@ -237,7 +295,7 @@ ssh root@10.10.99.10
 Expected output: every host returns `pong`. If pfSense shows `UNREACHABLE`
 that's normal — it has its own playbook (step 16).
 
-### Step 14 -- Run Ansible site deploy
+### Step 12 -- Run Ansible site deploy
 
 ```bash
 ./scripts/deploy-all.sh

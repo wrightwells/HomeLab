@@ -7,6 +7,8 @@ module "homelab" {
   pm_tls_insecure               = var.pm_tls_insecure
   proxmox_node                  = var.proxmox_node
   vm_storage                    = var.vm_storage
+  pfsense_iso_datastore         = var.pfsense_iso_datastore
+  pfsense_iso_file_name         = var.pfsense_iso_file_name
   lxc_storage                   = var.lxc_storage
   cloudinit_storage             = var.cloudinit_storage
   pfsense_wan_bridge            = var.pfsense_wan_bridge
