@@ -79,6 +79,12 @@ variable "ssh_public_key" {
   sensitive = true
 }
 
+variable "host_control_ssh_public_key" {
+  type      = string
+  default   = ""
+  sensitive = true
+}
+
 variable "ansible_user" {
   type    = string
   default = "ansible"
@@ -98,6 +104,26 @@ variable "vm050_mint_template_vmid" {
 }
 
 variable "vm210_gpu_pci_address" {
+  type    = string
+  default = ""
+}
+
+variable "vm210_gpu_mapping_name" {
+  type    = string
+  default = "vm210-gpu"
+}
+
+variable "vm210_gpu_device_id" {
+  type    = string
+  default = ""
+}
+
+variable "vm210_gpu_iommu_group" {
+  type    = number
+  default = 0
+}
+
+variable "vm210_gpu_subsystem_id" {
   type    = string
   default = ""
 }

@@ -116,18 +116,47 @@
   changed_when: false
   failed_when: false
 
+- name: Import an existing appdata ZFS pool
+  ansible.builtin.command:
+    cmd: "zpool import -f -d /dev/disk/by-id {{ proxmox_appdata_zpool_name }}"
+  register: proxmox_appdata_zpool_import
+  changed_when: proxmox_appdata_zpool_import.rc == 0
+  failed_when: false
+  when: proxmox_appdata_zpool.rc != 0
+
+- name: Refresh appdata ZFS pool status after import
+  ansible.builtin.command:
+    cmd: "zpool list -H -o name {{ proxmox_appdata_zpool_name }}"
+  register: proxmox_appdata_zpool_post_import
+  changed_when: false
+  failed_when: false
+  when:
+    - proxmox_appdata_zpool.rc != 0
+    - proxmox_appdata_zpool_import.rc == 0
+
+- name: Adopt refreshed appdata ZFS pool status
+  ansible.builtin.set_fact:
+    proxmox_appdata_zpool: "{{ proxmox_appdata_zpool_post_import }}"
+  when:
+    - proxmox_appdata_zpool.rc != 0
+    - proxmox_appdata_zpool_import.rc == 0
+
 - name: Require explicit confirmation before creating the ZFS mirror
   ansible.builtin.assert:
     that:
       - proxmox_storage_allow_destructive_create | bool
     fail_msg: "Set proxmox_storage_allow_destructive_create=true for the first run that creates the ZFS mirror."
-  when: proxmox_appdata_zpool.rc != 0
+  when:
+    - proxmox_appdata_zpool.rc != 0
+    - proxmox_appdata_zpool_import.rc != 0
 
 - name: Wipe old signatures from ZFS mirror disks before first bootstrap
   ansible.builtin.command:
     cmd: "wipefs -a -f {{ item }}"
   loop: "{{ proxmox_appdata_zfs_disks }}"
-  when: proxmox_appdata_zpool.rc != 0
+  when:
+    - proxmox_appdata_zpool.rc != 0
+    - proxmox_appdata_zpool_import.rc != 0
 
 - name: Create the appdata ZFS mirror on first bootstrap
   ansible.builtin.command:
@@ -140,7 +169,9 @@
       {{ proxmox_appdata_zpool_name }}
       mirror
       {{ proxmox_appdata_zfs_disks | join(' ') }}
-  when: proxmox_appdata_zpool.rc != 0
+  when:
+    - proxmox_appdata_zpool.rc != 0
+    - proxmox_appdata_zpool_import.rc != 0
 
 - name: Ensure the appdata ZFS pool mountpoint is set
   ansible.builtin.command:

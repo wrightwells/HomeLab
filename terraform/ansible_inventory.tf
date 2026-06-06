@@ -11,7 +11,9 @@ locals {
       host.name => {
         ansible_host = host.ip
         ansible_user = host.user
-        extra_vars   = {}
+        extra_vars = host_key == "vm210_ai_gpu" ? {
+          ansible_remote_tmp = "/var/tmp/ansible-remote"
+        } : {}
       }
       if contains(host.groups, group_name)
     }

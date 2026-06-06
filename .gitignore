@@ -4,6 +4,7 @@
 crash.log
 *.tfvars
 !.tfvars.example
+terraform/generated/
 *.retry
 .env
 .env.*

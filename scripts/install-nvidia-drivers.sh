@@ -21,15 +21,21 @@ sudo apt-get install -y linux-headers-"$(uname -r)"
 # Add NVIDIA Container Toolkit repository
 # ---------------------------------------------------------------------------
 echo "=== Adding NVIDIA Container Toolkit repo ==="
-curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
-echo 'deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/stable/deb/$(ARCH) /' | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+sudo apt-get install -y curl gnupg ca-certificates software-properties-common ubuntu-drivers-common
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+  | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+curl -fsSL "https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list" \
+  | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#' \
+  | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list >/dev/null
 
 # ---------------------------------------------------------------------------
 # Install NVIDIA driver and Container Toolkit
 # ---------------------------------------------------------------------------
 echo "=== Installing NVIDIA driver 570 and Container Toolkit ==="
+sudo add-apt-repository -y restricted
+sudo ubuntu-drivers install
 sudo apt-get update -qq
-sudo apt-get install -y nvidia-driver-570 nvidia-container-toolkit
+sudo apt-get install -y nvidia-container-toolkit
 
 # ---------------------------------------------------------------------------
 # Configure Docker runtime for NVIDIA

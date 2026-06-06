@@ -1,4 +1,105 @@
 ---
+- name: Ensure ai-gpu Ansible remote temp directory exists
+  ansible.builtin.file:
+    path: "{{ vm210_ai_gpu_remote_tmp }}"
+    state: directory
+    owner: "{{ ansible_user | default('ansible') }}"
+    group: "{{ ansible_user | default('ansible') }}"
+    mode: "0700"
+
+- name: Install NVIDIA runtime prerequisites
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - software-properties-common
+      - ubuntu-drivers-common
+      - linux-headers-{{ ansible_kernel }}
+    state: present
+    update_cache: true
+  when: vm210_ai_gpu_nvidia_enabled | bool
+
+- name: Ensure Ubuntu restricted repository is enabled
+  ansible.builtin.command:
+    cmd: add-apt-repository -y restricted
+  register: vm210_ai_gpu_restricted_repo
+  changed_when: "'Adding component(s)' in vm210_ai_gpu_restricted_repo.stdout"
+  when: vm210_ai_gpu_nvidia_enabled | bool
+
+- name: Install NVIDIA Container Toolkit keyring
+  ansible.builtin.shell: |
+    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey -o /tmp/nvidia-container-toolkit.gpg
+    gpg --batch --yes --dearmor -o {{ vm210_ai_gpu_nvidia_toolkit_keyring }} /tmp/nvidia-container-toolkit.gpg
+    chmod a+r {{ vm210_ai_gpu_nvidia_toolkit_keyring }}
+    rm -f /tmp/nvidia-container-toolkit.gpg
+  when: vm210_ai_gpu_nvidia_enabled | bool
+
+- name: Configure NVIDIA Container Toolkit apt repository
+  ansible.builtin.copy:
+    dest: "{{ vm210_ai_gpu_nvidia_toolkit_repo_file }}"
+    content: "{{ vm210_ai_gpu_nvidia_toolkit_repo }}\n"
+    owner: root
+    group: root
+    mode: "0644"
+  when: vm210_ai_gpu_nvidia_enabled | bool
+
+- name: Install NVIDIA driver and container runtime packages
+  ansible.builtin.apt:
+    name:
+      - "{{ vm210_ai_gpu_nvidia_driver_package }}"
+      - nvidia-container-toolkit
+    state: present
+    update_cache: true
+  register: vm210_ai_gpu_nvidia_packages
+  notify:
+    - Restart Docker
+    - Reboot ai-gpu
+  when: vm210_ai_gpu_nvidia_enabled | bool
+
+- name: Check Docker daemon configuration
+  ansible.builtin.stat:
+    path: /etc/docker/daemon.json
+  register: vm210_ai_gpu_docker_daemon_json
+  when: vm210_ai_gpu_nvidia_enabled | bool
+
+- name: Read Docker daemon configuration
+  ansible.builtin.slurp:
+    path: /etc/docker/daemon.json
+  register: vm210_ai_gpu_docker_daemon_json_content
+  when:
+    - vm210_ai_gpu_nvidia_enabled | bool
+    - vm210_ai_gpu_docker_daemon_json.stat.exists
+
+- name: Configure Docker NVIDIA runtime
+  ansible.builtin.command:
+    cmd: nvidia-ctk runtime configure --runtime=docker
+  notify: Restart Docker
+  when:
+    - vm210_ai_gpu_nvidia_enabled | bool
+    - not vm210_ai_gpu_docker_daemon_json.stat.exists or 'nvidia-container-runtime' not in (vm210_ai_gpu_docker_daemon_json_content.content | b64decode)
+
+- name: Apply pending Docker restart or reboot before GPU validation
+  ansible.builtin.meta: flush_handlers
+
+- name: Verify host GPU access
+  ansible.builtin.command:
+    cmd: nvidia-smi
+  register: vm210_ai_gpu_nvidia_smi
+  changed_when: false
+  when:
+    - vm210_ai_gpu_nvidia_enabled | bool
+    - vm210_ai_gpu_verify_gpu_runtime | bool
+
+- name: Verify Docker GPU access
+  ansible.builtin.command:
+    cmd: "docker run --rm --gpus all {{ vm210_ai_gpu_docker_gpu_test_image }} nvidia-smi"
+  register: vm210_ai_gpu_docker_nvidia_smi
+  changed_when: false
+  when:
+    - vm210_ai_gpu_nvidia_enabled | bool
+    - vm210_ai_gpu_verify_gpu_runtime | bool
+
 - name: Ensure Frigate config directory exists
   ansible.builtin.file:
     path: "{{ frigate_config_root }}"

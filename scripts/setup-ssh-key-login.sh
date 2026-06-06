@@ -8,7 +8,7 @@ Usage:
   setup-ssh-key-login.sh [--host HOST] [--user USER] [--port PORT] [--key-file PATH] [--comment TEXT]
 
 Defaults:
-  --host      10.10.99.10
+  --host      10.10.99.110
   --user      root
   --port      22
   --key-file  ~/.ssh/id_ed25519
@@ -21,12 +21,12 @@ What it does:
 
 Examples:
   scripts/setup-ssh-key-login.sh
-  scripts/setup-ssh-key-login.sh --host 10.10.99.10 --user root
-  scripts/setup-ssh-key-login.sh --host 10.10.99.10 --user ww --key-file ~/.ssh/homelab_ed25519
+  scripts/setup-ssh-key-login.sh --host 10.10.99.110 --user root
+  scripts/setup-ssh-key-login.sh --host 10.10.99.110 --user ww --key-file ~/.ssh/homelab_ed25519
 EOF
 }
 
-HOST="10.10.99.10"
+HOST="10.10.99.110"
 USER_NAME="root"
 PORT="22"
 KEY_FILE="$HOME/.ssh/id_ed25519"

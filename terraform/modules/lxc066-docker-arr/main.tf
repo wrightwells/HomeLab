@@ -20,6 +20,10 @@ resource "proxmox_virtual_environment_container" "this" {
   initialization {
     hostname = var.hostname
 
+    dns {
+      servers = var.dns_servers
+    }
+
     ip_config {
       ipv4 {
         address = var.ipv4_address
@@ -29,7 +33,7 @@ resource "proxmox_virtual_environment_container" "this" {
 
     user_account {
       password = var.lxc_root_password
-      keys     = var.ssh_public_key == "" ? [] : [var.ssh_public_key]
+      keys     = var.ssh_public_keys
     }
   }
 

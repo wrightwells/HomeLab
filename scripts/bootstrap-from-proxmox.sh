@@ -44,6 +44,10 @@ pause "Before continuing, make sure:
 - the Linux Mint and Ubuntu cloud-image templates are prepared
 - you have published the bootstrap bundle: ./scripts/publish-control-node-bootstrap.sh"
 
+printf '\nNote: if Ansible is missing on this Proxmox host later, recover the control node from your workstation with:\n'
+printf '  ./scripts/ensure-proxmox-host-ansible.sh\n'
+printf '  ./scripts/run-ansible-on-proxmox-host.sh --limit <group>\n'
+
 ensure_vault_file
 setup_ansible_env
 

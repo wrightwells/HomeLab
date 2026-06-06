@@ -1,1 +1,12 @@
 ---
+- name: Restart Docker
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+
+- name: Reboot ai-gpu
+  ansible.builtin.reboot:
+    msg: "Rebooting after NVIDIA driver installation"
+    reboot_timeout: 1800
+    connect_timeout: 10
+    post_reboot_delay: 15

@@ -39,7 +39,7 @@ Notes:
 - The site build can be switched between UK and France through `ansible/inventories/production/site_config.yml`
 - IPs follow `10.<site_octet>.<vlan>.<host_id>`, for example `10.10.x.x` for UK and `10.20.x.x` for France
 - `vm050-mint` is clone-only from a prepared Linux Mint Cinnamon template and adds extra NVMe-style and media-style data disks
-- AI VM is clone-only from an Ubuntu Server 24.04 LTS cloud image template and includes a placeholder variable for later GPU passthrough
+- AI VM is clone-only from an Ubuntu Server 24.04 LTS cloud image template and supports repeatable GPU passthrough through Proxmox PCI mappings
 - LXCs assume a Debian 12 standard template exists in Proxmox
 - LXCs bind-mount host storage into /mnt/appdata and /mnt/media_pool where required
 - LXC root password is set via the `lxc_root_password` variable, which should match the Ansible vault password (see README-bootstrap.md step 7.4)
@@ -55,16 +55,20 @@ Run this on the Proxmox host (not inside a guest):
 lspci -nn | grep -iE 'vga|3d|audio'
 ```
 
-Use the NVIDIA VGA or 3D controller line, not the GPU audio function. If the
-GPU appears as `01:00.0`, set:
+Use the NVIDIA VGA or 3D controller line, not the GPU audio function. Record
+all four values that the passthrough bootstrap prints:
 
 ```hcl
-vm210_gpu_pci_address = "0000:01:00"
+vm210_gpu_pci_address = "0000:06:00"
+vm210_gpu_device_id = "10de:2504"
+vm210_gpu_iommu_group = 29
+vm210_gpu_subsystem_id = "1462:397d"
 ```
 
-Then re-run the production Terraform apply to attach the GPU.
+Then re-run the production Terraform apply to create the PCI mapping and attach
+the GPU.
 
-## SSH public key
+## SSH public keys
 
 To obtain `ssh_public_key`, run this on the machine where you will run Terraform:
 
@@ -77,5 +81,11 @@ Then copy the full line into `terraform.tfvars`:
 ```hcl
 ssh_public_key = "ssh-ed25519 AAAA..."
 ```
+
+For host-local Ansible from the Proxmox node, the bootstrap helpers can also
+generate `terraform/generated/proxmox-host-control.auto.tfvars.json` with
+`host_control_ssh_public_key`. The Terraform wrapper scripts automatically load
+that generated file when it exists, so fresh guests receive both your operator
+key and the Proxmox host control key.
 
 The full walkthrough lives in [README-bootstrap.md](../README-bootstrap.md).

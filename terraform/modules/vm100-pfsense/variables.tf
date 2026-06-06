@@ -5,6 +5,7 @@ variable "pfsense_iso_file_name" { type = string }
 variable "bootstrap_bridge" { type = string }
 variable "wan_bridge" { type = string }
 variable "lan_bridge" { type = string }
+variable "lan_trunks" { type = string }
 variable "dmz_bridge" { type = string }
 variable "cpu_cores" { type = number }
 variable "memory_mb" { type = number }

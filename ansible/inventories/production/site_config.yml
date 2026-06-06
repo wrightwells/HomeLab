@@ -26,7 +26,7 @@ homelab_site:
 
   proxmox:
     hostname: pve01
-    management_host_id: 10
+    management_host_id: 110
     management_nic: nic0
     bootstrap_subnet: 1
 

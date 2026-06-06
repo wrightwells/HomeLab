@@ -57,6 +57,7 @@ resource "proxmox_virtual_environment_vm" "this" {
   network_device {
     bridge = var.lan_bridge
     model  = "virtio"
+    trunks = var.lan_trunks
   }
 
   network_device {

@@ -16,6 +16,8 @@ set -euo pipefail
 REPO_URL="${REPO_URL:-https://github.com/wrightwells/HomeLab.git}"
 REPO_DIR="${HOME}/HomeLab"
 VAULT_FILE="${HOME}/.config/ansible/homelab-vault-pass.txt"
+HOST_CONTROL_KEY="${HOST_CONTROL_KEY:-$HOME/.ssh/homelab-bootstrap}"
+HOST_CONTROL_TFVARS_FILE="${HOST_CONTROL_TFVARS_FILE:-$REPO_DIR/terraform/generated/proxmox-host-control.auto.tfvars.json}"
 
 VAULT_PASSWORD="${1:-}"
 
@@ -23,15 +25,42 @@ VAULT_PASSWORD="${1:-}"
 # 1.1 Configure no-subscription repositories
 # ---------------------------------------------------------------------------
 echo "=== Configuring Proxmox no-subscription repositories ==="
+PVE_SUITE="$(. /etc/os-release && echo "${VERSION_CODENAME}")"
+
 if [ -f /etc/apt/sources.list.d/pve-enterprise.list ]; then
   sed -i 's/^deb/#deb/g' /etc/apt/sources.list.d/pve-enterprise.list
   echo "Disabled pve-enterprise.list"
 fi
 
-if [ ! -f /etc/apt/sources.list.d/pve-no-sub.list ]; then
-  echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-no-sub.list
-  echo "Enabled pve-no-subscription"
+if [ -f /etc/apt/sources.list.d/pve-enterprise.sources ]; then
+  mv /etc/apt/sources.list.d/pve-enterprise.sources /etc/apt/sources.list.d/pve-enterprise.sources.disabled
+  echo "Disabled pve-enterprise.sources"
 fi
+
+if [ -f /etc/apt/sources.list.d/ceph.sources ]; then
+  mv /etc/apt/sources.list.d/ceph.sources /etc/apt/sources.list.d/ceph.sources.disabled
+  echo "Disabled ceph.sources"
+fi
+
+rm -f /etc/apt/sources.list.d/pve-no-sub.list
+
+cat > /etc/apt/sources.list.d/pve-no-subscription.sources <<EOF
+Types: deb
+URIs: http://download.proxmox.com/debian/pve
+Suites: ${PVE_SUITE}
+Components: pve-no-subscription
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
+EOF
+echo "Enabled pve-no-subscription (${PVE_SUITE})"
+
+cat > /etc/apt/sources.list.d/ceph-no-subscription.sources <<EOF
+Types: deb
+URIs: http://download.proxmox.com/debian/ceph-squid
+Suites: ${PVE_SUITE}
+Components: no-subscription
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
+EOF
+echo "Enabled ceph-squid no-subscription (${PVE_SUITE})"
 
 # ---------------------------------------------------------------------------
 # 1.2 Upgrade packages
@@ -48,7 +77,7 @@ echo ""
 echo "=== Installing required packages ==="
 apt install -y \
   wget jq unzip pciutils lsblk git curl gnupg \
-  software-properties-common python3-pip ansible
+  software-properties-common python3-pip ansible sshpass
 
 # ---------------------------------------------------------------------------
 # 1.4 Install Terraform
@@ -77,7 +106,18 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 1.6 Verify tools
+# 1.6 Install Ansible collections
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Installing Ansible collections ==="
+if [ -f "$REPO_DIR/ansible/requirements.yml" ]; then
+  (cd "$REPO_DIR/ansible" && ansible-galaxy collection install -r requirements.yml)
+else
+  echo "Skipping collections install because $REPO_DIR/ansible/requirements.yml is missing"
+fi
+
+# ---------------------------------------------------------------------------
+# 1.7 Verify tools
 # ---------------------------------------------------------------------------
 echo ""
 echo "=== Verifying tools ==="
@@ -86,7 +126,7 @@ ansible --version | head -1
 terraform version | head -1
 
 # ---------------------------------------------------------------------------
-# 1.7 Set up Ansible vault password file
+# 1.8 Set up Ansible vault password file
 # ---------------------------------------------------------------------------
 echo ""
 echo "=== Setting up Ansible vault password file ==="
@@ -102,14 +142,25 @@ chmod 600 "$VAULT_FILE"
 echo "Vault password file created at $VAULT_FILE"
 
 # ---------------------------------------------------------------------------
-# 1.8 Create SSH keypair and publish it
+# 1.9 Create SSH keypairs and publish them
 # ---------------------------------------------------------------------------
 echo ""
-echo "=== Setting up SSH deploy key ==="
+echo "=== Setting up SSH keys ==="
 if [ ! -f ~/.ssh/id_ed25519 ]; then
   ssh-keygen -t ed25519 -C "homelab-deploy" -f ~/.ssh/id_ed25519 -N ""
   echo "SSH keypair generated"
 fi
+
+if [ ! -f "$HOST_CONTROL_KEY" ]; then
+  ssh-keygen -t ed25519 -C "homelab-proxmox-control" -f "$HOST_CONTROL_KEY" -N ""
+  echo "Host-local guest access key generated"
+fi
+
+mkdir -p "$(dirname "$HOST_CONTROL_TFVARS_FILE")"
+jq -Rn --arg key "$(cat "${HOST_CONTROL_KEY}.pub")" \
+  '{host_control_ssh_public_key: $key}' > "$HOST_CONTROL_TFVARS_FILE"
+chmod 600 "$HOST_CONTROL_TFVARS_FILE"
+echo "Wrote Terraform host-control key vars to $HOST_CONTROL_TFVARS_FILE"
 
 echo ""
 echo "Add this public key as a deploy key on your GitHub repo:"
@@ -118,13 +169,13 @@ echo ""
 read -rp "Press Enter after the deploy key is added to GitHub..."
 
 # ---------------------------------------------------------------------------
-# 1.9 Fix hostname for Proxmox cluster (pvecm/pct rely on correct hostname)
+# 1.10 Fix hostname for Proxmox cluster (pvecm/pct rely on correct hostname)
 # ---------------------------------------------------------------------------
 echo ""
 echo "=== Fixing Proxmox hostname for cluster tools ==="
 EXPECTED_HOSTNAME="pve01.uk.wrightwells.com"
 EXPECTED_SHORT="pve01"
-MANAGEMENT_IP="10.10.99.10"
+MANAGEMENT_IP="10.10.99.110"
 
 # Fix /etc/hostname
 if [ "$(cat /etc/hostname 2>/dev/null)" != "${EXPECTED_HOSTNAME}" ]; then
@@ -147,7 +198,7 @@ echo "${MANAGEMENT_IP} ${EXPECTED_HOSTNAME} ${EXPECTED_SHORT}" >> /etc/hosts
 echo "Added ${EXPECTED_SHORT} -> ${MANAGEMENT_IP} to /etc/hosts"
 
 # ---------------------------------------------------------------------------
-# 1.10 Publish control node bootstrap scripts
+# 1.11 Publish control node bootstrap scripts
 # ---------------------------------------------------------------------------
 echo ""
 echo "=== Publishing bootstrap scripts to /mnt/appdata ==="
@@ -161,3 +212,4 @@ echo "Next steps:"
 echo "  1. Run: ./scripts/prepare-templates.sh  (prepare VM/LXC templates)"
 echo "  2. Configure terraform/terraform.tfvars  (API token, node name, template VMIDs)"
 echo "  3. Run: ./scripts/terraform-init.sh pfsense && ./scripts/terraform-apply.sh pfsense"
+echo "  4. Keep $HOST_CONTROL_TFVARS_FILE alongside terraform/terraform.tfvars for guest SSH access from the Proxmox host"

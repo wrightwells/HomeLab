@@ -29,6 +29,10 @@ debian_lxc_template = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
 
 ansible_user        = "ansible"
 ssh_public_key      = "ssh-ed25519 AAAA_REPLACE_ME"
+# Optional second guest access key used when Ansible runs from the Proxmox host.
+# `./scripts/prepare-proxmox-host.sh` and `./scripts/ensure-proxmox-host-ansible.sh`
+# can generate this automatically into terraform/generated/proxmox-host-control.auto.tfvars.json.
+host_control_ssh_public_key = ""
 
 # LXC root password -- uses the same plain-text secret as the Ansible vault password.
 # Tradeoff: this simplifies the operator flow but means the vault password doubles as

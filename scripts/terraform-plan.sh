@@ -4,4 +4,6 @@ source "$(dirname "$0")/_common.sh"
 
 TERRAFORM_ENV="${1:-root}"
 cd "$(terraform_env_dir "$TERRAFORM_ENV")"
-terraform plan -var-file="$DEFAULT_TERRAFORM_VARS_FILE"
+
+mapfile -t terraform_var_args < <(terraform_var_file_args)
+terraform plan "${terraform_var_args[@]}"

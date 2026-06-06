@@ -50,6 +50,29 @@ Before starting:
 
 ---
 
+## Current operational notes
+
+These notes capture known live deviations discovered during SSH/Ansible repair so
+they are not lost between sessions.
+
+- `proxmox-host` management now lives on `10.10.99.110`, not `10.10.99.10`.
+- Host-local Ansible is expected to run from the Proxmox node for downstream VLAN
+  workloads when the workstation is outside the pfSense-managed path.
+- `ai-gpu` uses `ansible_remote_tmp=/var/tmp/ansible-remote` because
+  `/tmp/ansible-remote` was previously created as `root` and breaks Ansible's
+  remote module staging for the unprivileged `ansible` user.
+- The DMZ LXCs (`docker-arr`, `docker-external`) currently depend on a temporary
+  Proxmox-host NAT/forwarding workaround because pfSense DMZ gateway
+  `10.10.66.1` is not yet providing egress. This is intentionally temporary and
+  should be removed once the network is fully moved behind pfSense VLANs.
+- `docker-arr` requires `/dev/net/tun` in CT `166` for the `gluetun` container.
+- `ai-gpu` requires NVIDIA driver plus NVIDIA Container Toolkit before Compose
+  stacks using `gpus: all` can start. The `vm210-ai-gpu` Ansible role now
+  installs and configures these automatically. Keep
+  `./scripts/install-nvidia-drivers.sh` as a break-glass recovery path.
+
+---
+
 ## Step-by-step detail
 
 ### Step 1 -- Prepare the Proxmox host
@@ -60,16 +83,22 @@ Before starting:
 
 This script:
 
-- Configures no-subscription apt repositories
+- Configures Proxmox VE 9 no-subscription apt repositories using `.sources`
+  entries for the current Debian suite
 - Upgrades all packages
 - Installs git, ansible, terraform, and build dependencies
 - Clones the HomeLab repo to `~/HomeLab`
 - Creates the Ansible vault password file (`~/.config/ansible/homelab-vault-pass.txt`)
 - Generates an `ed25519` SSH deploy key (if not already present)
+- Generates a dedicated Proxmox host guest-access key at `~/.ssh/homelab-bootstrap`
+- Writes `terraform/generated/proxmox-host-control.auto.tfvars.json` so Terraform injects that host-control key into guests automatically
 - Publishes bootstrap scripts to `/mnt/appdata/homelab-control/bin/`
 - Fixes hostname resolution for `pvecm`/`pct`
 
 **You must** add the displayed public key as a deploy key on your GitHub repo.
+
+If this step upgrades the Proxmox kernel or ZFS packages, reboot the host
+before continuing so the running kernel and `zfs-kmod` match.
 
 ### Step 2 -- Prepare Proxmox templates
 
@@ -101,6 +130,11 @@ vm050_mint_template_vmid = 9050
 lxc_root_password   = "<same as your Ansible vault password>"
 ssh_public_key      = "<contents of ~/.ssh/id_ed25519.pub>"
 ```
+
+If you run the bootstrap from the Proxmox host, `./scripts/prepare-proxmox-host.sh`
+also generates `terraform/generated/proxmox-host-control.auto.tfvars.json`.
+The Terraform wrapper scripts load that file automatically so guests receive a
+second SSH public key for host-local Ansible.
 
 Create the API token:
 
@@ -277,13 +311,13 @@ infra hosts.
 ./scripts/move-proxmox-ip.sh
 ```
 
-Moves the Proxmox management IP from `10.10.1.10` (vmbr0) to `10.10.99.10`
+Moves the Proxmox management IP from `10.10.1.10` (vmbr0) to `10.10.99.110`
 (vmbr2.99) behind pfSense.
 
 **Your SSH session will disconnect.** Reconnect with:
 
 ```bash
-ssh root@10.10.99.10
+ssh root@10.10.99.110
 ```
 
 ### Step 11 -- Verify Ansible can reach all hosts
@@ -294,6 +328,18 @@ ssh root@10.10.99.10
 
 Expected output: every host returns `pong`. If pfSense shows `UNREACHABLE`
 that's normal — it has its own playbook (step 16).
+
+If guests are reachable from the Proxmox host but not from your workstation,
+use the Proxmox host as the control node:
+
+```bash
+./scripts/ensure-proxmox-host-ansible.sh
+./scripts/run-ansible-on-proxmox-host.sh --limit ai_gpu
+```
+
+That fallback matches the way the bootstrap scripts are designed to run: the
+Proxmox host owns the repo checkout, vault file, rendered inventory, and the
+generated `~/.ssh/homelab-bootstrap` guest-access key.
 
 ### Step 12 -- Run Ansible site deploy
 
@@ -310,6 +356,14 @@ ansible-playbook -i inventories/production/hosts.ini playbooks/site.yml
 ```
 
 This deploys Docker and all compose stacks to every LXC and VM.
+
+If you are launching the playbook from your workstation and guest VLANs are not
+directly routable from there, prefer the host-local wrapper instead:
+
+```bash
+./scripts/ensure-proxmox-host-ansible.sh
+./scripts/run-ansible-on-proxmox-host.sh
+```
 
 ### Step 15 -- Apply pfSense firewall rules
 
@@ -330,24 +384,19 @@ After the AI VM exists, pass the GPU through to it:
 # 2. Reboot the Proxmox host
 reboot
 
-# 3. After reboot, update terraform.tfvars with the PCI address
-#    (the script prints the correct value)
+# 3. After reboot, update terraform.tfvars with the values printed by the script
+#    (PCI address, vendor:device, IOMMU group, and subsystem id)
 
-# 4. Configure the VM with GPU passthrough
-ssh root@10.10.99.10 "qm set 210 --hostpci0 '0000:06:00,pcie=1,rombar=1,x-vga=1'"
-ssh root@10.10.99.10 "qm set 210 --machine q35"
+# 4. Re-apply production Terraform so the provider creates the PCI mapping
+#    and attaches the GPU to vm210 in a repeatable way
+./scripts/terraform-apply.sh production
 
-# 5. Start the AI VM
-ssh root@10.10.99.10 "qm start 210"
+# 5. Start vm210 if your resource profile leaves it powered off
+ssh root@10.10.99.110 "qm start 210"
 
 # 6. Install NVIDIA drivers and Container Toolkit inside the VM
-ssh ansible@10.10.20.210 'bash -s' < scripts/install-nvidia-drivers.sh
-
-# 7. Reboot the AI VM, then re-run the Ansible AI GPU role
-ssh root@10.10.99.10 "qm reboot 210"
-# After reboot:
-cd ~/HomeLab/ansible
-ansible-playbook -i inventories/production/hosts.ini playbooks/site.yml --limit ai_gpu
+#    If the guest is only reachable from Proxmox, run from the host:
+ssh root@10.10.99.110 "cd /root/HomeLab && ./scripts/run-ansible-on-proxmox-host.sh --limit ai_gpu"
 ```
 
 ### Step 17 -- Private Docker images (optional)
@@ -389,7 +438,7 @@ After a successful run, these services are running:
 
 | Host | IP | Network |
 |------|----|---------|
-| Proxmox host (after step 12) | `10.10.99.10` | `vmbr2.99` (management VLAN) |
+| Proxmox host (after step 12) | `10.10.99.110` | `vmbr2.99` (management VLAN) |
 | `vm100_pfsense` | `10.10.99.1` | management VLAN 99 (pfSense IS the gateway) |
 | `vm050_mint` | `10.10.10.50` | `vmbr2` VLAN 10 |
 | `vm210_ai_gpu` | `10.10.20.210` | `vmbr2` VLAN 20 |
@@ -438,6 +487,21 @@ with `chmod 777`. Run:
 ./scripts/prepare-lxc-storage.sh
 ```
 
+### `appdata` ZFS pool shows `unsupported feature(s)`
+
+If the Proxmox storage playbook or `zpool import` reports
+`unsupported feature(s)` for `appdata`, the host is usually still running an
+older kernel/ZFS module after package upgrades. Reboot the Proxmox host, then
+rerun:
+
+```bash
+cd ~/HomeLab/ansible
+ansible-playbook -i inventories/production/hosts.ini playbooks/proxmox-storage.yml
+```
+
+The storage role now imports an existing `appdata` pool automatically before it
+falls back to destructive first-boot pool creation.
+
 ### Docker compose plugin not found on Debian LXCs
 
 The Docker role now installs the official Docker apt repository on Debian LXCs
@@ -463,8 +527,37 @@ re-encrypt all vault files:
 1. Verify IOMMU is enabled: `cat /proc/cmdline | grep intel_iommu`
 2. Verify VFIO is loaded: `lsmod | grep vfio`
 3. Verify GPU is bound to VFIO: `lspci -nnk -s 06:00.0`
-4. Verify VM config: `qm config 210 | grep -i pci`
-5. Verify VM uses q35 machine: `qm config 210 | grep machine`
+4. Verify Terraform variables are set:
+   - `vm210_gpu_pci_address`
+   - `vm210_gpu_device_id`
+   - `vm210_gpu_iommu_group`
+   - `vm210_gpu_subsystem_id`
+5. Verify VM config: `qm config 210 | grep -i pci`
+6. Verify VM uses q35 machine: `qm config 210 | grep machine`
+
+### Guests reachable from Proxmox host but not from your workstation
+
+The approved recovery path is to use the Proxmox host as the Ansible control
+node rather than forcing direct workstation-to-guest SSH:
+
+```bash
+./scripts/ensure-proxmox-host-ansible.sh
+./scripts/run-ansible-on-proxmox-host.sh --limit <host-or-group>
+```
+
+This is especially useful while:
+- the Proxmox host is still on the bootstrap bridge
+- pfSense VLAN routing is only partially configured
+- guest VLANs are reachable from the host but not from your local machine
+
+`./scripts/ensure-proxmox-host-ansible.sh` also writes
+`terraform/generated/proxmox-host-control.auto.tfvars.json` on the workstation
+so future Terraform runs from there seed the same host-control public key into
+new guests.
+
+If a VM comes up with a duplicate or unusable service IP during bootstrap,
+attach a temporary `vmbr0` NIC, recover it from the Proxmox console, then move
+it back to its intended VLAN-backed address before the final Ansible run.
 
 ---
 

@@ -55,6 +55,10 @@ resource "proxmox_virtual_environment_vm" "this" {
   initialization {
     datastore_id = var.cloudinit_storage
 
+    dns {
+      servers = var.dns_servers
+    }
+
     ip_config {
       ipv4 {
         address = var.ipv4_address
@@ -64,7 +68,8 @@ resource "proxmox_virtual_environment_vm" "this" {
 
     user_account {
       username = var.ansible_user
-      keys     = var.ssh_public_key == "" ? [] : [var.ssh_public_key]
+      password = var.bootstrap_password
+      keys     = var.ssh_public_keys
     }
   }
 

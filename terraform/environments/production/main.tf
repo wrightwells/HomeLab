@@ -15,6 +15,7 @@ module "homelab" {
   pfsense_lan_bridge            = var.pfsense_lan_bridge
   pfsense_dmz_bridge            = var.pfsense_dmz_bridge
   ssh_public_key                = var.ssh_public_key
+  host_control_ssh_public_key   = var.host_control_ssh_public_key
   ansible_user                  = var.ansible_user
   ansible_default_user          = var.ansible_default_user
   ansible_inventory_path        = var.ansible_inventory_path
@@ -27,6 +28,10 @@ module "homelab" {
   vm050_mint_media_storage      = var.vm050_mint_media_storage
   vm050_mint_media_disk_size_gb = var.vm050_mint_media_disk_size_gb
   vm210_gpu_pci_address         = var.vm210_gpu_pci_address
+  vm210_gpu_mapping_name        = var.vm210_gpu_mapping_name
+  vm210_gpu_device_id           = var.vm210_gpu_device_id
+  vm210_gpu_iommu_group         = var.vm210_gpu_iommu_group
+  vm210_gpu_subsystem_id        = var.vm210_gpu_subsystem_id
   debian_lxc_template           = var.debian_lxc_template
   lxc_root_password             = var.lxc_root_password
   build_inventory_file          = var.build_inventory_file

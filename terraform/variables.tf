@@ -103,6 +103,13 @@ variable "ssh_public_key" {
   sensitive   = true
 }
 
+variable "host_control_ssh_public_key" {
+  description = "Optional SSH public key for the Proxmox host control node so host-local Ansible can reach guests after Terraform creates them"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "ansible_user" {
   description = "Ansible SSH username"
   type        = string
@@ -176,6 +183,30 @@ variable "vm050_mint_media_disk_size_gb" {
 
 variable "vm210_gpu_pci_address" {
   description = "Optional Proxmox PCI address for later GPU passthrough to vm210, for example 0000:02:00"
+  type        = string
+  default     = ""
+}
+
+variable "vm210_gpu_mapping_name" {
+  description = "Cluster-wide Proxmox PCI mapping name used for vm210 GPU passthrough"
+  type        = string
+  default     = "vm210-gpu"
+}
+
+variable "vm210_gpu_device_id" {
+  description = "PCI vendor:device id for the vm210 GPU, for example 10de:2504"
+  type        = string
+  default     = ""
+}
+
+variable "vm210_gpu_iommu_group" {
+  description = "IOMMU group number for the vm210 GPU on the Proxmox host"
+  type        = number
+  default     = 0
+}
+
+variable "vm210_gpu_subsystem_id" {
+  description = "PCI subsystem vendor:device id for the vm210 GPU, for example 1462:397d"
   type        = string
   default     = ""
 }

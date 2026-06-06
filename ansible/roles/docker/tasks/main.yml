@@ -24,10 +24,11 @@
   when: docker_is_ubuntu_vm | default(false)
 
 - name: Install Docker official GPG key (Ubuntu VMs)
-  ansible.builtin.get_url:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    dest: /etc/apt/keyrings/docker.gpg
-    mode: "0644"
+  ansible.builtin.shell: |
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /tmp/docker.gpg
+    gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg /tmp/docker.gpg
+    chmod a+r /etc/apt/keyrings/docker.gpg
+    rm -f /tmp/docker.gpg
   when: docker_is_ubuntu_vm | default(false)
 
 - name: Add Docker official apt repository (Ubuntu VMs)

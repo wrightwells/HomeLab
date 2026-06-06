@@ -13,18 +13,18 @@ Once host storage is prepared, return to the bootstrap guide and continue there.
 Current repo behavior:
 
 - Proxmox host installation disk is manual.
-- Proxmox host data-disk layout is manual.
+- Proxmox host data-disk layout is prepared by the Proxmox storage playbook.
 - Terraform creates VM and LXC guest disks on Proxmox datastores that already
   exist.
 - Terraform does not partition, format, mirror, or build MergerFS on the
   Proxmox host.
-- Ansible deploys software into guests, but it does not currently prepare host
-  block devices either.
+- Ansible prepares or imports the host storage layout for NVMe, `appdata`, and
+  media when you run `playbooks/proxmox-storage.yml`.
 - The build inventory now describes the intended logical storage layout and
   which stores are enabled for the current build.
 
-That means the repo assumes the host storage foundations already exist before
-you run the infrastructure build.
+That means the repo assumes you complete the Proxmox host storage playbook
+before you run the infrastructure build.
 
 ## Disk Layers
 

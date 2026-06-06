@@ -4,7 +4,7 @@
 # Proxmox cluster tools (pvecm, pct) require the hostname to resolve to the
 # management IP, NOT 127.0.0.1. This script ensures /etc/hostname is correct,
 # removes stale or incorrect /etc/hosts entries, and writes the correct one
-# pointing at 10.10.99.10.
+# pointing at 10.10.99.110.
 #
 # Usage: ./scripts/fix-hostname-resolution.sh
 
@@ -12,7 +12,7 @@ set -euo pipefail
 
 EXPECTED_HOSTNAME="pve01.uk.wrightwells.com"
 EXPECTED_SHORT="pve01"
-MANAGEMENT_IP="10.10.99.10"
+MANAGEMENT_IP="10.10.99.110"
 
 echo "=== Fixing Proxmox hostname ==="
 echo "Expected hostname: ${EXPECTED_HOSTNAME}"

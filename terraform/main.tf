@@ -89,6 +89,10 @@ locals {
   }
 
   profile = local.resource_profiles[var.resource_profile]
+  guest_ssh_public_keys = distinct(compact([
+    var.ssh_public_key,
+    var.host_control_ssh_public_key,
+  ]))
   guest_enabled = merge(
     { vm100_pfsense = true },
     {
@@ -228,11 +232,16 @@ module "vm100_pfsense" {
   bootstrap_bridge      = local.homelab_site.bridges.bootstrap
   wan_bridge            = var.pfsense_wan_bridge
   lan_bridge            = var.pfsense_lan_bridge
-  dmz_bridge            = var.pfsense_dmz_bridge
-  cpu_cores             = local.profile.vm100_pfsense.cpu
-  memory_mb             = local.profile.vm100_pfsense.memory
-  started               = local.profile.vm100_pfsense.started
-  on_boot               = local.profile.vm100_pfsense.on_boot
+  lan_trunks = join(";", [
+    tostring(local.homelab_site.addressing.management_vlan),
+    tostring(local.homelab_site.addressing.workstation_vlan),
+    tostring(local.homelab_site.addressing.server_vlan),
+  ])
+  dmz_bridge = var.pfsense_dmz_bridge
+  cpu_cores  = local.profile.vm100_pfsense.cpu
+  memory_mb  = local.profile.vm100_pfsense.memory
+  started    = local.profile.vm100_pfsense.started
+  on_boot    = local.profile.vm100_pfsense.on_boot
 }
 
 module "vm050_mint" {
@@ -246,8 +255,9 @@ module "vm050_mint" {
   nvme_storage       = var.vm050_mint_nvme_storage
   media_storage      = var.vm050_mint_media_storage
   cloudinit_storage  = var.cloudinit_storage
-  ssh_public_key     = var.ssh_public_key
+  ssh_public_keys    = local.guest_ssh_public_keys
   ansible_user       = var.ansible_user
+  bootstrap_password = var.lxc_root_password
   cpu_cores          = local.profile.vm050_mint.cpu
   memory_mb          = local.profile.vm050_mint.memory
   started            = local.profile.vm050_mint.started
@@ -257,30 +267,37 @@ module "vm050_mint" {
   media_disk_size_gb = var.vm050_mint_media_disk_size_gb
   ipv4_address       = "${local.all_inventory_hosts.vm050_mint.ip}/24"
   ipv4_gateway       = local.all_inventory_hosts.vm050_mint.gateway
+  dns_servers        = [local.all_inventory_hosts.vm050_mint.gateway]
   bridge             = local.site_networks[local.inventory_hosts.vm050_mint.network].bridge
   vlan_id            = local.site_networks[local.inventory_hosts.vm050_mint.network].vlan
 }
 
 module "vm210_ai_gpu" {
-  count             = var.create_workloads && local.guest_enabled.vm210_ai_gpu ? 1 : 0
-  source            = "./modules/vm210-ai-gpu"
-  name              = local.inventory_hosts.vm210_ai_gpu.name
-  vm_id             = 210
-  proxmox_node      = var.proxmox_node
-  clone_vmid        = var.vm_template_vmid
-  vm_storage        = var.vm_storage
-  cloudinit_storage = var.cloudinit_storage
-  ssh_public_key    = var.ssh_public_key
-  ansible_user      = var.ansible_user
-  gpu_pci_address   = var.vm210_gpu_pci_address
-  cpu_cores         = local.profile.vm210_ai_gpu.cpu
-  memory_mb         = local.profile.vm210_ai_gpu.memory
-  started           = local.profile.vm210_ai_gpu.started
-  on_boot           = local.profile.vm210_ai_gpu.on_boot
-  ipv4_address      = "${local.all_inventory_hosts.vm210_ai_gpu.ip}/24"
-  ipv4_gateway      = local.all_inventory_hosts.vm210_ai_gpu.gateway
-  bridge            = local.site_networks[local.inventory_hosts.vm210_ai_gpu.network].bridge
-  vlan_id           = local.site_networks[local.inventory_hosts.vm210_ai_gpu.network].vlan
+  count              = var.create_workloads && local.guest_enabled.vm210_ai_gpu ? 1 : 0
+  source             = "./modules/vm210-ai-gpu"
+  name               = local.inventory_hosts.vm210_ai_gpu.name
+  vm_id              = 210
+  proxmox_node       = var.proxmox_node
+  clone_vmid         = var.vm_template_vmid
+  vm_storage         = var.vm_storage
+  cloudinit_storage  = var.cloudinit_storage
+  ssh_public_keys    = local.guest_ssh_public_keys
+  ansible_user       = var.ansible_user
+  bootstrap_password = var.lxc_root_password
+  gpu_pci_address    = var.vm210_gpu_pci_address
+  gpu_mapping_name   = var.vm210_gpu_mapping_name
+  gpu_device_id      = var.vm210_gpu_device_id
+  gpu_iommu_group    = var.vm210_gpu_iommu_group
+  gpu_subsystem_id   = var.vm210_gpu_subsystem_id
+  cpu_cores          = local.profile.vm210_ai_gpu.cpu
+  memory_mb          = local.profile.vm210_ai_gpu.memory
+  started            = local.profile.vm210_ai_gpu.started
+  on_boot            = local.profile.vm210_ai_gpu.on_boot
+  ipv4_address       = "${local.all_inventory_hosts.vm210_ai_gpu.ip}/24"
+  ipv4_gateway       = local.all_inventory_hosts.vm210_ai_gpu.gateway
+  dns_servers        = [local.all_inventory_hosts.vm210_ai_gpu.gateway]
+  bridge             = local.site_networks[local.inventory_hosts.vm210_ai_gpu.network].bridge
+  vlan_id            = local.site_networks[local.inventory_hosts.vm210_ai_gpu.network].vlan
 }
 
 module "lxc066_docker_arr" {
@@ -290,7 +307,7 @@ module "lxc066_docker_arr" {
   vm_id               = 166
   hostname            = local.inventory_hosts.lxc066_docker_arr.name
   lxc_storage         = var.lxc_storage
-  ssh_public_key      = var.ssh_public_key
+  ssh_public_keys     = local.guest_ssh_public_keys
   debian_lxc_template = var.debian_lxc_template
   cpu_cores           = local.profile.lxc066_docker_arr.cpu
   memory_mb           = local.profile.lxc066_docker_arr.memory
@@ -299,6 +316,7 @@ module "lxc066_docker_arr" {
   start_on_boot       = local.profile.lxc066_docker_arr.start_on_boot
   ipv4_address        = "${local.all_inventory_hosts.lxc066_docker_arr.ip}/24"
   ipv4_gateway        = local.all_inventory_hosts.lxc066_docker_arr.gateway
+  dns_servers         = [local.all_inventory_hosts.lxc066_docker_arr.gateway]
   bridge              = local.site_networks[local.inventory_hosts.lxc066_docker_arr.network].bridge
   vlan_id             = local.inventory_hosts.lxc066_docker_arr.network == "dmz" ? null : local.site_networks[local.inventory_hosts.lxc066_docker_arr.network].vlan
   lxc_root_password   = var.lxc_root_password
@@ -311,7 +329,7 @@ module "lxc200_docker_services" {
   vm_id               = 200
   hostname            = local.inventory_hosts.lxc200_docker_services.name
   lxc_storage         = var.lxc_storage
-  ssh_public_key      = var.ssh_public_key
+  ssh_public_keys     = local.guest_ssh_public_keys
   debian_lxc_template = var.debian_lxc_template
   cpu_cores           = local.profile.lxc200_docker_services.cpu
   memory_mb           = local.profile.lxc200_docker_services.memory
@@ -320,6 +338,7 @@ module "lxc200_docker_services" {
   start_on_boot       = local.profile.lxc200_docker_services.start_on_boot
   ipv4_address        = "${local.all_inventory_hosts.lxc200_docker_services.ip}/24"
   ipv4_gateway        = local.all_inventory_hosts.lxc200_docker_services.gateway
+  dns_servers         = [local.all_inventory_hosts.lxc200_docker_services.gateway]
   bridge              = local.site_networks[local.inventory_hosts.lxc200_docker_services.network].bridge
   vlan_id             = local.site_networks[local.inventory_hosts.lxc200_docker_services.network].vlan
   lxc_root_password   = var.lxc_root_password
@@ -332,7 +351,7 @@ module "lxc220_docker_apps" {
   vm_id               = 220
   hostname            = local.inventory_hosts.lxc220_docker_apps.name
   lxc_storage         = var.lxc_storage
-  ssh_public_key      = var.ssh_public_key
+  ssh_public_keys     = local.guest_ssh_public_keys
   debian_lxc_template = var.debian_lxc_template
   cpu_cores           = local.profile.lxc220_docker_apps.cpu
   memory_mb           = local.profile.lxc220_docker_apps.memory
@@ -341,6 +360,7 @@ module "lxc220_docker_apps" {
   start_on_boot       = local.profile.lxc220_docker_apps.start_on_boot
   ipv4_address        = "${local.all_inventory_hosts.lxc220_docker_apps.ip}/24"
   ipv4_gateway        = local.all_inventory_hosts.lxc220_docker_apps.gateway
+  dns_servers         = [local.all_inventory_hosts.lxc220_docker_apps.gateway]
   bridge              = local.site_networks[local.inventory_hosts.lxc220_docker_apps.network].bridge
   vlan_id             = local.site_networks[local.inventory_hosts.lxc220_docker_apps.network].vlan
   lxc_root_password   = var.lxc_root_password
@@ -353,7 +373,7 @@ module "lxc230_docker_media" {
   vm_id               = 230
   hostname            = local.inventory_hosts.lxc230_docker_media.name
   lxc_storage         = var.lxc_storage
-  ssh_public_key      = var.ssh_public_key
+  ssh_public_keys     = local.guest_ssh_public_keys
   debian_lxc_template = var.debian_lxc_template
   cpu_cores           = local.profile.lxc230_docker_media.cpu
   memory_mb           = local.profile.lxc230_docker_media.memory
@@ -362,6 +382,7 @@ module "lxc230_docker_media" {
   start_on_boot       = local.profile.lxc230_docker_media.start_on_boot
   ipv4_address        = "${local.all_inventory_hosts.lxc230_docker_media.ip}/24"
   ipv4_gateway        = local.all_inventory_hosts.lxc230_docker_media.gateway
+  dns_servers         = [local.all_inventory_hosts.lxc230_docker_media.gateway]
   bridge              = local.site_networks[local.inventory_hosts.lxc230_docker_media.network].bridge
   vlan_id             = local.site_networks[local.inventory_hosts.lxc230_docker_media.network].vlan
   lxc_root_password   = var.lxc_root_password
@@ -374,7 +395,7 @@ module "lxc240_docker_external" {
   vm_id               = 240
   hostname            = local.inventory_hosts.lxc240_docker_external.name
   lxc_storage         = var.lxc_storage
-  ssh_public_key      = var.ssh_public_key
+  ssh_public_keys     = local.guest_ssh_public_keys
   debian_lxc_template = var.debian_lxc_template
   cpu_cores           = local.profile.lxc240_docker_external.cpu
   memory_mb           = local.profile.lxc240_docker_external.memory
@@ -383,6 +404,7 @@ module "lxc240_docker_external" {
   start_on_boot       = local.profile.lxc240_docker_external.start_on_boot
   ipv4_address        = "${local.all_inventory_hosts.lxc240_docker_external.ip}/24"
   ipv4_gateway        = local.all_inventory_hosts.lxc240_docker_external.gateway
+  dns_servers         = [local.all_inventory_hosts.lxc240_docker_external.gateway]
   bridge              = local.site_networks[local.inventory_hosts.lxc240_docker_external.network].bridge
   vlan_id             = local.inventory_hosts.lxc240_docker_external.network == "dmz" ? null : local.site_networks[local.inventory_hosts.lxc240_docker_external.network].vlan
   lxc_root_password   = var.lxc_root_password
@@ -395,7 +417,7 @@ module "lxc250_infra" {
   vm_id               = 250
   hostname            = local.inventory_hosts.lxc250_infra.name
   lxc_storage         = var.lxc_storage
-  ssh_public_key      = var.ssh_public_key
+  ssh_public_keys     = local.guest_ssh_public_keys
   debian_lxc_template = var.debian_lxc_template
   cpu_cores           = local.profile.lxc250_infra.cpu
   memory_mb           = local.profile.lxc250_infra.memory
@@ -404,6 +426,7 @@ module "lxc250_infra" {
   start_on_boot       = local.profile.lxc250_infra.start_on_boot
   ipv4_address        = "${local.all_inventory_hosts.lxc250_infra.ip}/24"
   ipv4_gateway        = local.all_inventory_hosts.lxc250_infra.gateway
+  dns_servers         = [local.all_inventory_hosts.lxc250_infra.gateway]
   bridge              = local.site_networks[local.inventory_hosts.lxc250_infra.network].bridge
   vlan_id             = local.site_networks[local.inventory_hosts.lxc250_infra.network].vlan
   lxc_root_password   = var.lxc_root_password

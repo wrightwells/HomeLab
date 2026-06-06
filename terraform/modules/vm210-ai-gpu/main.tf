@@ -6,12 +6,28 @@ terraform {
   }
 }
 
+resource "proxmox_virtual_environment_hardware_mapping_pci" "gpu" {
+  count = var.gpu_pci_address != "" ? 1 : 0
+
+  name = var.gpu_mapping_name
+  map = [
+    {
+      id           = var.gpu_device_id
+      iommu_group  = var.gpu_iommu_group
+      node         = var.proxmox_node
+      path         = "${var.gpu_pci_address}.0"
+      subsystem_id = var.gpu_subsystem_id
+    }
+  ]
+}
+
 resource "proxmox_virtual_environment_vm" "this" {
   name      = var.name
   node_name = var.proxmox_node
   vm_id     = var.vm_id
   started   = var.started
   on_boot   = var.on_boot
+  machine   = var.gpu_pci_address != "" ? "q35" : null
   tags      = ["terraform", "ai", "gpu", "docker"]
 
   cpu {
@@ -41,6 +57,10 @@ resource "proxmox_virtual_environment_vm" "this" {
   initialization {
     datastore_id = var.cloudinit_storage
 
+    dns {
+      servers = var.dns_servers
+    }
+
     ip_config {
       ipv4 {
         address = var.ipv4_address
@@ -50,25 +70,30 @@ resource "proxmox_virtual_environment_vm" "this" {
 
     user_account {
       username = var.ansible_user
-      keys     = var.ssh_public_key == "" ? [] : [var.ssh_public_key]
+      password = var.bootstrap_password
+      keys     = var.ssh_public_keys
     }
   }
 
   network_device {
     bridge  = var.bridge
     vlan_id = var.vlan_id
+    model   = "virtio"
   }
 
   operating_system {
     type = "l26"
   }
 
-  hostpci {
-    device = "hostpci0"
-    id     = var.gpu_pci_address
-    pcie   = true
-    rombar = true
-    x_vga  = true
+  dynamic "hostpci" {
+    for_each = var.gpu_pci_address != "" ? [var.gpu_pci_address] : []
+    content {
+      device  = "hostpci0"
+      mapping = proxmox_virtual_environment_hardware_mapping_pci.gpu[0].name
+      pcie    = true
+      rombar  = true
+      xvga    = true
+    }
   }
 
   description = "AI VM cloned from a prepared Proxmox template. Extend with GPU passthrough as needed."
