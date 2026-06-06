@@ -173,8 +173,8 @@ read -rp "Press Enter after the deploy key is added to GitHub..."
 # ---------------------------------------------------------------------------
 echo ""
 echo "=== Fixing Proxmox hostname for cluster tools ==="
-EXPECTED_HOSTNAME="pve01.uk.wrightwells.com"
-EXPECTED_SHORT="pve01"
+EXPECTED_HOSTNAME="pve"
+EXPECTED_SHORT="pve"
 MANAGEMENT_IP="10.10.99.110"
 
 # Fix /etc/hostname
@@ -189,12 +189,13 @@ fi
 hostnamectl set-hostname "${EXPECTED_HOSTNAME}"
 echo "Live hostname set to '${EXPECTED_HOSTNAME}'"
 
-# Remove any stale entries for pve01 or old hostnames
+# Remove any stale entries for old Proxmox node names
 sed -i '/pve01/d' /etc/hosts
+sed -i '/pve\.uk\.wrightwells\.com/d' /etc/hosts
 sed -i '/vm050-mint/d' /etc/hosts
 
 # Add the correct entry with the management IP
-echo "${MANAGEMENT_IP} ${EXPECTED_HOSTNAME} ${EXPECTED_SHORT}" >> /etc/hosts
+echo "${MANAGEMENT_IP} ${EXPECTED_SHORT}" >> /etc/hosts
 echo "Added ${EXPECTED_SHORT} -> ${MANAGEMENT_IP} to /etc/hosts"
 
 # ---------------------------------------------------------------------------

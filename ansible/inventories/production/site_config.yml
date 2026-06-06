@@ -25,7 +25,7 @@ homelab_site:
     dmz: vmbr3
 
   proxmox:
-    hostname: pve01
+    hostname: pve
     management_host_id: 110
     management_nic: nic0
     bootstrap_subnet: 1

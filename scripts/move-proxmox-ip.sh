@@ -16,7 +16,7 @@ set -euo pipefail
 INTERFACES_FILE="/etc/network/interfaces"
 NEW_IP="10.10.99.110/24"
 NEW_GW="10.10.99.1"
-HOSTNAME_SHORT=$(hostname -s 2>/dev/null || echo "pve01")
+HOSTNAME_SHORT=$(hostname -s 2>/dev/null || echo "pve")
 HOSTNAME_FQDN=$(hostname -f 2>/dev/null || echo "${HOSTNAME_SHORT}.uk.wrightwells.com")
 
 echo "=== Moving Proxmox management IP to vmbr2.99 ==="
@@ -101,7 +101,11 @@ echo "Network interfaces updated."
 if grep -q "$HOSTNAME_SHORT" /etc/hosts; then
   sed -i "/${HOSTNAME_SHORT}/d" /etc/hosts
 fi
-echo "10.10.99.110 ${HOSTNAME_FQDN} ${HOSTNAME_SHORT}" >> /etc/hosts
+if [ "${HOSTNAME_FQDN}" = "${HOSTNAME_SHORT}" ]; then
+  echo "10.10.99.110 ${HOSTNAME_SHORT}" >> /etc/hosts
+else
+  echo "10.10.99.110 ${HOSTNAME_FQDN} ${HOSTNAME_SHORT}" >> /etc/hosts
+fi
 echo "Updated hostname entry to point to management VLAN IP (10.10.99.110)"
 
 # ---------------------------------------------------------------------------

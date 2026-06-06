@@ -10,8 +10,8 @@
 
 set -euo pipefail
 
-EXPECTED_HOSTNAME="pve01.uk.wrightwells.com"
-EXPECTED_SHORT="pve01"
+EXPECTED_HOSTNAME="pve"
+EXPECTED_SHORT="pve"
 MANAGEMENT_IP="10.10.99.110"
 
 echo "=== Fixing Proxmox hostname ==="
@@ -40,16 +40,17 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Clean /etc/hosts: remove any line referencing pve01 OR vm050-mint
+# 3. Clean /etc/hosts: remove any line referencing stale node names
 # ---------------------------------------------------------------------------
 echo "Cleaning /etc/hosts of stale entries..."
 sed -i '/pve01/d' /etc/hosts
+sed -i '/pve\.uk\.wrightwells\.com/d' /etc/hosts
 sed -i '/vm050-mint/d' /etc/hosts
 
 # ---------------------------------------------------------------------------
 # 4. Add the correct entry pointing to the management IP
 # ---------------------------------------------------------------------------
-echo "${MANAGEMENT_IP} ${EXPECTED_HOSTNAME} ${EXPECTED_SHORT}" >> /etc/hosts
+echo "${MANAGEMENT_IP} ${EXPECTED_SHORT}" >> /etc/hosts
 
 echo ""
 echo "Updated /etc/hosts:"
