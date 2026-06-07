@@ -78,6 +78,66 @@ the build inventory file rather than by deleting repo configuration.
 - RAID1 2x4TB: /mnt/appdata for config, databases, Docker volumes, Syncthing critical data
 - Media pool 4x12TB: /mnt/media_pool via mergerfs
 
+## Rebuild an LXC
+
+This repo separates guest creation from guest configuration:
+
+- Terraform and Proxmox create the LXC shell
+- Ansible configures the workload inside it
+- Semaphore on `infra-01` is intended to run the steady-state Ansible jobs
+- the Proxmox host is the bootstrap fallback when `infra-01` or Semaphore is not ready yet
+
+For a normal worker LXC, the rebuild flow is:
+
+1. Recreate or reapply the container with Terraform:
+
+```bash
+./scripts/terraform-apply.sh production
+```
+
+2. Verify the recreated LXC is reachable from the control node.
+3. Run the relevant Ansible limit from Semaphore, or from the Proxmox host if Semaphore is not available yet.
+4. Let Ansible restore the host role:
+   packages, Docker, config files, env files, and compose stacks.
+
+Typical limits are:
+
+- `docker_services`
+- `docker_apps`
+- `docker_media`
+- `docker_arr`
+- `docker_external`
+- `infra`
+- a single host such as `infra-01`
+
+If you need to run the rebuild from the Proxmox host instead of Semaphore:
+
+```bash
+./scripts/ensure-proxmox-host-ansible.sh
+./scripts/run-ansible-on-proxmox-host.sh --limit infra
+```
+
+### `infra-01` bootstrap exception
+
+`infra-01` is special because it also hosts Semaphore and acts as a shared
+control node.
+
+That means its rebuild flow is:
+
+1. Terraform recreates CT `250`.
+2. Proxmox must provide the shared `/mnt/appdata` mount to the container.
+3. The shared control workspace must exist under:
+   `/mnt/appdata/homelab-control`
+4. Rebuild `infra-01` from the Proxmox host first.
+5. Once Semaphore is back, use it to manage the other worker LXCs again.
+
+In other words:
+
+- Terraform creates the guest
+- Proxmox/shared storage provides the persistent control assets
+- Ansible rebuilds the role
+- Semaphore resumes as the preferred runner after `infra-01` is healthy
+
 ## Hardware
 
 - CPU: 8 cores / 16 threads
