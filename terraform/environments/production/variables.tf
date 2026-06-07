@@ -103,7 +103,7 @@ variable "ansible_inventory_path" {
 
 variable "resource_profile" {
   type    = string
-  default = "balanced_128gb"
+  default = "balanced_96gb"
 }
 
 variable "vm_template_vmid" {

@@ -44,7 +44,7 @@ to control:
 
 Example use cases:
 
-- full build with every guest and service enabled, using the `balanced_128gb` profile
+- full build with every guest and service enabled, using the `balanced_96gb` profile
 - lightweight build with only `vm100_pfsense`, `lxc230_docker_media`, and a few core services, using the `balanced_32gb` profile
 - reduced storage build where `/mnt/appdata` still exists but falls back to `host_os` instead of a separate appdata disk
 

@@ -119,17 +119,19 @@ variable "ansible_user" {
 variable "resource_profile" {
   description = "Sizing and startup profile for guest CPU, memory, and auto-start behavior"
   type        = string
-  default     = "balanced_128gb"
+  default     = "balanced_96gb"
   validation {
     condition = contains([
       "balanced_32gb",
       "ai_focus_32gb",
       "balanced_64gb",
       "ai_focus_64gb",
+      "balanced_96gb",
+      "ai_focus_96gb",
       "balanced_128gb",
       "ai_focus_128gb",
     ], var.resource_profile)
-    error_message = "resource_profile must be one of balanced_32gb, ai_focus_32gb, balanced_64gb, ai_focus_64gb, balanced_128gb, or ai_focus_128gb."
+    error_message = "resource_profile must be one of balanced_32gb, ai_focus_32gb, balanced_64gb, ai_focus_64gb, balanced_96gb, ai_focus_96gb, balanced_128gb, or ai_focus_128gb."
   }
 }
 

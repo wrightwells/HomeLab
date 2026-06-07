@@ -64,6 +64,28 @@ locals {
       lxc240_docker_external = { cpu = 2, memory = 4096, swap = 512, started = false, start_on_boot = false }
       lxc250_infra           = { cpu = 2, memory = 2048, swap = 512, started = false, start_on_boot = false }
     }
+    balanced_96gb = {
+      vm100_pfsense          = { cpu = 2, memory = 4096, started = true, on_boot = true }
+      vm050_mint             = { cpu = 4, memory = 8192, started = true, on_boot = true }
+      vm210_ai_gpu           = { cpu = 8, memory = 24576, started = true, on_boot = true }
+      lxc066_docker_arr      = { cpu = 2, memory = 4096, swap = 512, started = true, start_on_boot = true }
+      lxc200_docker_services = { cpu = 4, memory = 8192, swap = 512, started = true, start_on_boot = true }
+      lxc220_docker_apps     = { cpu = 3, memory = 6144, swap = 512, started = true, start_on_boot = true }
+      lxc230_docker_media    = { cpu = 3, memory = 6144, swap = 512, started = true, start_on_boot = true }
+      lxc240_docker_external = { cpu = 2, memory = 4096, swap = 512, started = true, start_on_boot = true }
+      lxc250_infra           = { cpu = 2, memory = 4096, swap = 512, started = true, start_on_boot = true }
+    }
+    ai_focus_96gb = {
+      vm100_pfsense          = { cpu = 2, memory = 4096, started = true, on_boot = true }
+      vm050_mint             = { cpu = 2, memory = 4096, started = false, on_boot = false }
+      vm210_ai_gpu           = { cpu = 12, memory = 65536, started = true, on_boot = true }
+      lxc066_docker_arr      = { cpu = 2, memory = 4096, swap = 512, started = false, start_on_boot = false }
+      lxc200_docker_services = { cpu = 4, memory = 8192, swap = 512, started = false, start_on_boot = false }
+      lxc220_docker_apps     = { cpu = 3, memory = 6144, swap = 512, started = false, start_on_boot = false }
+      lxc230_docker_media    = { cpu = 3, memory = 6144, swap = 512, started = false, start_on_boot = false }
+      lxc240_docker_external = { cpu = 2, memory = 4096, swap = 512, started = false, start_on_boot = false }
+      lxc250_infra           = { cpu = 2, memory = 4096, swap = 512, started = false, start_on_boot = false }
+    }
     balanced_128gb = {
       vm100_pfsense          = { cpu = 2, memory = 8192, started = true, on_boot = true }
       vm050_mint             = { cpu = 4, memory = 8192, started = true, on_boot = true }

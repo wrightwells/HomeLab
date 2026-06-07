@@ -4,7 +4,7 @@ pm_api_token_secret = "PASTE_NEW_SECRET_HERE"
 pm_tls_insecure     = true
 
 proxmox_node        = "littledown"
-resource_profile    = "balanced_32gb"
+resource_profile    = "balanced_96gb"
 build_inventory_file = "../ansible/inventories/production/build_inventory.yml"
 site_config_file    = "../ansible/inventories/production/site_config.yml"
 vm_template_vmid    = 9000

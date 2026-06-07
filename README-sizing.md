@@ -4,9 +4,7 @@ This guide describes the sizing and inclusion system implemented in Terraform
 for your current host plan:
 
 - 12 cores / 24 threads
-- 32 GB RAM now
-- 64 GB RAM later
-- 128 GB RAM later
+- 96 GB RAM now
 
 Use [README-bootstrap.md](README-bootstrap.md) as the
 main runbook. This file is the sizing sub-guide for choosing and changing
@@ -76,12 +74,14 @@ The current profiles are:
 - `ai_focus_32gb`
 - `balanced_64gb`
 - `ai_focus_64gb`
+- `balanced_96gb`
+- `ai_focus_96gb`
 - `balanced_128gb`
 - `ai_focus_128gb`
 
 The Terraform variable default is:
 
-- `balanced_128gb`
+- `balanced_96gb`
 
 The example `terraform.tfvars` in this repo is set to:
 
@@ -95,40 +95,40 @@ For a minimal VM/LXC build on current hardware, start from:
 resource_profile = "balanced_32gb"
 ```
 
-For the full build on the upgraded host, use:
+For the full build on the current host, use:
 
 ```hcl
-resource_profile = "balanced_128gb"
+resource_profile = "balanced_96gb"
 ```
 
 Keep the CPU assignments from the existing profiles as they are. The main
 decision point here is host-memory tier:
 
 - minimal build: `balanced_32gb`
-- full build: `balanced_128gb`
-- optional intermediate step after a RAM upgrade: `balanced_64gb`
+- current full build: `balanced_96gb`
+- smaller intermediate profile: `balanced_64gb`
 
-### `balanced_128gb`
+### `balanced_96gb`
 
-- `vm100_pfsense`: 2 cores, 8 GB, starts automatically
+- `vm100_pfsense`: 2 cores, 4 GB, starts automatically
 - `vm050_mint`: 4 cores, 8 GB, starts automatically
-- `vm210_ai_gpu`: 12 cores, 48 GB, starts automatically
+- `vm210_ai_gpu`: 8 cores, 24 GB, starts automatically
 - `lxc066_docker_arr`: 2 cores, 4 GB, starts automatically
-- `lxc200_docker_services`: 4 cores, 10 GB, starts automatically
-- `lxc220_docker_apps`: 4 cores, 8 GB, starts automatically
-- `lxc230_docker_media`: 4 cores, 8 GB, starts automatically
+- `lxc200_docker_services`: 4 cores, 8 GB, starts automatically
+- `lxc220_docker_apps`: 3 cores, 6 GB, starts automatically
+- `lxc230_docker_media`: 3 cores, 6 GB, starts automatically
 - `lxc240_docker_external`: 2 cores, 4 GB, starts automatically
 - `lxc250_infra`: 2 cores, 4 GB, starts automatically
 
-Why this remains the Terraform variable default:
+Why this is now the Terraform variable default:
 
-- it assumes the long-term target host memory
-- it gives the AI VM enough headroom to be useful without switching profiles immediately
+- it matches the real 96 GB host
+- it avoids over-reserving idle VM memory on `pfsense` and `ai-gpu`
 - it keeps the rest of the lab online in a normal multi-service mode
 
 ## Lower-Memory Profiles
 
-Use these when the host has not yet reached the 128 GB target.
+Use these when the host is constrained below the current 96 GB capacity.
 
 ### `balanced_32gb`
 
@@ -177,6 +177,13 @@ This is the “AI mode” for the current 32 GB host.
 - `vm210_ai_gpu`: 12 cores, 52 GB, starts automatically
 - all LXCs: configured but not started and not set to auto-start
 
+### `ai_focus_96gb`
+
+- `vm100_pfsense`: 2 cores, 4 GB, starts automatically
+- `vm050_mint`: 2 cores, 4 GB, stays off by default
+- `vm210_ai_gpu`: 12 cores, 64 GB, starts automatically
+- all LXCs: configured but not started and not set to auto-start
+
 ### `ai_focus_128gb`
 
 - `vm100_pfsense`: 2 cores, 4 GB, starts automatically
@@ -201,7 +208,21 @@ upgraded.
 - `lxc240_docker_external`: 2 cores, 4 GB
 - `lxc250_infra`: 2 cores, 2 GB
 
-This is the recommended intermediate step once the host reaches 64 GB.
+This is a smaller intermediate profile.
+
+### `balanced_96gb`
+
+- `vm100_pfsense`: 2 cores, 4 GB
+- `vm050_mint`: 4 cores, 8 GB
+- `vm210_ai_gpu`: 8 cores, 24 GB
+- `lxc066_docker_arr`: 2 cores, 4 GB
+- `lxc200_docker_services`: 4 cores, 8 GB
+- `lxc220_docker_apps`: 3 cores, 6 GB
+- `lxc230_docker_media`: 3 cores, 6 GB
+- `lxc240_docker_external`: 2 cores, 4 GB
+- `lxc250_infra`: 2 cores, 4 GB
+
+This is the recommended current host profile.
 
 ### `balanced_128gb`
 
@@ -215,7 +236,7 @@ This is the recommended intermediate step once the host reaches 64 GB.
 - `lxc240_docker_external`: 2 cores, 4 GB
 - `lxc250_infra`: 2 cores, 4 GB
 
-This is the comfortable “everything can breathe” profile.
+This is the larger future “everything can breathe” profile.
 
 ## Recommended Use Over Time
 
@@ -245,7 +266,23 @@ resource_profile = "ai_focus_64gb"
 
 if you want to temporarily prioritize the AI VM.
 
-### Full build on 128 GB
+### Full build on 96 GB
+
+Use:
+
+```hcl
+resource_profile = "balanced_96gb"
+```
+
+Or:
+
+```hcl
+resource_profile = "ai_focus_96gb"
+```
+
+if you want to keep the rest of the lab mostly off and give the AI VM more room.
+
+### Future build on 128 GB
 
 Use:
 
