@@ -12,11 +12,13 @@ locals {
   ))
   homelab_site = yamldecode(file(local.site_config_path)).homelab_site
   site_networks = {
-    bootstrap   = { vlan = local.homelab_site.proxmox.bootstrap_subnet, bridge = local.homelab_site.bridges.bootstrap }
-    management  = { vlan = local.homelab_site.addressing.management_vlan, bridge = local.homelab_site.bridges.management }
-    workstation = { vlan = local.homelab_site.addressing.workstation_vlan, bridge = local.homelab_site.bridges.trusted }
-    servers     = { vlan = local.homelab_site.addressing.server_vlan, bridge = local.homelab_site.bridges.trusted }
-    dmz         = { vlan = local.homelab_site.addressing.dmz_vlan, bridge = local.homelab_site.bridges.dmz }
+    bootstrap   = { vlan = local.homelab_site.proxmox.bootstrap_subnet, bridge = local.homelab_site.bridges.bootstrap, gateway_host = local.homelab_site.addressing.gateway_host }
+    management  = { vlan = local.homelab_site.addressing.management_vlan, bridge = local.homelab_site.bridges.management, gateway_host = local.homelab_site.addressing.gateway_host }
+    workstation = { vlan = local.homelab_site.addressing.workstation_vlan, bridge = local.homelab_site.bridges.trusted, gateway_host = local.homelab_site.addressing.gateway_host }
+    servers     = { vlan = local.homelab_site.addressing.server_vlan, bridge = local.homelab_site.bridges.trusted, gateway_host = local.homelab_site.addressing.gateway_host }
+    # DMZ guests currently use the temporary Proxmox-host NAT/forwarding path
+    # on .254 until pfSense DMZ egress on .1 is fully online.
+    dmz         = { vlan = local.homelab_site.addressing.dmz_vlan, bridge = local.homelab_site.bridges.dmz, gateway_host = 254 }
   }
 
   resource_profiles = {
@@ -233,7 +235,7 @@ locals {
     for host_key, host in local.inventory_hosts :
     host_key => merge(host, {
       ip      = format("%d.%d.%d.%d", local.homelab_site.addressing.first_octet, local.homelab_site.addressing.second_octet, local.site_networks[host.network].vlan, host.host_id)
-      gateway = format("%d.%d.%d.%d", local.homelab_site.addressing.first_octet, local.homelab_site.addressing.second_octet, local.site_networks[host.network].vlan, local.homelab_site.addressing.gateway_host)
+      gateway = format("%d.%d.%d.%d", local.homelab_site.addressing.first_octet, local.homelab_site.addressing.second_octet, local.site_networks[host.network].vlan, local.site_networks[host.network].gateway_host)
     })
   }
 

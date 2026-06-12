@@ -1,0 +1,9 @@
+---
+- name: Install and enroll Tailscale on Linux LXCs and VMs
+  hosts: docker_hosts:ai_gpu:mint_desktop
+  become: true
+  vars_files:
+    - ../inventories/production/site_config.yml
+    - ../inventories/production/build_inventory.yml
+  roles:
+    - tailscale

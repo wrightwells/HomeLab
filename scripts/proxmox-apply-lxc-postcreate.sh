@@ -91,4 +91,7 @@ if [ "${#REBOOT_VMS[@]}" -gt 0 ]; then
   done
 fi
 
+echo "Ensuring /dev/net/tun is available in LXCs that host VPN-backed services"
+"$(dirname "$0")/setup-tun-device.sh" 166 200 220 230 240 250
+
 echo "Done."

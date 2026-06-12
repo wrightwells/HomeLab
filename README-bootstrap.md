@@ -580,16 +580,23 @@ qm template 9000
 
 Set `vm_template_vmid = 9000` in `terraform.tfvars`.
 
-### Linux Mint Cinnamon template (for vm050-mint, VMID 9050)
+### Linux Mint Cinnamon template (for vm050-mint, current VMID 9051)
 
 1. Download the Linux Mint Cinnamon ISO.
 2. Create a temporary VM on Proxmox and install Mint.
-3. Inside Mint, create the `ansible` account:
+3. On the Proxmox host, export the same deploy public key that the control-node
+   Ansible runs actually use:
+
+```bash
+ssh-keygen -y -f /root/.ssh/homelab-bootstrap
+```
+
+4. Inside Mint, create the `ansible` account with that exact public key:
 
 ```bash
 sudo useradd -m -s /bin/bash ansible || true
 sudo install -d -m 700 -o ansible -g ansible /home/ansible/.ssh
-printf '%s\n' 'ssh-ed25519 AAAA...homelab-deploy' | sudo tee /home/ansible/.ssh/authorized_keys >/dev/null
+printf '%s\n' 'ssh-ed25519 AAAA...actual-homelab-bootstrap-key' | sudo tee /home/ansible/.ssh/authorized_keys >/dev/null
 sudo chown ansible:ansible /home/ansible/.ssh/authorized_keys
 sudo chmod 600 /home/ansible/.ssh/authorized_keys
 sudo usermod -aG sudo ansible
@@ -597,25 +604,58 @@ printf 'ansible ALL=(ALL) NOPASSWD:ALL\n' | sudo tee /etc/sudoers.d/90-ansible >
 sudo chmod 440 /etc/sudoers.d/90-ansible
 ```
 
-4. Install required packages:
+5. Install required packages:
 
 ```bash
 sudo apt update
 sudo apt install -y openssh-server qemu-guest-agent cloud-init
 sudo systemctl enable ssh qemu-guest-agent
-curl -fsSL https://tailscale.com/install.sh | sh
-sudo systemctl enable tailscaled
 ```
 
-5. Shut down and convert to template:
+6. Make sure the template NIC matches the trusted workstation network:
 
 ```bash
-qm set 9050 --net0 virtio,bridge=vmbr2
-qm set 9050 --boot order=scsi0
-qm template 9050
+qm set 9051 --net0 virtio,bridge=vmbr2,tag=10
+qm set 9051 --boot order=scsi0
 ```
 
-Set `vm050_mint_template_vmid = 9050` in `terraform.tfvars`.
+7. Clean cloud-init state before templating:
+
+```bash
+sudo cloud-init clean --logs
+sudo shutdown now
+```
+
+8. Convert to template:
+
+```bash
+qm template 9051
+```
+
+9. Validate the template with a throwaway clone before using it for Terraform:
+
+```bash
+qm clone 9051 9052 --name mint-template-validation
+qm set 9052 --ide2 local-lvm:cloudinit --ciuser ansible --cipassword '<bootstrap-password>'
+qm set 9052 --sshkeys /root/.ssh/homelab-bootstrap.pub
+qm set 9052 --ipconfig0 ip=10.10.10.52/24,gw=10.10.10.1 --nameserver 10.10.10.1
+qm start 9052
+ssh -i /root/.ssh/homelab-bootstrap ansible@10.10.10.52
+```
+
+Expected result:
+- SSH works immediately with the deploy key
+- `cloud-init status --long` reports `DataSourceNoCloud`
+- the clone comes up on the requested static IP
+
+Set `vm050_mint_template_vmid = 9051` in `terraform.tfvars`.
+
+Notes:
+- Host-level Tailscale is now installed by the shared Ansible `tailscale` role,
+  not preinstalled in the Mint template.
+- The desktop NIC may appear as `eth0` or `ens18` depending on the clone; use
+  NetworkManager or runtime detection rather than hardcoding the interface name
+  in one-off admin commands.
 
 ---
 

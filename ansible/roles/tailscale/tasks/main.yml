@@ -1,0 +1,91 @@
+---
+- name: Install Tailscale prerequisites
+  ansible.builtin.apt:
+    name:
+      - curl
+      - ca-certificates
+      - gnupg
+    state: present
+    update_cache: true
+  when: tailscale_enabled
+
+- name: Detect Ubuntu codename for Linux Mint
+  ansible.builtin.shell: ". /etc/os-release && printf '%s' \"${UBUNTU_CODENAME:-$VERSION_CODENAME}\""
+  args:
+    executable: /bin/bash
+  register: tailscale_linux_mint_codename
+  changed_when: false
+  when:
+    - tailscale_enabled
+    - ansible_distribution == "Linux Mint"
+
+- name: Set Tailscale repository platform
+  ansible.builtin.set_fact:
+    tailscale_repo_platform: "{{ 'ubuntu' if ansible_distribution in ['Ubuntu', 'Linux Mint'] else 'debian' }}"
+    tailscale_repo_release: >-
+      {{
+        tailscale_linux_mint_codename.stdout | lower
+        if ansible_distribution == 'Linux Mint'
+        else ansible_distribution_release | lower
+      }}
+  when: tailscale_enabled
+
+- name: Install Tailscale signing key
+  ansible.builtin.get_url:
+    url: "https://pkgs.tailscale.com/stable/{{ tailscale_repo_platform }}/{{ tailscale_repo_release }}.noarmor.gpg"
+    dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+    mode: "0644"
+  when: tailscale_enabled
+
+- name: Install Tailscale apt source
+  ansible.builtin.get_url:
+    url: "https://pkgs.tailscale.com/stable/{{ tailscale_repo_platform }}/{{ tailscale_repo_release }}.tailscale-keyring.list"
+    dest: /etc/apt/sources.list.d/tailscale.list
+    mode: "0644"
+  when: tailscale_enabled
+
+- name: Install Tailscale package
+  ansible.builtin.apt:
+    name: tailscale
+    state: present
+    update_cache: true
+  when: tailscale_enabled
+
+- name: Ensure tailscaled is enabled and running
+  ansible.builtin.service:
+    name: tailscaled
+    state: started
+    enabled: true
+  when: tailscale_enabled
+
+- name: Check current Tailscale status
+  ansible.builtin.command:
+    cmd: tailscale status --json
+  register: tailscale_status
+  changed_when: false
+  failed_when: false
+  when: tailscale_enabled
+
+- name: Require a Tailscale auth key when enrollment is needed
+  ansible.builtin.assert:
+    that:
+      - tailscale_authkey | length > 0
+    fail_msg: >-
+      Tailscale is enabled but this host is not enrolled, and no auth key was provided.
+      Re-run with -e tailscale_authkey=tskey-...
+  when:
+    - tailscale_enabled
+    - tailscale_status.rc != 0
+
+- name: Bring host onto Tailscale
+  ansible.builtin.command:
+    cmd: >-
+      tailscale up
+      --auth-key={{ tailscale_authkey }}
+      --hostname={{ tailscale_hostname }}
+      --accept-dns={{ 'true' if tailscale_accept_dns else 'false' }}
+      --accept-routes={{ 'true' if tailscale_accept_routes else 'false' }}
+  no_log: true
+  when:
+    - tailscale_enabled
+    - tailscale_status.rc != 0

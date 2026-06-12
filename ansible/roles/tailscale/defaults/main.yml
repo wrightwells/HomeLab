@@ -1,0 +1,6 @@
+---
+tailscale_enabled: true
+tailscale_authkey: ""
+tailscale_hostname: "{{ inventory_hostname }}"
+tailscale_accept_dns: true
+tailscale_accept_routes: false
