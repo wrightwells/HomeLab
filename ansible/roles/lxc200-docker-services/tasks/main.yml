@@ -7,6 +7,7 @@
     compose_bundle_name: lxc200-docker-services
     compose_stacks: "{{ build_inventory.services.lxc200_docker_services | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
     docker_host_paths:
+      - path: /mnt/appdata/docker_volumes/portainer
       - path: /mnt/appdata/docker_volumes/paperless-ngx
       - path: /mnt/appdata/docker_volumes/paperless-ngx/db
       - path: /mnt/appdata/docker_volumes/paperless-ngx/data

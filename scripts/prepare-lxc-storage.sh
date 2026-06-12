@@ -92,7 +92,7 @@ chmod 777 /mnt/appdata/tailscale/ai/state
 # but also created here as a safety net so containers don't fail)
 # ---------------------------------------------------------------------------
 echo "Creating media pool directories..."
-mkdir -p /mnt/media_pool/{books,music,movies,tv}
+mkdir -p /mnt/media_pool/{books,music,movies,photos,tv}
 mkdir -p /mnt/media_pool/torrents/{books,music,movies,tv,incomplete}
 chmod -R 777 /mnt/media_pool 2>/dev/null || true
 

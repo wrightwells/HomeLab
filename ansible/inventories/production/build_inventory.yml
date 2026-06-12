@@ -25,6 +25,7 @@ build_inventory:
       enabled: true
       required_mounts:
         - appdata
+        - media
     lxc220_docker_apps:
       enabled: true
       required_mounts:
@@ -77,6 +78,10 @@ build_inventory:
           - appdata
 
     lxc066_docker_arr:
+      portainer:
+        enabled: true
+        required_mounts:
+          - appdata
       filebrowser:
         enabled: true
         required_mounts:
@@ -97,6 +102,10 @@ build_inventory:
           - media
 
     lxc200_docker_services:
+      portainer:
+        enabled: true
+        required_mounts:
+          - appdata
       immich:
         enabled: true
         required_mounts:
@@ -113,8 +122,13 @@ build_inventory:
         enabled: true
         required_mounts:
           - appdata
+          - media
 
     lxc220_docker_apps:
+      portainer:
+        enabled: true
+        required_mounts:
+          - appdata
       grafana:
         enabled: true
         required_mounts:
@@ -168,6 +182,10 @@ build_inventory:
         enabled: true
 
     lxc230_docker_media:
+      portainer:
+        enabled: true
+        required_mounts:
+          - appdata
       plex:
         enabled: true
         required_mounts:
@@ -184,6 +202,10 @@ build_inventory:
           - media
 
     lxc240_docker_external:
+      portainer:
+        enabled: true
+        required_mounts:
+          - appdata
       nginx:
         enabled: true
         required_mounts:

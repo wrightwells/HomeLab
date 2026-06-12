@@ -24,6 +24,7 @@ proxmox_media_pool_directories:
   - music
   - movies
   - tv
+  - photos
   - torrents
 proxmox_torrents_directories:
   - books

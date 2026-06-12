@@ -52,6 +52,7 @@ Notes:
 | `filebrowser` | `lxc066-docker-arr` | `10.10.66.66` | `http://docker-arr.bandicoot-pumpkinseed.ts.net:8081` | `8081` | File browser over the shared media tree |
 | `jellyseerr` | `lxc066-docker-arr` | `10.10.66.66` | `http://docker-arr.bandicoot-pumpkinseed.ts.net:5055` | `5055` | Media request portal |
 | `aurral` | `lxc066-docker-arr` | `10.10.66.66` | `http://docker-arr.bandicoot-pumpkinseed.ts.net:3000` | `3000` | Audio/media workflow helper integrated with Lidarr |
+| `portainer` | `lxc066-docker-arr` | `10.10.66.66` | `https://docker-arr.bandicoot-pumpkinseed.ts.net:9443` | `9443`, `8001` | Docker management UI for the ARR host |
 | `immich-server` | `lxc200-docker-services` | `10.10.20.200` | `http://docker-services.bandicoot-pumpkinseed.ts.net:2283` | `2283` | Photo and video management |
 | `immich-machine-learning` | `lxc200-docker-services` | `10.10.20.200` | `internal-only` | `N/A` | Immich ML worker |
 | `immich-redis` | `lxc200-docker-services` | `10.10.20.200` | `internal-only` | `N/A` | Immich cache |
@@ -65,6 +66,7 @@ Notes:
 | `paperless_gotenberg` | `lxc200-docker-services` | `10.10.20.200` | `internal-only` | `N/A` | PDF conversion helper for Paperless-ngx |
 | `paperless_tika` | `lxc200-docker-services` | `10.10.20.200` | `internal-only` | `N/A` | Text extraction helper for Paperless-ngx |
 | `syncthing` | `lxc200-docker-services` | `10.10.20.200` | `http://docker-services.bandicoot-pumpkinseed.ts.net:8384` | `8384`, `22000/tcp`, `22000/udp`, `21027/udp` | Sync service for important data between systems |
+| `portainer` | `lxc200-docker-services` | `10.10.20.200` | `https://docker-services.bandicoot-pumpkinseed.ts.net:9443` | `9443`, `8001` | Docker management UI for the services host |
 | `blinko` | `lxc220-docker-apps` | `10.10.20.220` | `http://docker-apps.bandicoot-pumpkinseed.ts.net:1111` | `1111` | Notes or knowledge app with Ollama integration |
 | `blinko-db` | `lxc220-docker-apps` | `10.10.20.220` | `internal-only` | `N/A` | Blinko PostgreSQL |
 | `calibre-web` | `lxc220-docker-apps` | `10.10.20.220` | `http://docker-apps.bandicoot-pumpkinseed.ts.net:8084` | `8084` | Web frontend for ebook library browsing |
@@ -80,8 +82,10 @@ Notes:
 | `pairdrop` | `lxc220-docker-apps` | `10.10.20.220` | `http://docker-apps.bandicoot-pumpkinseed.ts.net:1010` | `1010` | Local file sharing in browser |
 | `teslamate` | `lxc220-docker-apps` | `10.10.20.220` | `http://docker-apps.bandicoot-pumpkinseed.ts.net:4000` | `4000` | Tesla telemetry and trip analysis |
 | `teslamate_postgres` | `lxc220-docker-apps` | `10.10.20.220` | `postgres://docker-apps.bandicoot-pumpkinseed.ts.net:5432` | `5432` | TeslaMate database |
+| `portainer` | `lxc220-docker-apps` | `10.10.20.220` | `https://docker-apps.bandicoot-pumpkinseed.ts.net:9443` | `9443`, `8001` | Docker management UI for the apps host |
 | `jellyfin` | `lxc230-docker-media` | `10.10.20.230` | `http://docker-media.bandicoot-pumpkinseed.ts.net:8096` | `8096` | Media server |
 | `plex` | `lxc230-docker-media` | `10.10.20.230` | `http://docker-media.bandicoot-pumpkinseed.ts.net:32400/web` | `32400` | Media server |
+| `portainer` | `lxc230-docker-media` | `10.10.20.230` | `https://docker-media.bandicoot-pumpkinseed.ts.net:9443` | `9443`, `8001` | Docker management UI for the media host |
 | `tailscale` | `lxc230-docker-media` | `10.10.20.230` | `internal-only` | `N/A` | Network namespace for Jellyswarrm |
 | `jellyswarrm` | `lxc230-docker-media` | `10.10.20.230` | `tailscale-only` | `N/A` | Proxy or remote access helper for media apps |
 | `cloudflare-ddns-all` | `lxc240-docker-external` | `10.10.66.240` | `internal-only` | `N/A` | Cloudflare DDNS for wildcard DNS |
@@ -98,6 +102,7 @@ Notes:
 | `walletpage` | `lxc240-docker-external` | `10.10.66.240` | `http://docker-external.bandicoot-pumpkinseed.ts.net:8070` | `8070` | Static wallet or landing page |
 | `wordpress` | `lxc240-docker-external` | `10.10.66.240` | `http://docker-external.bandicoot-pumpkinseed.ts.net:8080` | `8080` | WordPress site |
 | `wordpress_db` | `lxc240-docker-external` | `10.10.66.240` | `internal-only` | `N/A` | WordPress MariaDB |
+| `portainer` | `lxc240-docker-external` | `10.10.66.240` | `https://docker-external.bandicoot-pumpkinseed.ts.net:9443` | `9443`, `8001` | Docker management UI for the external host |
 | `alertmanager` | `lxc250-infra` | `10.10.20.250` | `http://infra.bandicoot-pumpkinseed.ts.net:9093` | `9093` | Alert routing and notification hub |
 | `grafana` | `lxc250-infra` | `10.10.20.250` | `http://infra.bandicoot-pumpkinseed.ts.net:3000` | `3000` | Infra dashboards and monitoring UI |
 | `homebridge` | `lxc250-infra` | `10.10.20.250` | `http://infra.bandicoot-pumpkinseed.ts.net:8582` | `8582` | HomeKit bridge service |

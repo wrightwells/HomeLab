@@ -6,4 +6,6 @@
   vars:
     compose_bundle_name: lxc240-docker-external
     compose_stacks: "{{ build_inventory.services.lxc240_docker_external | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
+    docker_host_paths:
+      - path: /mnt/appdata/docker_volumes/portainer
   when: (build_inventory.services.lxc240_docker_external | dict2items | selectattr('value.enabled') | list | length) > 0

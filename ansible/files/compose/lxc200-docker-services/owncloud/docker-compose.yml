@@ -22,7 +22,8 @@ services:
       - OWNCLOUD_REDIS_ENABLED=true
       - OWNCLOUD_REDIS_HOST=redis
       - OWNCLOUD_REDIS_PASSWORD=${REDIS_PASSWORD}
-      - OWNCLOUD_CRON=true
+      # Run cron only in the dedicated sidecar below.
+      - OWNCLOUD_CRON=false
     # OwnCloud main data
     volumes:
       - owncloud-data:/mnt/data

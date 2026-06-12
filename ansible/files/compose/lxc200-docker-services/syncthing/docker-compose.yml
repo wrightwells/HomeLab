@@ -15,3 +15,5 @@ services:
     volumes:
       - /mnt/appdata/docker_volumes/syncthing/config:/config
       - /mnt/appdata/syncthing_sync:/data
+      - /mnt/appdata:/appdata
+      - /mnt/media_pool:/media_pool

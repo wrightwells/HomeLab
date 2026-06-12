@@ -65,7 +65,7 @@ apply_pct() {
 }
 
 apply_pct 166 --features nesting=1,keyctl=1 --mp0 /mnt/appdata,mp=/mnt/appdata --mp1 /mnt/media_pool,mp=/mnt/media_pool
-apply_pct 200 --features nesting=1,keyctl=1 --mp0 /mnt/appdata,mp=/mnt/appdata
+apply_pct 200 --features nesting=1,keyctl=1 --mp0 /mnt/appdata,mp=/mnt/appdata --mp1 /mnt/media_pool,mp=/mnt/media_pool
 apply_pct 220 --features nesting=1,keyctl=1 --mp0 /mnt/appdata,mp=/mnt/appdata
 apply_pct 230 --features nesting=1,keyctl=1 --mp0 /mnt/appdata,mp=/mnt/appdata --mp1 /mnt/media_pool,mp=/mnt/media_pool
 apply_pct 240 --features nesting=1,keyctl=1 --mp0 /mnt/appdata,mp=/mnt/appdata
