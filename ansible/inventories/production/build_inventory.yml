@@ -50,6 +50,10 @@ build_inventory:
         enabled: true
         required_mounts:
           - appdata
+      portainer:
+        enabled: true
+        required_mounts:
+          - appdata
       home-assistant:
         enabled: true
         required_mounts:
