@@ -3,3 +3,11 @@ proxmox_tailscale_enabled: true
 proxmox_tailscale_hostname: proxmox-host
 proxmox_tailscale_authkey: ""
 proxmox_tailscale_authkey_file: "{{ playbook_dir }}/../files/compose/lxc240-docker-external/tailscale-peer-relay/stack.env.vault"
+proxmox_code_server_enabled: true
+proxmox_code_server_user: root
+proxmox_code_server_home: "{{ '/root' if proxmox_code_server_user == 'root' else '/home/' ~ proxmox_code_server_user }}"
+proxmox_code_server_port: 3100
+proxmox_code_server_bind_addr: "{{ ansible_host | default('127.0.0.1') }}"
+proxmox_code_server_password: ""
+proxmox_code_server_password_file: /root/.config/ansible/homelab-vault-pass.txt
+proxmox_code_server_install_script: /usr/local/src/code-server-install.sh

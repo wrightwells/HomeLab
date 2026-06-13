@@ -1,4 +1,106 @@
 ---
+- name: Install code-server prerequisites
+  ansible.builtin.apt:
+    name:
+      - curl
+      - ca-certificates
+    state: present
+    update_cache: true
+  when: proxmox_code_server_enabled
+
+- name: Download code-server install script
+  ansible.builtin.get_url:
+    url: https://code-server.dev/install.sh
+    dest: "{{ proxmox_code_server_install_script }}"
+    mode: "0755"
+  when: proxmox_code_server_enabled
+
+- name: Install code-server
+  ansible.builtin.command:
+    cmd: "sh {{ proxmox_code_server_install_script }}"
+    creates: /usr/bin/code-server
+  when: proxmox_code_server_enabled
+
+- name: Read code-server password from host vault file when unset
+  ansible.builtin.command:
+    cmd: "cat {{ proxmox_code_server_password_file }}"
+  register: proxmox_code_server_password_file_result
+  changed_when: false
+  no_log: true
+  when:
+    - proxmox_code_server_enabled
+    - (proxmox_code_server_password | default('') | length) == 0
+
+- name: Set effective code-server password
+  ansible.builtin.set_fact:
+    proxmox_code_server_effective_password: >-
+      {{
+        proxmox_code_server_password
+        if (proxmox_code_server_password | default('') | length) > 0
+        else proxmox_code_server_password_file_result.stdout
+      }}
+  no_log: true
+  when: proxmox_code_server_enabled
+
+- name: Require a code-server password
+  ansible.builtin.assert:
+    that:
+      - (proxmox_code_server_effective_password | default('') | trim | length) > 0
+    fail_msg: >-
+      code-server is enabled but no password is available. Set
+      proxmox_code_server_password or ensure
+      {{ proxmox_code_server_password_file }} exists on the Proxmox host.
+  when: proxmox_code_server_enabled
+
+- name: Ensure code-server config directory exists
+  ansible.builtin.file:
+    path: "{{ proxmox_code_server_home }}/.config/code-server"
+    state: directory
+    owner: "{{ proxmox_code_server_user }}"
+    group: "{{ proxmox_code_server_user }}"
+    mode: "0700"
+  when: proxmox_code_server_enabled
+
+- name: Write code-server config
+  ansible.builtin.copy:
+    dest: "{{ proxmox_code_server_home }}/.config/code-server/config.yaml"
+    owner: "{{ proxmox_code_server_user }}"
+    group: "{{ proxmox_code_server_user }}"
+    mode: "0600"
+    content: |
+      bind-addr: {{ proxmox_code_server_bind_addr }}:{{ proxmox_code_server_port }}
+      auth: password
+      password: {{ proxmox_code_server_effective_password | trim }}
+      cert: false
+      app-name: Proxmox Host Code Server
+      disable-update-check: true
+      disable-workspace-trust: true
+      user-data-dir: {{ proxmox_code_server_home }}/.local/share/code-server
+      default-workspace: /root/HomeLab
+  no_log: true
+  register: proxmox_code_server_config
+  when: proxmox_code_server_enabled
+
+- name: Ensure code-server service is enabled
+  ansible.builtin.service:
+    name: "code-server@{{ proxmox_code_server_user }}"
+    enabled: true
+  when: proxmox_code_server_enabled
+
+- name: Restart code-server after config changes
+  ansible.builtin.service:
+    name: "code-server@{{ proxmox_code_server_user }}"
+    state: restarted
+  when:
+    - proxmox_code_server_enabled
+    - proxmox_code_server_config is changed
+
+- name: Ensure code-server service is running
+  ansible.builtin.service:
+    name: "code-server@{{ proxmox_code_server_user }}"
+    state: started
+  when: proxmox_code_server_enabled
+
 - name: Install Tailscale prerequisites
   ansible.builtin.apt:
     name:
