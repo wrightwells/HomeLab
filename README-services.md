@@ -39,6 +39,7 @@ Notes:
 | `wyoming-whisper` | `vm210-ai-gpu` | `10.10.20.210` | `tcp://ai-gpu.bandicoot-pumpkinseed.ts.net:10300` | `10300` | Local Wyoming STT service for Assist speech recognition |
 | `wyoming-openwakeword` | `vm210-ai-gpu` | `10.10.20.210` | `tcp://ai-gpu.bandicoot-pumpkinseed.ts.net:10400` | `10400` | Local Wyoming wake word service for voice pipelines |
 | `n8n` | `vm210-ai-gpu` | `10.10.20.210` | `http://ai-gpu.bandicoot-pumpkinseed.ts.net:5678` | `5678` | Workflow automation and service orchestration |
+| `portainer` | `vm210-ai-gpu` | `10.10.20.210` | `https://ai-gpu.bandicoot-pumpkinseed.ts.net:9443` | `9443`, `8001` | Docker management UI for the AI GPU host |
 | `openvscode-server` | `vm210-ai-gpu` | `10.10.20.210` | `http://ai-gpu.bandicoot-pumpkinseed.ts.net:3100` | `3100` | Remote VS Code-style editor for homelab work |
 | `openclaw-gateway` | `vm300-openclaw` | `10.10.66.70` | `http://openclaw.bandicoot-pumpkinseed.ts.net:18789` | `18789` | OpenClaw AI agent gateway with Telegram bot integration, uses remote Ollama |
 | `open-webui` | `vm300-openclaw` | `10.10.66.70` | `http://openclaw.bandicoot-pumpkinseed.ts.net:3000` | `3000` | Local Open WebUI instance connected to remote Ollama |
