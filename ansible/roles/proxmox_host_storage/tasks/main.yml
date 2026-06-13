@@ -268,22 +268,30 @@
     opts: "{{ proxmox_mergerfs_opts }}"
     state: mounted
 
+- name: Ensure media pool root is writable by Docker app user
+  ansible.builtin.file:
+    path: "{{ proxmox_media_pool_mount }}"
+    state: directory
+    owner: "{{ proxmox_media_pool_owner }}"
+    group: "{{ proxmox_media_pool_group }}"
+    mode: "{{ proxmox_media_pool_mode }}"
+
 - name: Ensure top-level media pool directories exist
   ansible.builtin.file:
     path: "{{ proxmox_media_pool_mount }}/{{ item }}"
     state: directory
-    owner: root
-    group: root
-    mode: "0755"
+    owner: "{{ proxmox_media_pool_owner }}"
+    group: "{{ proxmox_media_pool_group }}"
+    mode: "{{ proxmox_media_pool_mode }}"
   loop: "{{ proxmox_media_pool_directories }}"
 
 - name: Ensure torrent subdirectories exist
   ansible.builtin.file:
     path: "{{ proxmox_media_pool_mount }}/torrents/{{ item }}"
     state: directory
-    owner: root
-    group: root
-    mode: "0755"
+    owner: "{{ proxmox_media_pool_owner }}"
+    group: "{{ proxmox_media_pool_group }}"
+    mode: "{{ proxmox_media_pool_mode }}"
   loop: "{{ proxmox_torrents_directories }}"
 
 - name: Ensure shared appdata directories exist

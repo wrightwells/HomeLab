@@ -19,6 +19,9 @@ proxmox_media_branch_root: /mnt
 proxmox_media_branch_prefix: media_disk
 proxmox_media_pool_mount: /mnt/media_pool
 proxmox_mergerfs_opts: "defaults,allow_other,use_ino,category.create=mfs,moveonenospc=true,fsname=mergerfs"
+proxmox_media_pool_owner: "{{ docker_app_uid | default('1000') }}"
+proxmox_media_pool_group: "{{ docker_app_gid | default('1000') }}"
+proxmox_media_pool_mode: "0775"
 proxmox_media_pool_directories:
   - books
   - music
