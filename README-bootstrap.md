@@ -91,7 +91,7 @@ This script:
 - Creates the Ansible vault password file (`~/.config/ansible/homelab-vault-pass.txt`)
 - Generates an `ed25519` SSH deploy key (if not already present)
 - Generates a dedicated Proxmox host guest-access key at `~/.ssh/homelab-bootstrap`
-- Writes `terraform/generated/proxmox-host-control.auto.tfvars.json` so Terraform injects that host-control key into guests automatically
+- Writes `terraform/generated/proxmox-host-control.auto.tfvars.json` so Terraform uses that Proxmox host key as the primary guest SSH key and also keeps it as the explicit host-control key
 - Publishes bootstrap scripts to `/mnt/appdata/homelab-control/bin/`
 - Fixes hostname resolution for `pvecm`/`pct`
 
@@ -128,13 +128,14 @@ resource_profile    = "balanced_96gb"
 vm_template_vmid    = 9000
 vm050_mint_template_vmid = 9050
 lxc_root_password   = "<same as your Ansible vault password>"
-ssh_public_key      = "<contents of ~/.ssh/id_ed25519.pub>"
+ssh_public_key      = ""
 ```
 
 If you run the bootstrap from the Proxmox host, `./scripts/prepare-proxmox-host.sh`
 also generates `terraform/generated/proxmox-host-control.auto.tfvars.json`.
-The Terraform wrapper scripts load that file automatically so guests receive a
-second SSH public key for host-local Ansible.
+The Terraform wrapper scripts load that file automatically so guests use the
+Proxmox host key as their primary Terraform-injected SSH key and also keep it
+as the explicit host-control key for host-local Ansible.
 
 Create the API token:
 

@@ -70,22 +70,29 @@ the GPU.
 
 ## SSH public keys
 
-To obtain `ssh_public_key`, run this on the machine where you will run Terraform:
+The preferred Terraform control client for guest SSH is the Proxmox host.
+Bootstrap helpers on the host generate `~/.ssh/homelab-bootstrap` and write
+`terraform/generated/proxmox-host-control.auto.tfvars.json`. The Terraform
+wrapper scripts automatically load that generated file when it exists, so fresh
+guests receive the Proxmox host key by default.
+
+To inspect that canonical guest-access key on the Proxmox host:
 
 ```bash
-cat ~/.ssh/id_ed25519.pub
+cat ~/.ssh/homelab-bootstrap.pub
 ```
 
-Then copy the full line into `terraform.tfvars`:
+The generated auto tfvars file now sets both `ssh_public_key` and
+`host_control_ssh_public_key` to that same Proxmox host control key.
+
+If you intentionally want an additional operator key baked into new guests,
+copy its public key into `terraform.tfvars`:
 
 ```hcl
 ssh_public_key = "ssh-ed25519 AAAA..."
 ```
 
-For host-local Ansible from the Proxmox node, the bootstrap helpers can also
-generate `terraform/generated/proxmox-host-control.auto.tfvars.json` with
-`host_control_ssh_public_key`. The Terraform wrapper scripts automatically load
-that generated file when it exists, so fresh guests receive both your operator
-key and the Proxmox host control key.
+Leaving `ssh_public_key` blank in `terraform.tfvars` is valid when you are
+using the Proxmox-host-generated auto tfvars file.
 
 The full walkthrough lives in [README-bootstrap.md](../README-bootstrap.md).

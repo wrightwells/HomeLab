@@ -58,7 +58,10 @@ fi
 host_control_public_key=\"\$(cat \"${REMOTE_HOST_CONTROL_KEY}.pub\")\"
 mkdir -p \"$REMOTE_REPO_DIR/terraform/generated\"
 jq -Rn --arg key \"\$host_control_public_key\" \
-  '\''{host_control_ssh_public_key: $key}'\'' > \"$REMOTE_REPO_DIR/terraform/generated/proxmox-host-control.auto.tfvars.json\"
+  '\''{
+    ssh_public_key: $key,
+    host_control_ssh_public_key: $key
+  }'\'' > \"$REMOTE_REPO_DIR/terraform/generated/proxmox-host-control.auto.tfvars.json\"
 
 chmod 600 \"$REMOTE_VAULT_FILE\"
 
@@ -71,7 +74,10 @@ ansible --version | head -1
 mkdir -p "$GENERATED_TERRAFORM_VARS_DIR"
 host_control_public_key="$(ssh -o StrictHostKeyChecking=no "$PROXMOX_HOST" "cat '${REMOTE_HOST_CONTROL_KEY}.pub'")"
 jq -Rn --arg key "$host_control_public_key" \
-  '{host_control_ssh_public_key: $key}' > "$PROXMOX_HOST_CONTROL_TFVARS_FILE"
+  '{
+    ssh_public_key: $key,
+    host_control_ssh_public_key: $key
+  }' > "$PROXMOX_HOST_CONTROL_TFVARS_FILE"
 
 if [[ -n "$TEMP_VAULT_FILE" ]]; then
   rm -f "$TEMP_VAULT_FILE"

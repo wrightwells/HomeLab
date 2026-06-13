@@ -28,10 +28,14 @@ pfsense_dmz_bridge  = "vmbr3"
 debian_lxc_template = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
 
 ansible_user        = "ansible"
-ssh_public_key      = "ssh-ed25519 AAAA_REPLACE_ME"
-# Optional second guest access key used when Ansible runs from the Proxmox host.
-# `./scripts/prepare-proxmox-host.sh` and `./scripts/ensure-proxmox-host-ansible.sh`
-# can generate this automatically into terraform/generated/proxmox-host-control.auto.tfvars.json.
+ssh_public_key      = ""
+# Preferred model: let the Proxmox host act as the Terraform/Ansible control
+# client for guests. The host bootstrap helpers generate
+# terraform/generated/proxmox-host-control.auto.tfvars.json with both
+# ssh_public_key and host_control_ssh_public_key set to the Proxmox host's
+# guest-access key, so you can usually leave ssh_public_key empty here.
+# Set this manually only when you intentionally want an additional operator key
+# baked into new guests.
 host_control_ssh_public_key = ""
 
 # LXC root password -- uses the same plain-text secret as the Ansible vault password.

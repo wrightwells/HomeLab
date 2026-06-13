@@ -158,7 +158,10 @@ fi
 
 mkdir -p "$(dirname "$HOST_CONTROL_TFVARS_FILE")"
 jq -Rn --arg key "$(cat "${HOST_CONTROL_KEY}.pub")" \
-  '{host_control_ssh_public_key: $key}' > "$HOST_CONTROL_TFVARS_FILE"
+  '{
+    ssh_public_key: $key,
+    host_control_ssh_public_key: $key
+  }' > "$HOST_CONTROL_TFVARS_FILE"
 chmod 600 "$HOST_CONTROL_TFVARS_FILE"
 echo "Wrote Terraform host-control key vars to $HOST_CONTROL_TFVARS_FILE"
 
