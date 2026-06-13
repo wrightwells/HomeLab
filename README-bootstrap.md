@@ -107,7 +107,7 @@ before continuing so the running kernel and `zfs-kmod` match.
 ```
 
 Downloads the Debian 12 standard LXC template and verifies that VM templates
-9000 (Ubuntu AI) and 9050 (Linux Mint) exist. If the VM templates don't exist
+9000 (Ubuntu AI) and 9051 (Linux Mint) exist. If the VM templates don't exist
 yet, create them using the reference instructions at the bottom of this guide.
 
 ### Step 3 -- Configure Terraform variables
@@ -126,7 +126,7 @@ pm_tls_insecure     = true
 proxmox_node        = "pve"
 resource_profile    = "balanced_96gb"
 vm_template_vmid    = 9000
-vm050_mint_template_vmid = 9050
+vm050_mint_template_vmid = 9051
 lxc_root_password   = "<same as your Ansible vault password>"
 ssh_public_key      = ""
 ```
