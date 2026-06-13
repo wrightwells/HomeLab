@@ -18,7 +18,7 @@ services:
     container_name: blinko
     restart: unless-stopped
     ports:
-      - "10.10.20.220:1111:1111"
+      - "1111:1111"
     env_file:
       - stack.env
     environment:

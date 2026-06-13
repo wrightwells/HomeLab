@@ -5,15 +5,6 @@ services:
       - "7070:3000"
     env_file:
       - stack.env
-    environment:
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
-      DEFAULT_DOMAIN: ${DEFAULT_DOMAIN}
-      SITE_NAME: ${SITE_NAME}
     depends_on:
       - db
 
@@ -21,10 +12,6 @@ services:
     image: postgres:14
     env_file:
       - stack.env
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - kutt-db:/var/lib/postgresql/data
 
