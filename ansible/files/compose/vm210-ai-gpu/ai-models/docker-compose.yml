@@ -9,6 +9,8 @@ services:
       - OLLAMA_HOST=0.0.0.0:11434
     volumes:
       - /mnt/ai_models/ollama:/root/.ollama
+    ports:
+      - "11434:11434"
     gpus: all
     restart: unless-stopped
 
