@@ -53,3 +53,22 @@ proxmox_appdata_service_directories:
     owner: "101000"
     group: "101000"
     mode: "0755"
+  # lxc200 is unprivileged; filebrowser runs as UID/GID 1000 inside the container.
+  - path: "{{ proxmox_appdata_mountpoint }}/docker_volumes/filebrowser-docker-services"
+    owner: "101000"
+    group: "101000"
+    mode: "0755"
+  - path: "{{ proxmox_appdata_mountpoint }}/docker_volumes/filebrowser-docker-services/database"
+    owner: "101000"
+    group: "101000"
+    mode: "0755"
+  # lxc220 grist runs as container root, so shared bind mounts need the
+  # host-shifted root ownership.
+  - path: "{{ proxmox_appdata_mountpoint }}/docker_volumes/grist"
+    owner: "100000"
+    group: "100000"
+    mode: "0755"
+  - path: "{{ proxmox_appdata_mountpoint }}/docker_volumes/grist/grist-data"
+    owner: "100000"
+    group: "100000"
+    mode: "0755"
