@@ -1,0 +1,46 @@
+services:
+  planka-db:
+    image: postgres:16-alpine
+    container_name: planka-db
+    restart: unless-stopped
+    env_file:
+      - stack.env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: ${TZ}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - planka-db-data:/var/lib/postgresql/data
+
+  planka:
+    image: ghcr.io/plankanban/planka:latest
+    container_name: planka
+    restart: unless-stopped
+    depends_on:
+      planka-db:
+        condition: service_healthy
+    env_file:
+      - stack.env
+    environment:
+      TZ: ${TZ}
+      BASE_URL: ${BASE_URL}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@planka-db:5432/${POSTGRES_DB}
+      SECRET_KEY: ${SECRET_KEY}
+      DEFAULT_ADMIN_EMAIL: ${DEFAULT_ADMIN_EMAIL}
+      DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD}
+      DEFAULT_ADMIN_NAME: ${DEFAULT_ADMIN_NAME}
+      DEFAULT_ADMIN_USERNAME: ${DEFAULT_ADMIN_USERNAME}
+    ports:
+      - "1337:1337"
+    volumes:
+      - planka-user-data:/app/data
+
+volumes:
+  planka-db-data:
+  planka-user-data:

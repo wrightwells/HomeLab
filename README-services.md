@@ -83,6 +83,8 @@ Notes:
 | `influxdb` | `lxc220-docker-apps` | `10.10.20.220` | `http://docker-apps.bandicoot-pumpkinseed.ts.net:8086` | `8086` | Time-series database |
 | `node-red` | `lxc220-docker-apps` | `10.10.20.220` | `http://docker-apps.bandicoot-pumpkinseed.ts.net:1880` | `1880` | Visual automation flows |
 | `pairdrop` | `lxc220-docker-apps` | `10.10.20.220` | `http://docker-apps.bandicoot-pumpkinseed.ts.net:1010` | `1010` | Local file sharing in browser |
+| `planka` | `lxc220-docker-apps` | `10.10.20.220` | `http://docker-apps.bandicoot-pumpkinseed.ts.net:1337` | `1337` | Kanban project board with a seeded admin account |
+| `planka-db` | `lxc220-docker-apps` | `10.10.20.220` | `internal-only` | `N/A` | Planka PostgreSQL |
 | `teslamate` | `lxc220-docker-apps` | `10.10.20.220` | `http://docker-apps.bandicoot-pumpkinseed.ts.net:4000` | `4000` | Tesla telemetry and trip analysis |
 | `teslamate_postgres` | `lxc220-docker-apps` | `10.10.20.220` | `postgres://docker-apps.bandicoot-pumpkinseed.ts.net:5432` | `5432` | TeslaMate database |
 | `portainer` | `lxc220-docker-apps` | `10.10.20.220` | `https://docker-apps.bandicoot-pumpkinseed.ts.net:9443` | `9443`, `8001` | Docker management UI for the apps host |

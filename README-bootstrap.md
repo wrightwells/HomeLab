@@ -428,7 +428,7 @@ After a successful run, these services are running:
 | `vm300-openclaw` | `10.10.66.70` | OpenClaw Gateway (Telegram bot, remote Ollama), Open WebUI |
 | `lxc066-docker-arr` | `10.10.66.66` | gluetun, qbittorrent, prowlarr, sonarr, radarr, lidarr, bazarr, readarr, filebrowser, jellyseerr, aurrar |
 | `lxc200-docker-services` | `10.10.20.200` | Immich, ownCloud, Paperless-ngx, Syncthing |
-| `lxc220-docker-apps` | `10.10.20.220` | Blinko, Calibre, Calibre-Web, EruGo, Firefly III, Grafana, Grist, Homarr, InfluxDB, Node-RED, Pairdrop, Semaphore, TeslaMate, grist-finance-connector |
+| `lxc220-docker-apps` | `10.10.20.220` | Blinko, Calibre, Calibre-Web, EruGo, Firefly III, Grafana, Grist, Homarr, InfluxDB, Node-RED, Pairdrop, Planka, Semaphore, TeslaMate, grist-finance-connector |
 | `lxc230-docker-media` | `10.10.20.230` | Jellyfin, Plex, Jellyswarrm |
 | `lxc240-docker-external` | `10.10.66.240` | Cloudflare DDNS, Ghost, Kutt, nginx, RustDesk, Tailscale relay, Walletpage, WordPress |
 | `lxc250-infra` | `10.10.20.250` | Alertmanager, Grafana, Homebridge, Mosquitto MQTT, Portainer, Prometheus, Semaphore, Uptime Kuma |

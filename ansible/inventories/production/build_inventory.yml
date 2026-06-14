@@ -184,6 +184,10 @@ build_inventory:
           - appdata
       pairdrop:
         enabled: true
+      planka:
+        enabled: true
+        required_mounts:
+          - appdata
 
     lxc230_docker_media:
       portainer:
