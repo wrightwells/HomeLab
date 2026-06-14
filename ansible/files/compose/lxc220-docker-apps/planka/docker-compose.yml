@@ -16,7 +16,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - planka-db-data:/var/lib/postgresql/data
+      - /mnt/appdata/docker_volumes/planka/db:/var/lib/postgresql/data
 
   planka:
     image: ghcr.io/plankanban/planka:latest
@@ -39,8 +39,4 @@ services:
     ports:
       - "1337:1337"
     volumes:
-      - planka-user-data:/app/data
-
-volumes:
-  planka-db-data:
-  planka-user-data:
+      - /mnt/appdata/docker_volumes/planka/data:/app/data

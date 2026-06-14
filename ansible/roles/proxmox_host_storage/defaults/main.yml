@@ -38,3 +38,18 @@ proxmox_torrents_directories:
 proxmox_appdata_directories:
   - docker_volumes
   - configs
+proxmox_appdata_service_directories:
+  # lxc220 is unprivileged, so these ownership values are the host-shifted IDs
+  # for container postgres (70:70) and planka app user (1000:1000).
+  - path: "{{ proxmox_appdata_mountpoint }}/docker_volumes/planka"
+    owner: "100000"
+    group: "100000"
+    mode: "0755"
+  - path: "{{ proxmox_appdata_mountpoint }}/docker_volumes/planka/db"
+    owner: "100070"
+    group: "100070"
+    mode: "0700"
+  - path: "{{ proxmox_appdata_mountpoint }}/docker_volumes/planka/data"
+    owner: "101000"
+    group: "101000"
+    mode: "0755"
