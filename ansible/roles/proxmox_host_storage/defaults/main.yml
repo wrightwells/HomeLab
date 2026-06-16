@@ -19,13 +19,16 @@ proxmox_media_branch_root: /mnt
 proxmox_media_branch_prefix: media_disk
 proxmox_media_pool_mount: /mnt/media_pool
 proxmox_mergerfs_opts: "defaults,allow_other,use_ino,category.create=mfs,moveonenospc=true,fsname=mergerfs"
-proxmox_media_pool_owner: "{{ docker_app_uid | default('1000') }}"
-proxmox_media_pool_group: "{{ docker_app_gid | default('1000') }}"
+# Unprivileged LXCs map guest UID/GID 1000 to host 101000, so shared media
+# bind mounts must use the shifted host IDs for guest write access.
+proxmox_media_pool_owner: "101000"
+proxmox_media_pool_group: "101000"
 proxmox_media_pool_mode: "0775"
 proxmox_media_pool_directories:
   - books
   - music
   - movies
+  - ROMS
   - tv
   - photos
   - torrents
@@ -62,6 +65,20 @@ proxmox_appdata_service_directories:
     owner: "101000"
     group: "101000"
     mode: "0755"
+  # lxc200 syncthing runs as UID/GID 1000 inside an unprivileged LXC, so the
+  # host-side bind mount paths need shifted ownership to stay writable.
+  - path: "{{ proxmox_appdata_mountpoint }}/docker_volumes/syncthing"
+    owner: "101000"
+    group: "101000"
+    mode: "0775"
+  - path: "{{ proxmox_appdata_mountpoint }}/docker_volumes/syncthing/config"
+    owner: "101000"
+    group: "101000"
+    mode: "0775"
+  - path: "{{ proxmox_appdata_mountpoint }}/syncthing_sync"
+    owner: "101000"
+    group: "101000"
+    mode: "0775"
   # lxc220 grist runs as container root, so shared bind mounts need the
   # host-shifted root ownership.
   - path: "{{ proxmox_appdata_mountpoint }}/docker_volumes/grist"

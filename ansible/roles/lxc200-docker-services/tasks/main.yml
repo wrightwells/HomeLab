@@ -1,4 +1,15 @@
 ---
+- name: Repair Syncthing shared path ownership
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: "{{ docker_app_uid }}"
+    group: "{{ docker_app_gid }}"
+    recurse: true
+  loop:
+    - /mnt/appdata/docker_volumes/syncthing/config
+    - /mnt/appdata/syncthing_sync
+  when: build_inventory.services.lxc200_docker_services.syncthing.enabled | default(false) | bool
+
 - name: Deploy compose bundles for docker-services
   ansible.builtin.include_role:
     name: docker
