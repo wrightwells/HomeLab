@@ -1,17 +1,18 @@
 services:
   frigate:
-    image: ghcr.io/blakeblackshear/frigate:stable
+    image: ghcr.io/blakeblackshear/frigate:stable-tensorrt
     container_name: frigate
     restart: unless-stopped
     privileged: true
-    shm_size: "512mb"
+    shm_size: "1024mb"
     network_mode: host
     environment:
       - TZ=Europe/London
       - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
       - LIBVA_DRIVER_NAME=nvidia
     volumes:
-      - /mnt/appdata/configs/frigate:/config
+      - /mnt/appdata/config/frigate:/config
       - /mnt/ai_cache/frigate:/media/frigate
       - /etc/localtime:/etc/localtime:ro
     tmpfs:

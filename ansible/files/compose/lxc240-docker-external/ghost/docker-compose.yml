@@ -9,9 +9,6 @@ services:
       database__client: sqlite3
       database__connection__filename: /var/lib/ghost/content/data/ghost.db
     volumes:
-      - ghost-data:/var/lib/ghost/content
+      - /mnt/appdata/docker_volumes/ghost/content:/var/lib/ghost/content
     ports:
       - "2368:2368"
-
-volumes:
-  ghost-data:

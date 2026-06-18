@@ -109,6 +109,15 @@
     mode: "0755"
   when: build_inventory.services.vm210_ai_gpu.frigate.enabled | bool
 
+- name: Ensure Frigate model cache directory exists
+  ansible.builtin.file:
+    path: "{{ frigate_model_cache_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: build_inventory.services.vm210_ai_gpu.frigate.enabled | bool
+
 - name: Deploy managed Frigate config template
   ansible.builtin.template:
     src: frigate-config.yml.j2
@@ -126,6 +135,10 @@
     compose_bundle_name: vm210-ai-gpu
     compose_stacks: "{{ build_inventory.services.vm210_ai_gpu | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
     docker_host_paths:
+      - path: "{{ frigate_config_root }}"
+      - path: "{{ frigate_model_cache_dir }}"
+      - path: /mnt/appdata/docker_volumes/portainer
+      - path: /mnt/appdata/docker_volumes/searxng/config
       - path: /mnt/appdata/docker_volumes/home-assistant-voice
       - path: /mnt/appdata/docker_volumes/home-assistant-voice/piper
       - path: /mnt/appdata/docker_volumes/home-assistant-voice/whisper

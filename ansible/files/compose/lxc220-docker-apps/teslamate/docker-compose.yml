@@ -40,7 +40,4 @@ services:
     ports:
      - "5432:5432"
     volumes:
-     - teslamate-db:/var/lib/postgresql/data
-
-volumes:
-  teslamate-db:
+     - /mnt/appdata/docker_volumes/teslamate/db:/var/lib/postgresql/data

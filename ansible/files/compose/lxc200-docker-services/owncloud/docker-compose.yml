@@ -26,7 +26,7 @@ services:
       - OWNCLOUD_CRON=false
     # OwnCloud main data
     volumes:
-      - owncloud-data:/mnt/data
+      - /mnt/appdata/docker_volumes/owncloud/data:/mnt/data
       - /mnt/media_pool:/external/shared
     networks:
       - owncloud_net
@@ -45,7 +45,7 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
-      - owncloud-db:/var/lib/mysql
+      - /mnt/appdata/docker_volumes/owncloud/db:/var/lib/mysql
     networks:
       - owncloud_net
 
@@ -78,13 +78,9 @@ services:
       - OWNCLOUD_REDIS_HOST=redis
       - OWNCLOUD_REDIS_PASSWORD=${REDIS_PASSWORD}
     volumes:
-      - owncloud-data:/mnt/data
+      - /mnt/appdata/docker_volumes/owncloud/data:/mnt/data
     networks:
       - owncloud_net
-
-volumes:
-  owncloud-data:
-  owncloud-db:
 
 networks:
   owncloud_net:

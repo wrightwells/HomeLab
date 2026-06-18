@@ -8,6 +8,7 @@
     compose_stacks: "{{ build_inventory.services.lxc230_docker_media | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
     docker_host_paths:
       - path: /mnt/appdata/docker_volumes/portainer
+      - path: /mnt/appdata/docker_volumes/jellyswarrm/tailscale-state
       - path: /mnt/appdata/docker_volumes/plex
         owner: "{{ docker_app_uid }}"
         group: "{{ docker_app_gid }}"

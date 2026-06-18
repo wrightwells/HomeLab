@@ -13,7 +13,7 @@ services:
 
 
     volumes:
-      - tailscale-state:/var/lib/tailscale
+      - /mnt/appdata/docker_volumes/jellyswarrm/tailscale-state:/var/lib/tailscale
       - /dev/net/tun:/dev/net/tun
     restart: unless-stopped
 
@@ -29,6 +29,3 @@ services:
       - JELLYSWARRM_USERNAME=${JS_USERNAME}
       - JELLYSWARRM_PASSWORD=${JS_PASSWORD}
     restart: unless-stopped
-
-volumes:
-  tailscale-state:

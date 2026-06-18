@@ -6,7 +6,4 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - uptime-kuma-data:/app/data
-
-volumes:
-  uptime-kuma-data:
+      - /mnt/appdata/docker_volumes/uptime-kuma:/app/data

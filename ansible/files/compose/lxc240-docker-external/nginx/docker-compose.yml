@@ -14,14 +14,10 @@ services:
       - ./files/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./files/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./files/default.conf:/etc/nginx/conf.d/ssl.conf:ro
-      - nginx-html:/usr/share/nginx/html:ro
-      - nginx-logs:/var/log/nginx
+      - /mnt/appdata/docker_volumes/nginx/html:/usr/share/nginx/html:ro
+      - /mnt/appdata/docker_volumes/nginx/logs:/var/log/nginx
     healthcheck:
       test: ["CMD-SHELL", "nginx -t || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-volumes:
-  nginx-html:
-  nginx-logs:

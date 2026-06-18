@@ -11,7 +11,7 @@ services:
       - TS_STATE_DIR=/var/lib/tailscale
       - TS_USERSPACE=true
     volumes:
-      - rustdesk-ts-state:/var/lib/tailscale
+      - /mnt/appdata/docker_volumes/rustdesk/tailscale-state:/var/lib/tailscale
 
   hbbs:
     image: rustdesk/rustdesk-server:latest
@@ -21,7 +21,7 @@ services:
     environment:
       - ALWAYS_USE_RELAY=Y
     volumes:
-      - rustdesk-data:/root
+      - /mnt/appdata/docker_volumes/rustdesk/data:/root
     network_mode: service:tailscale
     depends_on:
       - tailscale
@@ -33,11 +33,7 @@ services:
     command: hbbr
     restart: unless-stopped
     volumes:
-      - rustdesk-data:/root
+      - /mnt/appdata/docker_volumes/rustdesk/data:/root
     network_mode: service:tailscale
     depends_on:
       - tailscale
-
-volumes:
-  rustdesk-ts-state:
-  rustdesk-data:

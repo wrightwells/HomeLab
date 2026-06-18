@@ -8,7 +8,7 @@ services:
     env_file:
       - stack.env
     volumes:
-      - wordpress-data:/var/www/html
+      - /mnt/appdata/docker_volumes/wordpress/html:/var/www/html
     ports:
       - "8080:80"
     networks:
@@ -22,13 +22,9 @@ services:
     env_file:
       - stack.env
     volumes:
-      - wordpress-db-data:/var/lib/mysql
+      - /mnt/appdata/docker_volumes/wordpress/db:/var/lib/mysql
     networks:
       - wordpress_net
-
-volumes:
-  wordpress-data:
-  wordpress-db-data:
 
 networks:
   wordpress_net:

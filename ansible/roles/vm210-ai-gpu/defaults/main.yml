@@ -8,11 +8,11 @@ vm210_ai_gpu_docker_gpu_test_image: nvidia/cuda:12.8.0-base-ubuntu24.04
 vm210_ai_gpu_verify_gpu_runtime: true
 vm210_ai_gpu_remote_tmp: /var/tmp/ansible-remote
 
-frigate_config_root: /mnt/appdata/configs/frigate
+frigate_config_root: /mnt/appdata/config/frigate
 frigate_record_enabled: true
 frigate_record_retain_days: 3
 frigate_event_retain_days: 7
-frigate_shm_size: 512mb
+frigate_shm_size: 1024mb
 frigate_cache_tmpfs_size: 1073741824
 frigate_mqtt_enabled: true
 frigate_mqtt_host: "{{ ai_gpu_ip }}"
@@ -28,9 +28,8 @@ frigate_review_detection_labels:
   - car
   - person
   - speech
-frigate_detector_name: ov
-frigate_detector_type: openvino
-frigate_detector_device: CPU
+frigate_model_cache_dir: "{{ frigate_config_root }}/model_cache"
+frigate_model_path: /config/model_cache/yolo.onnx
 frigate_camera_name: trackmix_front
 frigate_camera_sub_rtsp_url: rtsp://admin:St4nl3y11@10.20.1.11:554/h264Preview_01_sub
 frigate_camera_main_rtsp_url: rtsp://admin:St4nl3y11@10.20.1.11:554/h264Preview_01_main

@@ -12,8 +12,5 @@ services:
     ports:
       - "8084:8083"
     volumes:
-      - calibre-web-data:/config
+      - /mnt/appdata/docker_volumes/calibre-web/config:/config
       - /mnt/media_pool/books:/books
-
-volumes:
-  calibre-web-data:

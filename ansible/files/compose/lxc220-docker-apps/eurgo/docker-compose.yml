@@ -6,7 +6,4 @@ services:
     ports:
       - "9998:80"
     volumes:
-      - erugo-data:/var/www/html/storage
-
-volumes:
-  erugo-data:
+      - /mnt/appdata/docker_volumes/erugo/storage:/var/www/html/storage

@@ -4,7 +4,7 @@ services:
     container_name: tailscale-peer-relay
     restart: unless-stopped
     volumes:
-      - ts-peer-relay-state:/var/lib/tailscale
+      - /mnt/appdata/docker_volumes/tailscale-peer-relay/state:/var/lib/tailscale
     env_file:
       - stack.env
     environment:
@@ -13,6 +13,3 @@ services:
       - TS_STATE_DIR=/var/lib/tailscale
       - TS_USERSPACE=true
     network_mode: host
-
-volumes:
-  ts-peer-relay-state:

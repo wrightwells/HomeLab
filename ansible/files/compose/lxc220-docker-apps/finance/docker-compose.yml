@@ -43,10 +43,6 @@ services:
     depends_on:
       - app
 
-volumes:
-   firefly_iii_upload:
-   firefly_iii_db:
-
 networks:
   firefly_iii:
     driver: bridge

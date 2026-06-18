@@ -13,7 +13,4 @@ services:
     env_file:
       - stack.env
     volumes:
-      - kutt-db:/var/lib/postgresql/data
-
-volumes:
-  kutt-db:
+      - /mnt/appdata/docker_volumes/kutt/db:/var/lib/postgresql/data

@@ -16,8 +16,5 @@ services:
     ports:
       - "3000:3001"
     volumes:
-      - aurral-data:/app/backend/data
+      - /mnt/appdata/docker_volumes/aurral:/app/backend/data
       - /mnt/media_pool/torrents:/app/downloads
-
-volumes:
-  aurral-data:

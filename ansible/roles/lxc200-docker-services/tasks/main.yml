@@ -1,4 +1,12 @@
 ---
+- name: Seed filebrowser settings.json with valid JSON
+  ansible.builtin.copy:
+    dest: /mnt/appdata/docker_volumes/filebrowser-docker-services/settings.json
+    content: "{}\n"
+    force: false
+    mode: "0644"
+  when: build_inventory.services.lxc200_docker_services.filebrowser.enabled | default(false) | bool
+
 - name: Repair Syncthing shared path ownership
   ansible.builtin.file:
     path: "{{ item }}"
@@ -19,6 +27,12 @@
     compose_stacks: "{{ build_inventory.services.lxc200_docker_services | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
     docker_host_paths:
       - path: /mnt/appdata/docker_volumes/portainer
+      - path: /mnt/appdata/docker_volumes/filebrowser-docker-services
+      - path: /mnt/appdata/docker_volumes/filebrowser-docker-services/database
+      - path: /mnt/appdata/docker_volumes/immich/model-cache
+      - path: /mnt/appdata/docker_volumes/immich/db
+      - path: /mnt/appdata/docker_volumes/owncloud/data
+      - path: /mnt/appdata/docker_volumes/owncloud/db
       - path: /mnt/appdata/docker_volumes/paperless-ngx
       - path: /mnt/appdata/docker_volumes/paperless-ngx/db
       - path: /mnt/appdata/docker_volumes/paperless-ngx/data

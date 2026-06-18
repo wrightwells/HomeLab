@@ -7,5 +7,11 @@
     compose_bundle_name: lxc220-docker-apps
     compose_stacks: "{{ build_inventory.services.lxc220_docker_apps | dict2items | selectattr('value.enabled') | map(attribute='key') | list }}"
     docker_host_paths:
+      - path: /mnt/appdata/docker_volumes/blinko/db
+      - path: /mnt/appdata/docker_volumes/calibre/config
+      - path: /mnt/appdata/docker_volumes/calibre-web/config
+      - path: /mnt/appdata/docker_volumes/erugo/storage
+      - path: /mnt/appdata/docker_volumes/grist-finance-connector/state
       - path: /mnt/appdata/docker_volumes/portainer
+      - path: /mnt/appdata/docker_volumes/teslamate/db
   when: (build_inventory.services.lxc220_docker_apps | dict2items | selectattr('value.enabled') | list | length) > 0
