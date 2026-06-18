@@ -170,3 +170,182 @@ Note:
 - [Stack Env Vault Script](README-stack-env-vaults.md)
 - [Continue Config Example](continue/config.yaml.example)
   This is a local client-side example and is not part of the automated deployment.
+
+
+
+## TODO
+ITEM 1:
+Update my Frigate Docker Compose and Frigate config so Frigate uses the Nvidia/TensorRT image instead of the CPU detector.
+
+Current Frigate compose service is:
+
+```yaml
+services:
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable
+    container_name: frigate
+    restart: unless-stopped
+    privileged: true
+    shm_size: "512mb"
+    network_mode: host
+    environment:
+      - TZ=Europe/London
+      - NVIDIA_VISIBLE_DEVICES=all
+      - LIBVA_DRIVER_NAME=nvidia
+    volumes:
+      - /mnt/appdata/configs/frigate:/config
+      - /mnt/ai_cache/frigate:/media/frigate
+      - /etc/localtime:/etc/localtime:ro
+    tmpfs:
+      - /tmp/cache:size=1073741824
+    gpus: all
+```
+
+Required changes:
+
+1. Change the Frigate image from:
+
+```yaml
+image: ghcr.io/blakeblackshear/frigate:stable
+```
+
+to:
+
+```yaml
+image: ghcr.io/blakeblackshear/frigate:stable-tensorrt
+```
+
+2. Increase shared memory from:
+
+```yaml
+shm_size: "512mb"
+```
+
+to:
+
+```yaml
+shm_size: "1024mb"
+```
+
+3. Keep GPU passthrough enabled with:
+
+```yaml
+gpus: all
+```
+
+4. Keep these existing volume mappings exactly as they are:
+
+```yaml
+- /mnt/appdata/configs/frigate:/config
+- /mnt/ai_cache/frigate:/media/frigate
+- /etc/localtime:/etc/localtime:ro
+```
+
+5. Add this Nvidia capability environment variable:
+
+```yaml
+- NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+```
+
+6. Keep the existing environment variables:
+
+```yaml
+- TZ=Europe/London
+- NVIDIA_VISIBLE_DEVICES=all
+- LIBVA_DRIVER_NAME=nvidia
+```
+
+7. Update Frigate’s `config.yml` to add an Nvidia ONNX detector section near the top of the file, without removing my existing cameras, MQTT, face recognition, LPR, or recording settings.
+
+Add this:
+
+```yaml
+detectors:
+  onnx:
+    type: onnx
+
+model:
+  model_type: yolo-generic
+  width: 320
+  height: 320
+  input_tensor: nchw
+  input_dtype: float
+  path: /config/model_cache/yolo.onnx
+  labelmap_path: /labelmap/coco-80.txt
+```
+
+8. Create the model cache directory on the host if it does not already exist:
+
+```bash
+mkdir -p /mnt/appdata/configs/frigate/model_cache
+```
+
+9. Add comments or a README note explaining that the required object-detection model file must be placed here on the host:
+
+```text
+/mnt/appdata/configs/frigate/model_cache/yolo.onnx
+```
+
+Inside the container this becomes:
+
+```text
+/config/model_cache/yolo.onnx
+```
+
+10. The model needed is a YOLO ONNX model compatible with Frigate’s ONNX detector, exported at 320x320 input size and saved as:
+
+```text
+/config/model_cache/yolo.onnx
+```
+
+Use a YOLO v7/v9-style COCO object detection ONNX model, 320x320, with the COCO label map:
+
+```text
+/labelmap/coco-80.txt
+```
+
+11. Do not download a random incompatible model. Add a clear TODO/comment saying the user must provide or export a compatible YOLO ONNX model to:
+
+```text
+/mnt/appdata/configs/frigate/model_cache/yolo.onnx
+```
+
+12. After editing, provide the commands to redeploy and verify:
+
+```bash
+docker compose pull
+docker compose up -d
+docker exec -it frigate nvidia-smi
+docker logs -f frigate | grep -i -E 'detector|onnx|cuda|tensorrt|cpu|error'
+```
+
+13. The expected outcome is that this warning should disappear:
+
+```text
+CPU detectors are not recommended and should only be used for testing or for trial purposes.
+```
+
+14. Do not change my camera RTSP URLs, MQTT credentials, recording paths, face recognition settings, LPR settings, or network mode.
+----------------------------------------------------------
+ITEM 2:
+ 1. Frigate should have a config folder /mnt/appdata/config/frgate   but is not being created or populated
+----------------------------------------------------------
+ITEM 3:
+1. Check all docker compose files , all container configuration should be in volumes /mnt/appdata/docker_volumes/[conatiner name]
+examples that are incorrect
+   1. aurral 
+      - aurral-data:/app/backend/data
+   2. immich
+      - immich-db:/var/lib/postgresql/data
+   3. owncloud
+      - owncloud-db:/var/lib/mysql
+      - owncloud-data:/mnt/data
+   4. paperless-ngx
+      - paperless-db:/var/lib/postgresql/data
+   5. blinko
+      - blinko-db:/var/lib/postgresql/data
+   6. eurgo
+      - erugo-data:/var/www/html/storage
+   and any others
+-------------------------------------------------------------
+ITEM 4:
