@@ -5,9 +5,12 @@
 # required directories on the Proxmox host with 777 permissions so that
 # containers can read/write without ownership issues.
 #
-# IMPORTANT: Database containers (postgres, mariadb) now use Docker named
-# volumes instead of bind mounts to avoid ZFS chown failures. Only non-database
-# paths need host directories.
+# IMPORTANT: Several services now use host bind mounts under
+# /mnt/appdata/docker_volumes, including some database and state paths.
+# These host directories must exist before Ansible deploys Compose stacks,
+# otherwise Docker inside unprivileged LXCs can fail with permission denied
+# while trying to create new top-level mount source paths on the shared ZFS
+# bind mount.
 #
 # Run this on the Proxmox host AFTER storage is set up (step 3) and BEFORE
 # running Ansible (step 10).
@@ -30,8 +33,7 @@ mkdir -p /mnt/appdata/code
 chmod 777 /mnt/appdata /mnt/appdata/docker_volumes /mnt/appdata/configs /mnt/appdata/homelab-control
 
 # ---------------------------------------------------------------------------
-# Docker volume subdirectories (non-database paths only)
-# Database containers use Docker named volumes to avoid ZFS chown issues
+# Docker volume subdirectories
 # ---------------------------------------------------------------------------
 echo "Creating Docker volume subdirectories..."
 
@@ -41,27 +43,38 @@ mkdir -p /mnt/appdata/docker_volumes/{gluetun,qbittorrent,prowlarr,sonarr,radarr
 # Media stack (lxc230-docker-media)
 mkdir -p /mnt/appdata/docker_volumes/{jellyfin,plex,jellyswarrm/tailscale}
 
-# Services stack (lxc200-docker-services) -- data/media paths only, no DB paths
-mkdir -p /mnt/appdata/docker_volumes/{paperless-ngx/data,paperless-ngx/media,paperless-ngx/export,paperless-ngx/consume}
-mkdir -p /mnt/appdata/docker_volumes/{syncthing/config}
+# Services stack (lxc200-docker-services)
+mkdir -p /mnt/appdata/docker_volumes/{immich/db,immich/model-cache}
+mkdir -p /mnt/appdata/docker_volumes/{owncloud/data,owncloud/db}
+mkdir -p /mnt/appdata/docker_volumes/{paperless-ngx/db,paperless-ngx/data,paperless-ngx/media,paperless-ngx/export,paperless-ngx/consume}
+mkdir -p /mnt/appdata/docker_volumes/syncthing/config
 mkdir -p /mnt/appdata/docker_volumes/syncthing_sync
 
-# Apps stack (lxc220-docker-apps) -- no DB paths (use named volumes)
+# Apps stack (lxc220-docker-apps)
 mkdir -p /mnt/appdata/docker_volumes/{homarr,influxdb,pairdrop}
-mkdir -p /mnt/appdata/docker_volumes/{blinko/files}
-mkdir -p /mnt/appdata/docker_volumes/{node-red}
+mkdir -p /mnt/appdata/docker_volumes/{blinko/db,blinko/files}
+mkdir -p /mnt/appdata/docker_volumes/{calibre/config,calibre-web/config}
+mkdir -p /mnt/appdata/docker_volumes/erugo/storage
+mkdir -p /mnt/appdata/docker_volumes/grist-finance-connector/state
+mkdir -p /mnt/appdata/docker_volumes/node-red
+mkdir -p /mnt/appdata/docker_volumes/teslamate/db
 
-# External stack (lxc240-docker-external) -- no DB paths (use named volumes)
+# External stack (lxc240-docker-external)
+mkdir -p /mnt/appdata/docker_volumes/{ghost/content,kutt/db}
+mkdir -p /mnt/appdata/docker_volumes/{nginx/html,nginx/logs}
+mkdir -p /mnt/appdata/docker_volumes/{rustdesk/data,rustdesk/tailscale-state}
+mkdir -p /mnt/appdata/docker_volumes/tailscale-peer-relay/state
 mkdir -p /mnt/appdata/docker_volumes/walletpage
+mkdir -p /mnt/appdata/docker_volumes/{wordpress/html,wordpress/db}
 
-# Infra stack (lxc250-infra) -- no DB paths
+# Infra stack (lxc250-infra)
 mkdir -p /mnt/appdata/docker_volumes/{portainer,prometheus/data,uptime-kuma}
 mkdir -p /mnt/appdata/docker_volumes/{mosquitto/config,mosquitto/data,mosquitto/log}
 
-# AI GPU VM (vm210-ai-gpu) -- no DB paths
-mkdir -p /mnt/appdata/docker_volumes/{open-webui,frigate,home-assistant}
+# AI GPU VM (vm210-ai-gpu)
+mkdir -p /mnt/appdata/docker_volumes/{open-webui,frigate,home-assistant,portainer}
 mkdir -p /mnt/appdata/docker_volumes/{home-assistant-voice/piper,home-assistant-voice/whisper,home-assistant-voice/openwakeword,home-assistant-voice/openwakeword/custom}
-mkdir -p /mnt/appdata/docker_volumes/{n8n,openvscode-server}
+mkdir -p /mnt/appdata/docker_volumes/{n8n,openvscode-server,searxng/config}
 chmod -R 777 /mnt/appdata/docker_volumes
 
 # ---------------------------------------------------------------------------
@@ -112,6 +125,6 @@ done
 echo ""
 echo "=== LXC storage preparation complete ==="
 echo ""
-echo "Note: Database containers (postgres, mariadb, redis) use Docker named"
-echo "volumes and do NOT require host directories. This avoids ZFS chown failures"
-echo "in unprivileged LXCs where root maps to nobody:65534 on the host."
+echo "Note: Shared bind-mounted appdata paths must be pre-created on the Proxmox"
+echo "host. Unprivileged LXCs can otherwise hit permission-denied errors when"
+echo "Docker tries to create new top-level mount source directories at runtime."

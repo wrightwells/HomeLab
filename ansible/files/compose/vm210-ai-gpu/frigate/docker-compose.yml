@@ -12,7 +12,7 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
       - LIBVA_DRIVER_NAME=nvidia
     volumes:
-      - /mnt/appdata/config/frigate:/config
+      - /mnt/appdata/configs/frigate:/config
       - /mnt/ai_cache/frigate:/media/frigate
       - /etc/localtime:/etc/localtime:ro
     tmpfs:

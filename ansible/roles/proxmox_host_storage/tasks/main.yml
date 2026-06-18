@@ -300,7 +300,7 @@
     state: directory
     owner: root
     group: root
-    mode: "0755"
+    mode: "{{ proxmox_appdata_directory_mode }}"
   loop: "{{ proxmox_appdata_directories }}"
 
 - name: Ensure shared appdata service directories exist with mapped ownership

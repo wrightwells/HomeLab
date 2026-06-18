@@ -70,6 +70,11 @@ they are not lost between sessions.
   stacks using `gpus: all` can start. The `vm210-ai-gpu` Ansible role now
   installs and configures these automatically. Keep
   `./scripts/install-nvidia-drivers.sh` as a break-glass recovery path.
+- Frigate on `ai-gpu` expects a user-supplied YOLO ONNX detector model at
+  `/mnt/appdata/configs/frigate/model_cache/yolo.onnx` on the host, which maps
+  to `/config/model_cache/yolo.onnx` in the container. Use a Frigate-compatible
+  YOLO v7/v9-style COCO ONNX model exported at `320x320`; do not drop in a
+  random ONNX file.
 
 ---
 
@@ -304,7 +309,9 @@ directories on the Proxmox host with `777` permissions:
 ```
 
 Covers every volume used by the ARR stack, services, apps, media, external, and
-infra hosts.
+infra hosts. This is especially important now that several app/database/state
+paths under `/mnt/appdata/docker_volumes` are host bind mounts rather than
+Docker-managed named volumes.
 
 ### Step 10 -- Move Proxmox host IP to management VLAN
 
