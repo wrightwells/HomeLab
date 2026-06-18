@@ -68,6 +68,7 @@ Notes:
 | `paperless_broker` | `lxc200-docker-services` | `10.10.20.200` | `internal-only` | `N/A` | Paperless-ngx Redis broker |
 | `paperless_gotenberg` | `lxc200-docker-services` | `10.10.20.200` | `internal-only` | `N/A` | PDF conversion helper for Paperless-ngx |
 | `paperless_tika` | `lxc200-docker-services` | `10.10.20.200` | `internal-only` | `N/A` | Text extraction helper for Paperless-ngx |
+| `filebrowser` | `lxc200-docker-services` | `10.10.20.200` | `http://docker-services.bandicoot-pumpkinseed.ts.net:8081` | `8081` | File browser over the shared appdata tree |
 | `syncthing` | `lxc200-docker-services` | `10.10.20.200` | `http://docker-services.bandicoot-pumpkinseed.ts.net:8384` | `8384`, `22000/tcp`, `22000/udp`, `21027/udp` | Sync service for important data between systems |
 | `portainer` | `lxc200-docker-services` | `10.10.20.200` | `https://docker-services.bandicoot-pumpkinseed.ts.net:9443` | `9443`, `8001` | Docker management UI for the services host |
 | `blinko` | `lxc220-docker-apps` | `10.10.20.220` | `http://docker-apps.bandicoot-pumpkinseed.ts.net:1111` | `1111` | Notes or knowledge app with Ollama integration |
