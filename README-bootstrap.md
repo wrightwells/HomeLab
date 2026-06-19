@@ -70,11 +70,13 @@ they are not lost between sessions.
   stacks using `gpus: all` can start. The `vm210-ai-gpu` Ansible role now
   installs and configures these automatically. Keep
   `./scripts/install-nvidia-drivers.sh` as a break-glass recovery path.
-- Frigate on `ai-gpu` expects a user-supplied YOLO ONNX detector model at
-  `/mnt/appdata/configs/frigate/model_cache/yolo.onnx` on the host, which maps
-  to `/config/model_cache/yolo.onnx` in the container. Use a Frigate-compatible
-  YOLO v7/v9-style COCO ONNX model exported at `320x320`; do not drop in a
-  random ONNX file.
+- Frigate on `ai-gpu` uses the ONNX detector with the Nvidia-capable
+  `stable-tensorrt` image. The `vm210-ai-gpu` Ansible role can build a
+  Frigate-compatible YOLOv9 ONNX model at
+  `/mnt/appdata/configs/frigate/model_cache/yolo.onnx`, which maps to
+  `/config/model_cache/yolo.onnx` in the container. The older amd64 TensorRT
+  detector path is intentionally not used because Frigate 0.17 rejects it on
+  amd64.
 
 ---
 

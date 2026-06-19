@@ -143,7 +143,7 @@
 
 - name: Deploy Frigate YOLO ONNX build Dockerfile
   ansible.builtin.template:
-    src: frigate-yolov7-onnx.Dockerfile.j2
+    src: frigate-yolov9-onnx.Dockerfile.j2
     dest: "{{ frigate_yolo_model_dockerfile_path }}"
     owner: root
     group: root
@@ -157,6 +157,8 @@
   ansible.builtin.shell: >-
     docker build
     {{ '--no-cache' if frigate_yolo_model_build_no_cache | bool else '' }}
+    --build-arg MODEL_SIZE={{ frigate_yolo_model_size }}
+    --build-arg IMG_SIZE={{ frigate_yolo_model_image_size }}
     --output {{ frigate_yolo_model_build_output_dir }}
     -f {{ frigate_yolo_model_dockerfile_path }}
     {{ frigate_yolo_model_build_dir }}
