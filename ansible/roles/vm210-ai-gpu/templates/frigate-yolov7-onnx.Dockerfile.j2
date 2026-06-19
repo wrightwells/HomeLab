@@ -1,0 +1,34 @@
+FROM python:3.11-slim AS build
+
+RUN apt-get update \
+  && apt-get install --no-install-recommends -y wget ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src/yolo
+
+RUN python -m pip install --no-cache-dir 'numpy<2' onnx==1.16.2
+
+RUN --mount=type=cache,target=/downloads set -eux; \
+  wget --tries=20 --waitretry=5 --timeout=60 -c \
+    -O /downloads/yolo_to_onnx.py \
+    https://raw.githubusercontent.com/NateMeyer/tensorrt_demos/master/yolo/yolo_to_onnx.py; \
+  wget --tries=20 --waitretry=5 --timeout=60 -c \
+    -O /downloads/yolov7.cfg \
+    https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov7.cfg; \
+  wget --tries=20 --waitretry=5 --timeout=60 -c \
+    -O /downloads/yolov7.weights \
+    https://github.com/AlexeyAB/darknet/releases/download/yolov4/yolov7.weights; \
+  cp /downloads/yolo_to_onnx.py ./yolo_to_onnx.py; \
+  cp /downloads/yolov7.cfg ./yolov7.cfg; \
+  cp /downloads/yolov7.weights ./yolov7.weights
+
+RUN sed -e '6s/batch=64/batch=1/' \
+        -e '8s/width=640/width=320/' \
+        -e '9s/height=640/height=320/' \
+        yolov7.cfg > yolov7-320.cfg
+
+RUN ln -sf yolov7.weights yolov7-320.weights
+RUN python3 yolo_to_onnx.py -m yolov7-320
+
+FROM scratch
+COPY --from=build /src/yolo/yolov7-320.onnx /yolo.onnx

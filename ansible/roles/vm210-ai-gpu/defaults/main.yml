@@ -30,6 +30,14 @@ frigate_review_detection_labels:
   - speech
 frigate_model_cache_dir: "{{ frigate_config_root }}/model_cache"
 frigate_model_path: /config/model_cache/yolo.onnx
+frigate_model_host_path: "{{ frigate_model_cache_dir }}/yolo.onnx"
+frigate_yolo_model_build_enabled: true
+frigate_yolo_model_build_force: false
+frigate_yolo_model_build_no_cache: true
+frigate_yolo_model_build_dir: /tmp/frigate-yolo-export
+frigate_yolo_model_build_output_dir: "{{ frigate_yolo_model_build_dir }}/output"
+frigate_yolo_model_dockerfile_path: "{{ frigate_yolo_model_build_dir }}/Dockerfile"
+frigate_yolo_model_build_source_path: "{{ frigate_yolo_model_build_output_dir }}/yolo.onnx"
 frigate_camera_name: trackmix_front
 frigate_camera_sub_rtsp_url: rtsp://admin:St4nl3y11@10.20.1.11:554/h264Preview_01_sub
 frigate_camera_main_rtsp_url: rtsp://admin:St4nl3y11@10.20.1.11:554/h264Preview_01_main

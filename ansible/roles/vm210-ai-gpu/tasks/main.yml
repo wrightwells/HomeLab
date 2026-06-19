@@ -118,6 +118,69 @@
     mode: "0755"
   when: build_inventory.services.vm210_ai_gpu.frigate.enabled | bool
 
+- name: Check Frigate YOLO ONNX model
+  ansible.builtin.stat:
+    path: "{{ frigate_model_host_path }}"
+  register: frigate_yolo_model
+  when:
+    - build_inventory.services.vm210_ai_gpu.frigate.enabled | bool
+    - frigate_yolo_model_build_enabled | bool
+
+- name: Ensure Frigate YOLO build directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ frigate_yolo_model_build_dir }}"
+    - "{{ frigate_yolo_model_build_output_dir }}"
+  when:
+    - build_inventory.services.vm210_ai_gpu.frigate.enabled | bool
+    - frigate_yolo_model_build_enabled | bool
+    - frigate_yolo_model_build_force | bool or not (frigate_yolo_model.stat.exists | default(false))
+
+- name: Deploy Frigate YOLO ONNX build Dockerfile
+  ansible.builtin.template:
+    src: frigate-yolov7-onnx.Dockerfile.j2
+    dest: "{{ frigate_yolo_model_dockerfile_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - build_inventory.services.vm210_ai_gpu.frigate.enabled | bool
+    - frigate_yolo_model_build_enabled | bool
+    - frigate_yolo_model_build_force | bool or not (frigate_yolo_model.stat.exists | default(false))
+
+- name: Build Frigate YOLO ONNX model
+  ansible.builtin.shell: >-
+    docker build
+    {{ '--no-cache' if frigate_yolo_model_build_no_cache | bool else '' }}
+    --output {{ frigate_yolo_model_build_output_dir }}
+    -f {{ frigate_yolo_model_dockerfile_path }}
+    {{ frigate_yolo_model_build_dir }}
+  environment:
+    DOCKER_BUILDKIT: "1"
+  changed_when: true
+  when:
+    - build_inventory.services.vm210_ai_gpu.frigate.enabled | bool
+    - frigate_yolo_model_build_enabled | bool
+    - frigate_yolo_model_build_force | bool or not (frigate_yolo_model.stat.exists | default(false))
+
+- name: Install generated Frigate YOLO ONNX model
+  ansible.builtin.copy:
+    src: "{{ frigate_yolo_model_build_source_path }}"
+    dest: "{{ frigate_model_host_path }}"
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - build_inventory.services.vm210_ai_gpu.frigate.enabled | bool
+    - frigate_yolo_model_build_enabled | bool
+    - frigate_yolo_model_build_force | bool or not (frigate_yolo_model.stat.exists | default(false))
+
 - name: Deploy managed Frigate config template
   ansible.builtin.template:
     src: frigate-config.yml.j2
