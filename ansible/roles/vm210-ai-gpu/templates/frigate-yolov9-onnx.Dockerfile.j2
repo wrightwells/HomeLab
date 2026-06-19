@@ -14,12 +14,19 @@ RUN --mount=type=cache,target=/downloads set -eux; \
 
 RUN python -m pip install --upgrade pip setuptools wheel
 
-RUN python -m pip install \
+RUN --mount=type=cache,target=/downloads set -eux; \
+  wget --tries=20 --waitretry=5 --timeout=60 -c \
+    -O /downloads/torch-2.2.2+cpu-cp311-cp311-linux_x86_64.whl \
+    https://download.pytorch.org/whl/cpu/torch-2.2.2%2Bcpu-cp311-cp311-linux_x86_64.whl; \
+  wget --tries=20 --waitretry=5 --timeout=60 -c \
+    -O /downloads/torchvision-0.17.2+cpu-cp311-cp311-linux_x86_64.whl \
+    https://download.pytorch.org/whl/cpu/torchvision-0.17.2%2Bcpu-cp311-cp311-linux_x86_64.whl; \
+  python -m pip install \
   --no-cache-dir \
   --retries 10 \
   --timeout 180 \
-  --index-url https://download.pytorch.org/whl/cpu \
-  torch==2.2.2+cpu torchvision==0.17.2+cpu
+  /downloads/torch-2.2.2+cpu-cp311-cp311-linux_x86_64.whl \
+  /downloads/torchvision-0.17.2+cpu-cp311-cp311-linux_x86_64.whl
 
 RUN python -m pip install \
   --no-cache-dir \
