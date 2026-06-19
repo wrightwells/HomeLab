@@ -78,6 +78,13 @@ RUN --mount=type=cache,target=/downloads set -eux; \
 
 RUN sed -i "s/ckpt = torch.load(attempt_download(w), map_location='cpu')/ckpt = torch.load(attempt_download(w), map_location='cpu', weights_only=False)/g" models/experimental.py
 
+RUN --mount=type=cache,target=/root/.cache/pip \
+  python -m pip install \
+  --retries 10 \
+  --timeout 180 \
+  'numpy<2' \
+  'setuptools<81'
+
 RUN python3 export.py \
   --weights ./yolov9-${MODEL_SIZE}.pt \
   --imgsz ${IMG_SIZE} \
