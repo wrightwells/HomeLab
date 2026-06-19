@@ -33,7 +33,7 @@ frigate_model_path: /config/model_cache/yolo.onnx
 frigate_model_host_path: "{{ frigate_model_cache_dir }}/yolo.onnx"
 frigate_yolo_model_build_enabled: true
 frigate_yolo_model_build_force: false
-frigate_yolo_model_build_no_cache: true
+frigate_yolo_model_build_no_cache: false
 frigate_yolo_model_build_dir: /tmp/frigate-yolov9-export
 frigate_yolo_model_build_output_dir: "{{ frigate_yolo_model_build_dir }}/output"
 frigate_yolo_model_dockerfile_path: "{{ frigate_yolo_model_build_dir }}/Dockerfile"

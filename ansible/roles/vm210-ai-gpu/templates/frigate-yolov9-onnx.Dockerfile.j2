@@ -34,19 +34,34 @@ RUN --mount=type=cache,target=/root/.cache/pip \
   --timeout 180 \
   gitpython \
   ipython \
-  matplotlib \
   'numpy<2' \
-  opencv-python-headless \
   pillow \
   psutil \
   pyyaml \
   requests \
+  tqdm
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+  python -m pip install \
+  --retries 10 \
+  --timeout 180 \
+  opencv-python-headless
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+  python -m pip install \
+  --retries 10 \
+  --timeout 180 \
   scipy \
-  thop \
-  tqdm \
-  tensorboard \
   pandas \
+  matplotlib \
   seaborn \
+  tensorboard \
+  thop
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+  python -m pip install \
+  --retries 10 \
+  --timeout 180 \
   onnx==1.16.2 \
   onnxruntime \
   onnx-simplifier==0.4.* \
