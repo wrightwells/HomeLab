@@ -12,7 +12,8 @@ RUN --mount=type=cache,target=/downloads set -eux; \
     https://github.com/WongKinYiu/yolov9/archive/refs/heads/main.tar.gz; \
   tar -xzf /downloads/yolov9.tar.gz --strip-components=1
 
-RUN python -m pip install --upgrade pip setuptools wheel
+RUN --mount=type=cache,target=/root/.cache/pip \
+  python -m pip install --upgrade pip setuptools wheel
 
 RUN --mount=type=cache,target=/downloads set -eux; \
   wget --tries=20 --waitretry=5 --timeout=60 -c \
@@ -22,14 +23,13 @@ RUN --mount=type=cache,target=/downloads set -eux; \
     -O /downloads/torchvision-0.17.2+cpu-cp311-cp311-linux_x86_64.whl \
     https://download.pytorch.org/whl/cpu/torchvision-0.17.2%2Bcpu-cp311-cp311-linux_x86_64.whl; \
   python -m pip install \
-  --no-cache-dir \
   --retries 10 \
   --timeout 180 \
   /downloads/torch-2.2.2+cpu-cp311-cp311-linux_x86_64.whl \
   /downloads/torchvision-0.17.2+cpu-cp311-cp311-linux_x86_64.whl
 
-RUN python -m pip install \
-  --no-cache-dir \
+RUN --mount=type=cache,target=/root/.cache/pip \
+  python -m pip install \
   --retries 10 \
   --timeout 180 \
   gitpython \
