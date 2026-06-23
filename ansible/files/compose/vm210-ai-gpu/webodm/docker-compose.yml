@@ -1,0 +1,89 @@
+services:
+  db:
+    image: webodm/webodm_db:latest
+    container_name: webodm-db
+    restart: unless-stopped
+    expose:
+      - "5432"
+    volumes:
+      - /mnt/appdata/webodm/db:/var/lib/postgresql/data
+    oom_score_adj: -100
+
+  broker:
+    image: redis:7.0.10
+    container_name: webodm-broker
+    restart: unless-stopped
+    oom_score_adj: -500
+
+  webapp:
+    image: webodm/webodm_webapp:latest
+    container_name: webodm-webapp
+    restart: unless-stopped
+    entrypoint: >-
+      /bin/bash -c "service cron start && chmod +x /webodm/*.sh &&
+      /bin/bash -c \"/webodm/wait-for-postgres.sh db
+      /webodm/wait-for-it.sh -t 0 broker:6379 -- /webodm/start.sh\""
+    depends_on:
+      - db
+      - broker
+      - worker
+      - node-odx-1
+    env_file:
+      - stack.env
+    environment:
+      - WO_PORT
+      - WO_HOST
+      - WO_DEBUG
+      - WO_BROKER
+      - WO_DEV
+      - WO_DEV_WATCH_PLUGINS
+      - WO_SECRET_KEY
+      - WO_DEFAULT_NODES
+      - WEB_CONCURRENCY
+    ports:
+      - "${WO_PORT}:8000"
+    volumes:
+      - /mnt/appdata/webodm/media:/webodm/app/media
+    oom_score_adj: 0
+
+  worker:
+    image: webodm/webodm_webapp:latest
+    container_name: webodm-worker
+    restart: unless-stopped
+    entrypoint: >-
+      /bin/bash -c "/webodm/wait-for-postgres.sh db
+      /webodm/wait-for-it.sh -t 0 broker:6379 --
+      /webodm/wait-for-it.sh -t 0 webapp:8000 -- /webodm/worker.sh start"
+    depends_on:
+      - db
+      - broker
+    env_file:
+      - stack.env
+    environment:
+      - WO_BROKER
+      - WO_DEBUG
+      - WO_SECRET_KEY
+      - WEB_CONCURRENCY
+    volumes:
+      - /mnt/appdata/webodm/media:/webodm/app/media
+    oom_score_adj: 250
+
+  node-odx-1:
+    image: webodm/nodeodx:gpu
+    platform: linux/amd64
+    container_name: webodm-node-odx-1
+    restart: unless-stopped
+    expose:
+      - "3000"
+    volumes:
+      - /mnt/appdata/webodm/node/data:/var/www/data
+      - /mnt/appdata/webodm/node/tmp:/var/www/tmp
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+    oom_score_adj: 500

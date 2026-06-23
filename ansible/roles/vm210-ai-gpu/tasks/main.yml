@@ -192,6 +192,63 @@
     mode: "0640"
   when: build_inventory.services.vm210_ai_gpu.frigate.enabled | bool
 
+- name: Ensure WebODM data directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ webodm_root }}"
+    - "{{ webodm_root }}/db"
+    - "{{ webodm_root }}/media"
+    - "{{ webodm_root }}/node"
+    - "{{ webodm_root }}/node/data"
+    - "{{ webodm_root }}/node/tmp"
+  when: build_inventory.services.vm210_ai_gpu.webodm.enabled | bool
+
+- name: Check WebODM secret key
+  ansible.builtin.stat:
+    path: "{{ webodm_secret_key_file }}"
+  register: webodm_secret_key_stat
+  when: build_inventory.services.vm210_ai_gpu.webodm.enabled | bool
+
+- name: Generate WebODM secret key
+  ansible.builtin.command:
+    cmd: python3 -c 'import secrets; print(secrets.token_urlsafe(50))'
+  register: webodm_secret_key_generated
+  changed_when: true
+  no_log: true
+  when:
+    - build_inventory.services.vm210_ai_gpu.webodm.enabled | bool
+    - not webodm_secret_key_stat.stat.exists
+
+- name: Install WebODM secret key
+  ansible.builtin.copy:
+    dest: "{{ webodm_secret_key_file }}"
+    content: "{{ webodm_secret_key_generated.stdout }}\n"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  when:
+    - build_inventory.services.vm210_ai_gpu.webodm.enabled | bool
+    - not webodm_secret_key_stat.stat.exists
+
+- name: Read WebODM secret key
+  ansible.builtin.slurp:
+    path: "{{ webodm_secret_key_file }}"
+  register: webodm_secret_key_slurp
+  no_log: true
+  when: build_inventory.services.vm210_ai_gpu.webodm.enabled | bool
+
+- name: Set WebODM secret key fact
+  ansible.builtin.set_fact:
+    webodm_secret_key: "{{ webodm_secret_key_slurp.content | b64decode | trim }}"
+  no_log: true
+  when: build_inventory.services.vm210_ai_gpu.webodm.enabled | bool
+
 - name: Deploy compose bundles for AI GPU VM
   ansible.builtin.include_role:
     name: docker
@@ -218,6 +275,12 @@
       - path: /mnt/appdata/code
         owner: "{{ docker_app_uid }}"
         group: "{{ docker_app_gid }}"
+      - path: "{{ webodm_root }}"
+      - path: "{{ webodm_root }}/db"
+      - path: "{{ webodm_root }}/media"
+      - path: "{{ webodm_root }}/node"
+      - path: "{{ webodm_root }}/node/data"
+      - path: "{{ webodm_root }}/node/tmp"
   when: (build_inventory.services.vm210_ai_gpu | dict2items | selectattr('value.enabled') | list | length) > 0
 
 - name: Ensure /mnt/ai_models/ollama directory exists for model storage

@@ -8,6 +8,12 @@ vm210_ai_gpu_docker_gpu_test_image: nvidia/cuda:12.8.0-base-ubuntu24.04
 vm210_ai_gpu_verify_gpu_runtime: true
 vm210_ai_gpu_remote_tmp: /var/tmp/ansible-remote
 
+webodm_host: "{{ ai_gpu_ip }}"
+webodm_port: 8000
+webodm_root: /mnt/appdata/webodm
+webodm_secret_key_file: "{{ webodm_root }}/secret_key"
+webodm_web_concurrency: 2
+
 frigate_config_root: /mnt/appdata/configs/frigate
 frigate_record_enabled: true
 frigate_record_retain_days: 3

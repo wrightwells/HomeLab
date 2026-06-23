@@ -80,6 +80,10 @@ build_inventory:
         enabled: true
         required_mounts:
           - appdata
+      webodm:
+        enabled: true
+        required_mounts:
+          - appdata
 
     lxc066_docker_arr:
       portainer:
